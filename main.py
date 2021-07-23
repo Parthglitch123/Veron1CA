@@ -78,13 +78,15 @@ def developer_check(author_id):
 def generate_random_footer():
     footers_list = [
         'Hey there pal :D',
-        'Imagine flying...',
+        'When pigs fly.',
         'Hey! This looks sketchy, not gonna lie.',
         'Have a good day...... or good night whatever.',
         'This has to be the matrix!',
         'Noob is you.',
         'Back to the future!',
         'We need a hashmap.',
+        'Json, Jason, Jason, Jayson!',
+        'Developed with <3 by HitBlast.'
     ]
     return random.choice(footers_list)
 
@@ -169,11 +171,6 @@ async def on_ready():
     print(
         f'\nLog: {bot.user.name} has been deployed in {len(bot.guilds)} server(s).')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(bot.guilds)} server(s)!'))
-
-
-@bot.event
-async def on_member_join(member):
-    await member.send(f'Hi there, {member.mention}! Hope you enjoy your stay at {member.guild.name}!')
 
 
 @bot.event
@@ -326,6 +323,7 @@ class Moderation(commands.Cog):
                 type(error), error, error.__traceback__, file=sys.stderr)
 
     @commands.command(name='userinfo', help='Shows all important information on a user.')
+    @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def userinfo(self, ctx, user: discord.Member = None):
         if not user:
             user = ctx.author
@@ -345,10 +343,10 @@ class Moderation(commands.Cog):
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_footer(text=generate_random_footer(),
                          icon_url=ctx.author.avatar_url)
-
         await ctx.send(embed=embed)
 
     @commands.command(name='guildinfo', help='Shows all important information on the current guild / server.')
+    @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def guildinfo(self, ctx):
         guild = ctx.guild
         embed = (discord.Embed(title=guild.name,
@@ -364,22 +362,42 @@ class Moderation(commands.Cog):
         embed.set_thumbnail(url=ctx.guild.icon_url)
         embed.set_footer(text=generate_random_footer(),
                          icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
 
+    @commands.command(name='roleinfo', help='Shows all important information related to a specific role.')
+    @commands.has_any_role(lock_roles[0], lock_roles[1])
+    async def roleinfo(self, ctx, role: discord.Role):
+        embed = (discord.Embed(
+            title=f'Role Information: {str(role)}', color=accent_color))
+        embed.add_field(name='Creation Date:', value=role.created_at.strftime("%b %d, %Y")).add_field(
+            name='Mentionable', value=role.mentionable)
+        embed.add_field(name='Managed By Integration', value=role.is_integration(
+        )).add_field(name='Managed By Bot', value=role.is_bot_managed())
+        embed.add_field(name='Role Position', value=role.position).add_field(
+            name='Role ID', value=f'`{role.id}`')
+        embed.set_footer(icon_url=ctx.author.avatar_url,
+                         text=generate_random_footer())
         await ctx.send(embed=embed)
 
     @commands.command(name='purge', help='Clears messages within the given index.')
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def purge(self, ctx, amount=1):
-        amount += 1
-        await ctx.channel.purge(limit=amount)
+        if amount > 200:
+            await ctx.send('Purges are limited to 200 messages per use!')
+        else:
+            amount += 1
+            await ctx.channel.purge(limit=amount)
 
     @commands.command(name='ripplepurge', help='Clears messages that are sent by a specific user within the given index.')
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def ripplepurge(self, ctx, member: discord.Member, amount=2):
-        messages = await ctx.history(limit=amount).flatten()
-        for message in messages:
-            if message.author == member:
-                await message.delete()
+        if amount > 100:
+            await ctx.send('Ripple purges are limited to 100 messages per use!')
+        else:
+            messages = await ctx.history(limit=amount).flatten()
+            for message in messages:
+                if message.author == member:
+                    await message.delete()
 
     @commands.command(name='sayhi', help='Helps to greet channel members.')
     @commands.has_any_role(lock_roles[0], lock_roles[1])
@@ -567,21 +585,6 @@ class Moderation(commands.Cog):
     async def unban(self, ctx, member: discord.User):
         await ctx.guild.unban(member)
         await ctx.send(f'Member **{member.name}** has been unbanned!')
-
-    @commands.command(name='roleinfo', help='Shows all important information related to a specific role.')
-    @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def roleinfo(self, ctx, role: discord.Role):
-        embed = (discord.Embed(
-            title=f'Role Information: {str(role)}', color=accent_color))
-        embed.add_field(name='Creation Date:', value=role.created_at.strftime("%b %d, %Y")).add_field(
-            name='Mentionable', value=role.mentionable)
-        embed.add_field(name='Managed By Integration', value=role.is_integration(
-        )).add_field(name='Managed By Bot', value=role.is_bot_managed())
-        embed.add_field(name='Role Position', value=role.position).add_field(
-            name='Role ID', value=f'`{role.id}`')
-        embed.set_footer(icon_url=ctx.author.avatar_url,
-                         text=generate_random_footer())
-        await ctx.send(embed=embed)
 
     @commands.command(name='invites', help='Shows all active server invite codes.')
     @commands.has_any_role(lock_roles[0], lock_roles[1])
