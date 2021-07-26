@@ -24,6 +24,7 @@ from decouple import config
 from discord.ext import commands
 from async_timeout import timeout
 from keep_alive import keep_alive
+from discord_slash import SlashCommand
 
 
 # Environment variables.
@@ -34,11 +35,12 @@ token = config('TOKEN', cast=str)
 # System variables.
 accent_color = 0xb6c1c6
 lock_roles = ['BotMod', 'BotAdmin']
-
-# System startup data.
-bot = commands.Bot(commands.when_mentioned_or(prefix), help_command=None)
 last_restarted_str = str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 last_restarted_obj = time.time()
+
+# Setting up bot and slash objects.
+bot = commands.Bot(commands.when_mentioned_or(prefix), help_command=None)
+slash = SlashCommand(bot, sync_commands=True)
 
 # Toggles.
 global jail_toggle
@@ -183,6 +185,12 @@ async def on_message(message):
             if not await jailcheck(message):
                 await bot.process_commands(message)
                 await webcheck(message)
+
+
+# Slash commands.
+@slash.slash(name='test', description='Test command to perform a trial of the upcoming slash commands feature.')
+async def test(ctx):
+    await ctx.send('Hackerman, here we go!')
 
 
 # Help command.
@@ -1215,6 +1223,7 @@ bot.add_cog(Chill(bot))
 bot.add_cog(Moderation(bot))
 bot.add_cog(Music(bot))
 bot.add_cog(Developer(bot))
+
 
 # Run the bot.
 keep_alive()
