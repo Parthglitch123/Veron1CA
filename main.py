@@ -247,7 +247,7 @@ async def help(ctx, cmd=None):
 
 # Chill category commands.
 class Chill(commands.Cog):
-    def __init__(self, ctx):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name='avatar', help='Shows a member\'s Discord avatar.')
@@ -281,7 +281,7 @@ class Chill(commands.Cog):
 
 # Moderation category commands.
 class Moderation(commands.Cog):
-    def __init__(self, ctx):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -1142,7 +1142,7 @@ class Music(commands.Cog):
 
 # Developer commands/tools.
 class Developer(commands.Cog):
-    def __init__(self, ctx):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name='devtools', help='Shows all the developer tools that can be used.')
