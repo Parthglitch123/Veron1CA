@@ -36,7 +36,7 @@ accent_color = 0xb6c1c6
 lock_roles = ['BotMod', 'BotAdmin']
 
 # System startup data.
-bot = commands.Bot(commands.when_mentioned_or(prefix), help_command=None, intents=discord.Intents.all())
+bot = commands.Bot(commands.when_mentioned_or(prefix), help_command=None)
 last_restarted_str = str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 last_restarted_obj = time.time()
 
