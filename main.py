@@ -326,7 +326,7 @@ class Chill(commands.Cog):
         name='avatar',
         description='Shows a member\'s Discord avatar.'
     )
-    async def _avatar(self, ctx, member: discord.Member = None):
+    async def _avatar(self, ctx: SlashCommand, member: discord.Member = None):
         if not member:
             member = ctx.author
 
@@ -376,7 +376,7 @@ class Chill(commands.Cog):
         name='ping', 
         description='Shows the current response time of the bot.'
     )
-    async def _ping(self, ctx):
+    async def _ping(self, ctx: SlashCommand):
         ping = round(self.bot.latency * 1000)
         uptime = str(datetime.timedelta(seconds=int(
             round(time.time() - last_restarted_obj))))
