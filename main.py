@@ -1248,19 +1248,24 @@ class VoiceState:
     async def audio_player_task(self):
         while True:
             self.next.clear()
+            self.now = None
 
-            if not self.loop:
+            if self.loop == False:
                 try:
                     async with timeout(180):
                         self.current = await self.songs.get()
                 except asyncio.TimeoutError:
                     self.bot.loop.create_task(self.stop())
+                    self.exists = False
                     return
+                
+                self.current.source.volume = self._volume
+                self.voice.play(self.current.source, after=self.play_next_song)
 
-            self.current.source.volume = self._volume
-            self.voice.play(self.current.source, after=self.play_next_song)
-            await self.current.source.channel.send(embed=self.current.create_embed())
-
+            elif self.loop == True:
+                self.now = discord.FFmpegPCMAudio(self.current.source.stream_url, **YTDLSource.FFMPEG_OPTIONS)
+                self.voice.play(self.now, after=self.play_next_song)
+            
             await self.next.wait()
 
     def play_next_song(self, error=None):
@@ -1364,10 +1369,10 @@ class Music(commands.Cog):
         if not ctx.voice_state.is_playing:
             return await ctx.send('There\'s nothing being played at the moment.')
 
-        if 0 > volume > 100:
+        if 0 >= volume >= 100:
             return await ctx.send('Volume must be between 0 and 100 to execute the command.')
 
-        ctx.voice_state.volume = volume / 100
+        ctx.voice_state.current.source.volume = volume / 100
         await ctx.send('Volume of the player is now set to **{}%**'.format(volume))
 
     @commands.command(
