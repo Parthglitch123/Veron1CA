@@ -1495,7 +1495,10 @@ class Music(commands.Cog):
             return await ctx.send('Nothing being played at the moment.')
 
         ctx.voice_state.loop = not ctx.voice_state.loop
-        await ctx.message.add_reaction('✅')
+        if ctx.voice_state.loop:
+            await ctx.message.add_reaction('✅')
+        else:
+            await ctx.message.add_reaction('❎')
 
     @commands.command(
         name='play', 
