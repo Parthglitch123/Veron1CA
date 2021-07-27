@@ -1613,8 +1613,7 @@ class Developer(commands.Cog):
                     )
                 )
                 await ctx.send(embed=embed)
-                repo = git.Repo(os.getcwd())
-                repo.remotes.upstream.pull('master')
+                os.system('git pull origin master')
                 os.execv(sys.executable, ['python'] + sys.argv)
 
             except git.exc.InvalidGitRepositoryError:
