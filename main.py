@@ -416,16 +416,16 @@ class Moderation(commands.Cog):
                 pass
 
         elif isinstance(error, commands.MissingRole):
-            await ctx.send(f'Oops! {error}')
+            await ctx.send(f'Whoops! {error}')
 
         elif isinstance(error, commands.MissingAnyRole):
-            await ctx.send(f'Oops! {error}')
+            await ctx.send(f'Whoops! {error}')
 
         elif isinstance(error, commands.errors.UserNotFound):
-            await ctx.send(f'Oops! {error} Try mentioning or pinging them! You can also try using their ID as an argument.')
+            await ctx.send(f'Whoops! {error} Try mentioning or pinging them! You can also try using their ID as an argument.')
 
         elif isinstance(error, commands.errors.RoleNotFound):
-            await ctx.send(f'Oops! {error} Try mentioning or pinging the role. You can also try using it\'s ID as an argument.')
+            await ctx.send(f'Whoops! {error} Try mentioning or pinging the role. You can also try using it\'s ID as an argument.')
 
         elif isinstance(error, commands.errors.MissingRequiredArgument):
             await ctx.send(f'Oops, {error} Try typing `//help commandname` if you don\'t know how to use the command.')
@@ -1308,7 +1308,7 @@ class Music(commands.Cog):
         ctx.voice_state = self.get_voice_state(ctx)
 
     async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        await ctx.send('Oops! {}'.format(str(error)))
+        await ctx.send('Whoops! {}'.format(str(error)))
 
     @commands.command(
         name='join', 
@@ -1371,7 +1371,7 @@ class Music(commands.Cog):
         else:
             embed = (
                 discord.Embed(
-                    title='Whoops!',
+                    title='WhWhoops!',
                     description='This command is locked for performance reasons. If you wanna adjust the volume, make sure to [vote for me](https://top.gg/bot/867998923250352189/vote/) in order to unlock the command.',
                     color=accent_color
                 ).set_footer(
@@ -1519,7 +1519,7 @@ class Music(commands.Cog):
             try:
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
             except YTDLError as e:
-                await ctx.send('Oops! An error occurred while processing this request: {}'.format(str(e)))
+                await ctx.send('Whoops! An error occurred while processing this request: {}'.format(str(e)))
             else:
                 song = Song(source)
 
