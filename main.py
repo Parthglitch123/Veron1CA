@@ -161,7 +161,8 @@ async def webcheck(message):
                 if len(msg_web_records) <= 5:
                     msg_web_records.append(message)
                 else:
-                    embed = (discord.Embed(
+                    embed = (
+                        discord.Embed(
                             title='Web Trap Retracted', 
                             description='The web trap that you had enabled has been retracted successfully after it\'s operation. Below is the list of five messages that the web captured.',
                             color=accent_color
@@ -215,7 +216,8 @@ async def on_message(message):
 @bot.group(invoke_without_command=True)
 async def help(ctx, cmd=None):
     if not cmd:
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title=f'It\'s {bot.user.name} onboard!', 
                 color=accent_color
             ).set_footer(
@@ -237,7 +239,8 @@ async def help(ctx, cmd=None):
         await ctx.send(embed=embed)
 
     elif cmd.lower() == 'all':
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title='Here\'s an entire list of commands!',
                 description=f'My default command prefix is `{prefix}` and you can type `{prefix}help commandname` in the chat to get information on a particular command.', 
                 color=accent_color
@@ -266,7 +269,8 @@ async def help(ctx, cmd=None):
                         allow_embed = False
 
                 if allow_embed:
-                    embed = (discord.Embed(
+                    embed = (
+                        discord.Embed(
                             title=f'Command Docs -> {command.name}', 
                             color=accent_color
                         ).set_footer(
@@ -313,7 +317,8 @@ class Chill(commands.Cog):
         if not member:
             member = ctx.message.author
 
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title='Here\'s what I found!', 
                 color=accent_color
             ).set_image(
@@ -333,7 +338,8 @@ class Chill(commands.Cog):
         if not member:
             member = ctx.author
 
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title='Here\'s what I found!', 
                 color=accent_color
             ).set_image(
@@ -353,7 +359,8 @@ class Chill(commands.Cog):
         ping = round(self.bot.latency * 1000)
         uptime = str(datetime.timedelta(seconds=int(
             round(time.time() - last_restarted_obj))))
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title='System Status', 
                 color=accent_color
             ).add_field(
@@ -383,7 +390,8 @@ class Chill(commands.Cog):
         ping = round(self.bot.latency * 1000)
         uptime = str(datetime.timedelta(seconds=int(
             round(time.time() - last_restarted_obj))))
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title='System Status', 
                 color=accent_color
             ).add_field(
@@ -512,7 +520,8 @@ class Moderation(commands.Cog):
         if not user:
             user = ctx.author
 
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title=f'{user.name}\'s Bio', 
                 color=accent_color
             )
@@ -553,7 +562,8 @@ class Moderation(commands.Cog):
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def guildinfo(self, ctx):
         guild = ctx.guild
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title=guild.name,
                 description=f'Showing all necessary information related to this guild. Scroll to find out more about {guild.name}!', 
                 color=accent_color
@@ -590,7 +600,8 @@ class Moderation(commands.Cog):
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def roleinfo(self, ctx, role: discord.Role):
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title=f'Role Information: {str(role)}', 
                 color=accent_color
             )
@@ -662,7 +673,8 @@ class Moderation(commands.Cog):
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def send_dm(self, ctx, user: discord.User, *, message):
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title=f'{ctx.author.name} has something up for you!', 
                 color=accent_color
             )
@@ -688,7 +700,8 @@ class Moderation(commands.Cog):
             await ctx.send('Cannot send audit log entries more than 100 at a time!')
 
         else:
-            embed = (discord.Embed(
+            embed = (
+                discord.Embed(
                     title='Audit Log', 
                     description=f'Showing the latest {audit_limit} entries that were made in the audit log of {ctx.guild.name}.', 
                     color=accent_color
@@ -786,7 +799,8 @@ class Moderation(commands.Cog):
     async def jailed(self, ctx):
         if jail_toggle:
             jail_has_member = False
-            embed = (discord.Embed(
+            embed = (
+                discord.Embed(
                     title='Now viewing the prison!', 
                     color=accent_color
                 ).set_footer(
@@ -882,7 +896,8 @@ class Moderation(commands.Cog):
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def bans(self, ctx):
         bans = await ctx.guild.bans()
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title='Now viewing banned members!', 
                 color=accent_color
             ).set_footer(
@@ -918,7 +933,8 @@ class Moderation(commands.Cog):
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def invites(self, ctx):
         invites = await ctx.guild.invites()
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title='Now viewing invite codes!', 
                 color=accent_color
             ).set_footer(
@@ -951,7 +967,8 @@ class Moderation(commands.Cog):
             reason = f'Inviter: {ctx.author.name}'
 
         invite = await ctx.channel.create_invite(max_age=max_age, max_uses=max_uses, reason=reason)
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 color=accent_color
             ).add_field(
                 name='Link', 
@@ -1209,7 +1226,8 @@ class Song:
         self.requester = source.requester
 
     def create_embed(self):
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 title='Now vibin\' to:',
                 description='```css\n{0.source.title}\n```'.format(self),
                 color=accent_color
@@ -1505,7 +1523,8 @@ class Music(commands.Cog):
             queue += '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(
                 i + 1, song)
 
-        embed = (discord.Embed(
+        embed = (
+            discord.Embed(
                 description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue)
             ).set_footer(
                 text='Viewing page {}/{}'.format(page, pages)
@@ -1591,7 +1610,8 @@ class Developer(commands.Cog):
     )
     async def devtools(self, ctx):
         if developer_check(ctx.author.id):
-            embed = (discord.Embed(
+            embed = (
+                discord.Embed(
                     title='Developer Tools', 
                     description=f'Make sure to use these with consciousness. Type `{prefix}help toolname` to get help on a particular command/tool.', 
                     color=accent_color
@@ -1622,7 +1642,8 @@ class Developer(commands.Cog):
                 return not toggle
 
             if not toggle_obj:
-                embed = (discord.Embed(
+                embed = (
+                    discord.Embed(
                         title='Toggle-able Features', 
                         description=f'You can see the boolean values that are assigned to each of the fields. This represents that either the feature is turned ON (True) or OFF (False). Type `{prefix}toggle togglename` to modify values of specific options.', 
                         color=accent_color
@@ -1660,7 +1681,8 @@ class Developer(commands.Cog):
         if developer_check(ctx.author.id):
             try:
                 _ = git.Repo(os.getcwd()).git_dir
-                embed = (discord.Embed(
+                embed = (
+                    discord.Embed(
                         title=f'Fetching latest code for me...', 
                         description='I will automatically restart when the possible updates are done setting up! Please be patient.',
                         color=accent_color
@@ -1682,7 +1704,8 @@ class Developer(commands.Cog):
     )
     async def devpanel(self, ctx):
         if developer_check(ctx.author.id):
-            embed = (discord.Embed(
+            embed = (
+                discord.Embed(
                     title='Developer Panel', 
                     color=accent_color
                 ).add_field(
@@ -1705,7 +1728,8 @@ class Developer(commands.Cog):
     async def restart(self, ctx):
         if developer_check(ctx.author.id):
             print('Log: Restarting!')
-            embed = (discord.Embed(
+            embed = (
+                discord.Embed(
                     title='Restarting! Please allow me upto 5 seconds.', 
                     color=accent_color
                 )
