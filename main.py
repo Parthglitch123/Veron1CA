@@ -1773,6 +1773,7 @@ bot.add_cog(Chill(bot))
 bot.add_cog(Moderation(bot))
 bot.add_cog(Music(bot))
 bot.add_cog(Developer(bot))
+bot.add_cog(Slashes(bot))
 
 
 # Run the bot.
