@@ -330,27 +330,6 @@ class Chill(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @cog_ext.cog_slash(
-        name='avatar',
-        description='Shows a member\'s Discord avatar.'
-    )
-    async def _avatar(self, ctx: SlashContext, member: discord.Member = None):
-        if not member:
-            member = ctx.author
-
-        embed = (
-            discord.Embed(
-                title='Here\'s what I found!', 
-                color=accent_color
-            ).set_image(
-                url=member.avatar_url
-            ).set_footer(
-                text=generate_random_footer(),
-                icon_url=ctx.author.avatar_url
-            )
-        )
-        await ctx.send(embed=embed)
-
     @commands.command(
         name='ping', 
         help='Shows my current response time.'
@@ -382,65 +361,11 @@ class Chill(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @cog_ext.cog_slash(
-        name='ping', 
-        description='Shows my current response time.'
-    )
-    async def _ping(self, ctx: SlashContext):
-        ping = round(self.bot.latency * 1000)
-        uptime = str(datetime.timedelta(seconds=int(
-            round(time.time() - last_restarted_obj))))
-        embed = (
-            discord.Embed(
-                title='System Status', 
-                color=accent_color
-            ).add_field(
-                name='Latency', 
-                value=f'{ping}ms ({calc_ping(ping)})', 
-                inline=False
-            ).add_field(
-                name='Startup Time', 
-                value=last_restarted_str, 
-                inline=False
-            ).add_field(
-                name='Uptime', 
-                value=uptime, 
-                inline=False
-            ).set_footer(
-                text=generate_random_footer(),
-                icon_url=ctx.author.avatar_url
-            )
-        )
-        await ctx.send(embed=embed)
-
     @commands.command(
         name='vote', 
         help='Helps you vote for me on specific sites!'
     )
     async def vote(self, ctx):
-        if not await self.bot.topggpy.get_user_vote(ctx.author.id):
-            embed = (
-                discord.Embed(
-                    title=':military_medal: Voting Section', 
-                    description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourage him to launch more updates.',
-                    color=accent_color
-                ).add_field(
-                    name='Voting Links', 
-                    value='Link ~1: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
-                ).set_footer(
-                    text=f'Voting actually helps a lot, if you don\'t believe me either way.',
-                    icon_url=ctx.author.avatar_url
-                )
-            )
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send('You have already voted for me today, yay!')
-
-    @cog_ext.cog_slash(
-        name='vote', 
-        description='Helps you vote for me on specific sites!'
-    )
-    async def _vote(self, ctx):
         if not await self.bot.topggpy.get_user_vote(ctx.author.id):
             embed = (
                 discord.Embed(
@@ -1433,14 +1358,28 @@ class Music(commands.Cog):
         help='Sets the volume of the player.'
     )
     async def _volume(self, ctx: commands.Context, *, volume: int):
-        if not ctx.voice_state.is_playing:
-            return await ctx.send('There\'s nothing being played at the moment.')
+        if not await self.bot.topggpy.get_user_vote(ctx.author.id):
+            if not ctx.voice_state.is_playing:
+                return await ctx.send('There\'s nothing being played at the moment.')
 
-        if 0 >= volume >= 100:
-            return await ctx.send('Volume must be between 0 and 100 to execute the command.')
+            if 0 >= volume >= 100:
+                return await ctx.send('Volume must be between 0 and 100 to execute the command.')
 
-        ctx.voice_state.current.source.volume = volume / 100
-        await ctx.send('Volume of the player is now set to **{}%**'.format(volume))
+            ctx.voice_state.current.source.volume = volume / 100
+            await ctx.send('Volume of the player is now set to **{}%**'.format(volume))
+
+        else:
+            embed = (
+                discord.Embed(
+                    title='Whoops!',
+                    description='This command is locked for performance reasons. If you wanna adjust the volume, make sure to [vote for me](https://top.gg/bot/867998923250352189/vote/) in order to unlock the command.',
+                    color=accent_color
+                ).set_footer(
+                    text='It\'s free, it only takes a minute to do and it also supports my creator a lot!',
+                    icon_url=ctx.author.avatar_url
+                )
+            )
+            await ctx.send(embed=embed)
 
     @commands.command(
         name='now', 
@@ -1597,6 +1536,87 @@ class Music(commands.Cog):
         if ctx.voice_client:
             if ctx.voice_client.channel != ctx.author.voice.channel:
                 raise commands.CommandError('I\'m already in a voice channel.')
+
+
+# Slash commands.
+class Slashes(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @cog_ext.cog_slash(
+        name='avatar',
+        description='Shows a member\'s Discord avatar.'
+    )
+    async def _avatar(self, ctx: SlashContext, member: discord.Member = None):
+        if not member:
+            member = ctx.author
+
+        embed = (
+            discord.Embed(
+                title='Here\'s what I found!', 
+                color=accent_color
+            ).set_image(
+                url=member.avatar_url
+            ).set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar_url
+            )
+        )
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(
+        name='ping', 
+        description='Shows my current response time.'
+    )
+    async def _ping(self, ctx: SlashContext):
+        ping = round(self.bot.latency * 1000)
+        uptime = str(datetime.timedelta(seconds=int(
+            round(time.time() - last_restarted_obj))))
+        embed = (
+            discord.Embed(
+                title='System Status', 
+                color=accent_color
+            ).add_field(
+                name='Latency', 
+                value=f'{ping}ms ({calc_ping(ping)})', 
+                inline=False
+            ).add_field(
+                name='Startup Time', 
+                value=last_restarted_str, 
+                inline=False
+            ).add_field(
+                name='Uptime', 
+                value=uptime, 
+                inline=False
+            ).set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar_url
+            )
+        )
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(
+        name='vote', 
+        description='Helps you vote for me on specific sites!'
+    )
+    async def _vote(self, ctx):
+        if not await self.bot.topggpy.get_user_vote(ctx.author.id):
+            embed = (
+                discord.Embed(
+                    title=':military_medal: Voting Section', 
+                    description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourage him to launch more updates.',
+                    color=accent_color
+                ).add_field(
+                    name='Voting Links', 
+                    value='Link ~1: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
+                ).set_footer(
+                    text=f'Voting actually helps a lot, if you don\'t believe me either way.',
+                    icon_url=ctx.author.avatar_url
+                )
+            )
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send('You have already voted for me today, yay!')
 
 
 # Developer commands/tools.
