@@ -438,7 +438,7 @@ class Chill(commands.Cog):
 
     @cog_ext.cog_slash(
         name='vote', 
-        help='Helps you vote for me on specific sites!'
+        description='Helps you vote for me on specific sites!'
     )
     async def _vote(self, ctx):
         if not await self.bot.topggpy.get_user_vote(ctx.author.id):
