@@ -214,7 +214,7 @@ async def on_message(message):
 
 # Help command.
 @bot.group(invoke_without_command=True)
-async def help(ctx, cmd=None):
+async def help(ctx: commands.Context, cmd=None):
     if not cmd:
         embed = (
             discord.Embed(
@@ -313,7 +313,7 @@ class Chill(commands.Cog):
         name='avatar', 
         help='Shows a member\'s Discord avatar.'
     )
-    async def avatar(self, ctx, member: discord.Member = None):
+    async def avatar(self, ctx: commands.Context, member: discord.Member = None):
         if not member:
             member = ctx.message.author
 
@@ -334,7 +334,7 @@ class Chill(commands.Cog):
         name='ping', 
         help='Shows my current response time.'
     )
-    async def ping(self, ctx):
+    async def ping(self, ctx: commands.Context):
         ping = round(self.bot.latency * 1000)
         uptime = str(datetime.timedelta(seconds=int(
             round(time.time() - last_restarted_obj))))
@@ -365,7 +365,7 @@ class Chill(commands.Cog):
         name='vote', 
         help='Helps you vote for me on specific sites!'
     )
-    async def vote(self, ctx):
+    async def vote(self, ctx: commands.Context):
         if not await self.bot.topggpy.get_user_vote(ctx.author.id):
             embed = (
                 discord.Embed(
@@ -391,7 +391,7 @@ class Moderation(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
+    async def on_command_error(self, ctx: commands.Context, error):
         if hasattr(ctx.command, 'on_error'):
             return
 
@@ -441,7 +441,7 @@ class Moderation(commands.Cog):
         help='Shows all important information on a user.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def userinfo(self, ctx, user: discord.Member = None):
+    async def userinfo(self, ctx: commands.Context, user: discord.Member = None):
         if not user:
             user = ctx.author
 
@@ -485,7 +485,7 @@ class Moderation(commands.Cog):
         help='Shows all important information on the current guild / server.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def guildinfo(self, ctx):
+    async def guildinfo(self, ctx: commands.Context):
         guild = ctx.guild
         embed = (
             discord.Embed(
@@ -524,7 +524,7 @@ class Moderation(commands.Cog):
         help='Shows all important information related to a specific role.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def roleinfo(self, ctx, role: discord.Role):
+    async def roleinfo(self, ctx: commands.Context, role: discord.Role):
         embed = (
             discord.Embed(
                 title=f'Role Information: {str(role)}', 
@@ -559,7 +559,7 @@ class Moderation(commands.Cog):
         help='Clears messages within the given index.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def purge(self, ctx, amount=1):
+    async def purge(self, ctx: commands.Context, amount=1):
         if amount > 200:
             await ctx.send('Purges are limited to 200 messages per use!')
         else:
@@ -571,7 +571,7 @@ class Moderation(commands.Cog):
         help='Clears messages that are sent by a specific user within the given index.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def ripplepurge(self, ctx, member: discord.Member, amount=2):
+    async def ripplepurge(self, ctx: commands.Context, member: discord.Member, amount=2):
         if amount > 100:
             await ctx.send('Ripple purges are limited to 100 messages per use!')
         else:
@@ -585,7 +585,7 @@ class Moderation(commands.Cog):
         help='Helps to greet channel members.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def sayhi(self, ctx, member: discord.Member):
+    async def sayhi(self, ctx: commands.Context, member: discord.Member):
         greeting_messages = [f"Hi {member.mention} Glad you're here.", f"Hello there! {member.mention}", f"Hey {member.mention}! Nice to meet you.", f"Hey, {member.mention} What's up?", f"Looks like someone just spoke my name. Anyway, how are you doing {member.mention}?",
                              f"Happy to see you here, {member.mention}", f"Welcome! {member.mention} Have fun chatting!", f"Nice to meet you, {member.mention}! The name's {self.bot.user.name} by the way."]
         await ctx.message.delete()
@@ -597,7 +597,7 @@ class Moderation(commands.Cog):
         help='Helps to send DMs to specific users.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def send_dm(self, ctx, user: discord.User, *, message):
+    async def send_dm(self, ctx: commands.Context, user: discord.User, *, message):
         embed = (
             discord.Embed(
                 title=f'{ctx.author.name} has something up for you!', 
@@ -620,7 +620,7 @@ class Moderation(commands.Cog):
         help='Views the latest entries of the audit log in detail (limited to 100 entries).'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def audit(self, ctx, audit_limit: int):
+    async def audit(self, ctx: commands.Context, audit_limit: int):
         if int(audit_limit) > 100:
             await ctx.send('Cannot send audit log entries more than 100 at a time!')
 
@@ -648,7 +648,7 @@ class Moderation(commands.Cog):
         help='Tries to restore previously filtered message if it was deleted by mistake.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def restore_msg(self, ctx):
+    async def restore_msg(self, ctx: commands.Context):
         filtered_messages_guild = []
         for filtered_message in filtered_messages:
             if filtered_message[1] == ctx.guild:
@@ -673,7 +673,7 @@ class Moderation(commands.Cog):
         help='Enables a web trap to capture six messages sent by a specific user.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def msgweb(self, ctx, member: discord.Member):
+    async def msgweb(self, ctx: commands.Context, member: discord.Member):
         global msg_web_target
 
         if not msg_web_target:
@@ -690,7 +690,7 @@ class Moderation(commands.Cog):
         help='Temporarily prevents a member from chatting in server.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def jail(self, ctx, member: discord.Member, *, reason='No reason provided.'):
+    async def jail(self, ctx: commands.Context, member: discord.Member, *, reason='No reason provided.'):
         if jail_toggle:
             do_jail = False
 
@@ -721,7 +721,7 @@ class Moderation(commands.Cog):
         help='Views jailed members.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def jailed(self, ctx):
+    async def jailed(self, ctx: commands.Context):
         if jail_toggle:
             jail_has_member = False
             embed = (
@@ -755,7 +755,7 @@ class Moderation(commands.Cog):
         help='Removes a member from jail.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def unjail(self, ctx, member: discord.Member):
+    async def unjail(self, ctx: commands.Context, member: discord.Member):
         if jail_toggle:
             for jail_member in jail_members:
                 if jail_member[1] == ctx.guild and jail_member[0] == member:
@@ -773,7 +773,7 @@ class Moderation(commands.Cog):
         help='Blocks a user from chatting in a specific channel.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def block(self, ctx, member: discord.Member, *, reason='No reason provided.'):
+    async def block(self, ctx: commands.Context, member: discord.Member, *, reason='No reason provided.'):
         if member != self.bot.user:
             if member != ctx.author:
                 await ctx.channel.set_permissions(member, send_messages=False)
@@ -790,7 +790,7 @@ class Moderation(commands.Cog):
         help='Unblocks a user.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def unblock(self, ctx, member: discord.Member):
+    async def unblock(self, ctx: commands.Context, member: discord.Member):
         await ctx.channel.set_permissions(member, overwrite=None)
         await ctx.message.add_reaction('✅')
 
@@ -799,7 +799,7 @@ class Moderation(commands.Cog):
         help='Kicks a member from server.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def kick(self, ctx, member: discord.User, *, reason='No reason provided.'):
+    async def kick(self, ctx: commands.Context, member: discord.User, *, reason='No reason provided.'):
         await ctx.guild.kick(member, reason=reason)
         await ctx.send(f'Member **{member.name}** has been kicked! Reason: {reason}')
         await ctx.message.delete()
@@ -809,7 +809,7 @@ class Moderation(commands.Cog):
         help='Bans a member from server.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def ban(self, ctx, member: discord.User, *, reason='No reason provided.'):
+    async def ban(self, ctx: commands.Context, member: discord.User, *, reason='No reason provided.'):
         await ctx.guild.ban(member, reason=reason)
         await ctx.send(f'Member **{member.name}** has been banned! Reason: {reason}')
         await ctx.message.delete()
@@ -819,7 +819,7 @@ class Moderation(commands.Cog):
         help='Shows a list of banned users in the server.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def bans(self, ctx):
+    async def bans(self, ctx: commands.Context):
         bans = await ctx.guild.bans()
         embed = (
             discord.Embed(
@@ -847,7 +847,7 @@ class Moderation(commands.Cog):
         help='Unbans a member in server.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def unban(self, ctx, member: discord.User):
+    async def unban(self, ctx: commands.Context, member: discord.User):
         await ctx.guild.unban(member)
         await ctx.send(f'Member **{member.name}** has been unbanned!')
 
@@ -856,7 +856,7 @@ class Moderation(commands.Cog):
         help='Shows all active server invite codes.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def invites(self, ctx):
+    async def invites(self, ctx: commands.Context):
         invites = await ctx.guild.invites()
         embed = (
             discord.Embed(
@@ -887,7 +887,7 @@ class Moderation(commands.Cog):
         help='Creates an invite code or link.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def create_invite(self, ctx, max_age=60, max_uses=1, *, reason='No reason provided.'):
+    async def create_invite(self, ctx: commands.Context, max_age=60, max_uses=1, *, reason='No reason provided.'):
         if not reason:
             reason = f'Inviter: {ctx.author.name}'
 
@@ -930,7 +930,7 @@ class Moderation(commands.Cog):
         help='Removes a previously generated invite code or link.'
     )
     @commands.has_role(lock_roles[1])
-    async def remove_invite(self, ctx, invite_id):
+    async def remove_invite(self, ctx: commands.Context, invite_id):
         invites = await ctx.guild.invites()
         for invite in invites:
             if invite.id == invite_id:
@@ -942,7 +942,7 @@ class Moderation(commands.Cog):
         help='Creates a role.'
     )
     @commands.has_role(lock_roles[1])
-    async def create_new_role(self, ctx, *, role):
+    async def create_new_role(self, ctx: commands.Context, *, role):
         await ctx.guild.create_role(name=role)
         await ctx.message.add_reaction('✅')
 
@@ -951,7 +951,7 @@ class Moderation(commands.Cog):
         help='Removes an existing role.'
     )
     @commands.has_role(lock_roles[1])
-    async def remove_role(self, ctx, *, role: discord.Role):
+    async def remove_role(self, ctx: commands.Context, *, role: discord.Role):
         if role is None:
             await ctx.send('That\'s not a role, I guess?')
 
@@ -964,7 +964,7 @@ class Moderation(commands.Cog):
         help='Assigns an existing role to a server member.', pass_context=True
     )
     @commands.has_role(lock_roles[1])
-    async def assign_role(self, ctx, member: discord.Member, role: discord.Role):
+    async def assign_role(self, ctx: commands.Context, member: discord.Member, role: discord.Role):
         await member.add_roles(role)
         await ctx.send(f'Role {role.mention} has been given to {member.mention}, peace! :partying_face:')
 
@@ -973,7 +973,7 @@ class Moderation(commands.Cog):
         help='Creates a server channel.'
     )
     @commands.has_role(lock_roles[1])
-    async def create_channel(self, ctx, *, channel_name):
+    async def create_channel(self, ctx: commands.Context, *, channel_name):
         guild = ctx.guild
         existing_channel = discord.utils.get(guild.channels, name=channel_name)
         if not existing_channel:
@@ -985,7 +985,7 @@ class Moderation(commands.Cog):
         help='Removes an existing server channel.'
     )
     @commands.has_role(lock_roles[1])
-    async def delete_channel(self, ctx, channel_name: discord.TextChannel):
+    async def delete_channel(self, ctx: commands.Context, channel_name: discord.TextChannel):
         await channel_name.delete()
         await ctx.message.add_reaction('✅')
 
@@ -994,7 +994,7 @@ class Moderation(commands.Cog):
         help='Calms down chat.'
     )
     @commands.has_role(lock_roles[1])
-    async def freeze(self, ctx):
+    async def freeze_chat(self, ctx: commands.Context):
         if freeze_chats_toggle:
             frozen.append([ctx.author, ctx.guild, ctx.message.channel])
             await ctx.message.delete()
@@ -1007,7 +1007,7 @@ class Moderation(commands.Cog):
         help='Removes frozen state from chat.'
     )
     @commands.has_role(lock_roles[1])
-    async def thaw(self, ctx):
+    async def thaw_chat(self, ctx: commands.Context):
         if freeze_chats_toggle:
             for frozen_guild in frozen:
                 if frozen_guild[1] == ctx.guild:
@@ -1599,7 +1599,7 @@ class Slashes(commands.Cog):
         name='vote', 
         description='Helps you vote for me on specific sites!'
     )
-    async def _vote(self, ctx):
+    async def _vote(self, ctx: SlashContext):
         if not await self.bot.topggpy.get_user_vote(ctx.author.id):
             embed = (
                 discord.Embed(
@@ -1628,7 +1628,7 @@ class Developer(commands.Cog):
         name='devtools', 
         help='Shows all the developer tools that can be used.'
     )
-    async def devtools(self, ctx):
+    async def devtools(self, ctx: commands.Context):
         if developer_check(ctx.author.id):
             embed = (
                 discord.Embed(
@@ -1649,7 +1649,7 @@ class Developer(commands.Cog):
         name='toggle', 
         help='Toggles specific features.'
     )
-    async def toggle(self, ctx, toggle_obj=None):
+    async def toggle(self, ctx: commands.Context, toggle_obj=None):
         if developer_check(ctx.author.id):
             global jail_toggle
             global anti_swear_toggle
@@ -1694,10 +1694,10 @@ class Developer(commands.Cog):
                     await ctx.send(f'Invalid option! Try typing `{prefix}toggle` for more information.')
 
     @commands.command(
-        name='update', 
-        help='Fetches the latest code from the Git repository of the project, if available.'
+        name='restart', 
+        help='Fetches the latest code from the Git repository of the project and restarts.'
     )
-    async def update(self, ctx):
+    async def restart(self, ctx: commands.Context):
         if developer_check(ctx.author.id):
             try:
                 _ = git.Repo(os.getcwd()).git_dir
@@ -1713,16 +1713,18 @@ class Developer(commands.Cog):
                 )
                 await ctx.send(embed=embed)
                 os.system('git pull origin master')
-                os.execv(sys.executable, ['python'] + sys.argv)
 
             except git.exc.InvalidGitRepositoryError:
-                await ctx.send('I am not connected with a Git repository, so I can\'t retrieve the latest code.')
+                await ctx.send('I am not connected with a Git repository, so I can\'t retrieve the latest code. Restarting anyway...')
+
+            finally:
+                os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.command(
         name='panel', 
         help='Shows overall system status.'
     )
-    async def devpanel(self, ctx):
+    async def devpanel(self, ctx: commands.Context):
         if developer_check(ctx.author.id):
             embed = (
                 discord.Embed(
@@ -1742,26 +1744,10 @@ class Developer(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command(
-        name='restart', 
-        help='Restarts the system.'
-    )
-    async def restart(self, ctx):
-        if developer_check(ctx.author.id):
-            print('Log: Restarting!')
-            embed = (
-                discord.Embed(
-                    title='Restarting! Please allow me upto 5 seconds.', 
-                    color=accent_color
-                )
-            )
-            await ctx.send(embed=embed)
-            os.execv(sys.executable, ['python'] + sys.argv)
-
-    @commands.command(
         name='logout', 
         help='Logs out from the system.'
     )
-    async def logout(self, ctx):
+    async def logout(self, ctx: commands.Context):
         if developer_check(ctx.author.id):
             print('Log: Signing out of the system.')
             await ctx.message.add_reaction('✅')
