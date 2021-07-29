@@ -18,6 +18,7 @@ import traceback
 
 # Import third-party libraries.
 import git
+import topgg
 import discord
 import youtube_dl
 from decouple import config
@@ -28,9 +29,10 @@ from discord_slash import cog_ext, SlashCommand, SlashContext
 
 
 # Environment variables.
+token = config('TOKEN', cast=str)
+dbl_token = config('DBL_TOKEN', cast=str)
 owner = config('OWNER_ID', cast=int)
 prefix = config('COMMAND_PREFIX', cast=str)
-token = config('TOKEN', cast=str)
 
 # System variables.
 accent_color = 0xb6c1c6
@@ -40,6 +42,7 @@ last_restarted_obj = time.time()
 
 # Setting up bot and slash objects.
 bot = commands.Bot(commands.when_mentioned_or(prefix), help_command=None)
+bot.topggpy = topgg.DBLClient(bot, dbl_token)
 slash = SlashCommand(bot, sync_commands=True)
 
 # Toggles.
@@ -344,7 +347,7 @@ class Chill(commands.Cog):
 
     @commands.command(
         name='ping', 
-        help='Shows the current response time of the bot.'
+        help='Shows my current response time.'
     )
     async def ping(self, ctx):
         ping = round(self.bot.latency * 1000)
@@ -374,7 +377,7 @@ class Chill(commands.Cog):
 
     @cog_ext.cog_slash(
         name='ping', 
-        description='Shows the current response time of the bot.'
+        description='Shows my current response time.'
     )
     async def _ping(self, ctx: SlashContext):
         ping = round(self.bot.latency * 1000)
@@ -401,6 +404,52 @@ class Chill(commands.Cog):
             )
         )
         await ctx.send(embed=embed)
+
+    @commands.command(
+        name='vote', 
+        help='Helps you vote for me on specific sites!'
+    )
+    async def vote(self, ctx):
+        if not await self.bot.topggpy.get_user_vote(ctx.author.id):
+            embed = (
+                discord.Embed(
+                    title=':military_medal: Voting Section', 
+                    description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourage him to launch more updates.',
+                    color=accent_color
+                ).add_field(
+                    name='Voting Links', 
+                    value='Link ~1: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
+                ).set_footer(
+                    text=f'Voting actually helps a lot, if you don\'t believe me either way.',
+                    icon_url=ctx.author.avatar_url
+                )
+            )
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send('You have already voted for me today, yay!')
+
+    @cog_ext.cog_slash(
+        name='vote', 
+        help='Helps you vote for me on specific sites!'
+    )
+    async def _vote(self, ctx):
+        if not await self.bot.topggpy.get_user_vote(ctx.author.id):
+            embed = (
+                discord.Embed(
+                    title=':military_medal: Voting Section', 
+                    description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourage him to launch more updates.',
+                    color=accent_color
+                ).add_field(
+                    name='Voting Links', 
+                    value='Link ~1: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
+                ).set_footer(
+                    text=f'Voting actually helps a lot, if you don\'t believe me either way.',
+                    icon_url=ctx.author.avatar_url
+                )
+            )
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send('You have already voted for me today, yay!')
 
 
 # Moderation category commands.
