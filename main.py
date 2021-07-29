@@ -1371,7 +1371,7 @@ class Music(commands.Cog):
         else:
             embed = (
                 discord.Embed(
-                    title='WhWhoops!',
+                    title='Whoops!',
                     description='This command is locked for performance reasons. If you wanna adjust the volume, make sure to [vote for me](https://top.gg/bot/867998923250352189/vote/) in order to unlock the command.',
                     color=accent_color
                 ).set_footer(
