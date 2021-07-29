@@ -1358,7 +1358,7 @@ class Music(commands.Cog):
         help='Sets the volume of the player.'
     )
     async def _volume(self, ctx: commands.Context, *, volume: int):
-        if not await self.bot.topggpy.get_user_vote(ctx.author.id):
+        if await self.bot.topggpy.get_user_vote(ctx.author.id):
             if not ctx.voice_state.is_playing:
                 return await ctx.send('There\'s nothing being played at the moment.')
 
