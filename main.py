@@ -25,7 +25,7 @@ from decouple import config
 from discord.ext import commands
 from async_timeout import timeout
 from keep_alive import keep_alive
-from discord_slash import cog_ext, SlashCommand, SlashContext, create_option
+from discord_slash import cog_ext, SlashCommand, SlashContext
 
 
 # Environment variables.
@@ -312,16 +312,8 @@ class Chill(commands.Cog):
     @commands.command(
         name='avatar', 
         help='Shows a member\'s Discord avatar.',
-        options=[
-            create_option(
-                name='member',
-                description='Select the member to fetch the avatar from.',
-                type='6',
-                required=False
-            )
-        ]
     )
-    async def avatar(self, ctx: commands.Context, member):
+    async def avatar(self, ctx: commands.Context, member: discord.Member = None):
         if not member:
             member = ctx.message.author
 
@@ -340,7 +332,7 @@ class Chill(commands.Cog):
 
     @cog_ext.cog_slash(
         name='avatar',
-        description='Shows a member\'s Discord avatar.'
+        description='Shows a member\'s Discord avatar.',
     )
     async def _avatar(self, ctx: SlashContext, member: discord.Member = None):
         if not member:
@@ -1761,7 +1753,6 @@ bot.add_cog(Chill(bot))
 bot.add_cog(Moderation(bot))
 bot.add_cog(Music(bot))
 bot.add_cog(Developer(bot))
-bot.add_cog(Slashes(bot))
 
 
 # Run the bot.
