@@ -16,6 +16,7 @@ import functools
 import itertools
 import traceback
 
+
 # Import third-party libraries.
 import git
 import topgg
@@ -34,16 +35,19 @@ dbl_token = config('DBL_TOKEN', cast=str)
 owner = config('OWNER_ID', cast=int)
 prefix = config('COMMAND_PREFIX', cast=str)
 
+
 # System variables.
 accent_color = 0xb6c1c6
 lock_roles = ['BotMod', 'BotAdmin']
 last_restarted_str = str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 last_restarted_obj = time.time()
 
+
 # Setting up bot and slash objects.
 bot = commands.Bot(commands.when_mentioned_or(prefix), help_command=None)
 bot.topggpy = topgg.DBLClient(bot, dbl_token)
 slash = SlashCommand(bot, sync_commands=True)
+
 
 # Toggles.
 global jail_toggle
@@ -52,6 +56,7 @@ global anti_swear_toggle
 anti_swear_toggle = True
 global freeze_chats_toggle
 freeze_chats_toggle = True
+
 
 # Global variables.
 global jail_members
@@ -246,6 +251,7 @@ async def vote_reminder():
             )
         )
         await member.send(embed=embed)
+
 
 # Help command.
 @bot.group(invoke_without_command=True)
