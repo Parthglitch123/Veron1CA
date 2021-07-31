@@ -22,9 +22,9 @@ import topgg
 import discord
 import youtube_dl
 from decouple import config
-from discord.ext import commands
 from async_timeout import timeout
 from keep_alive import keep_alive
+from discord.ext import commands, tasks
 from discord_slash import cog_ext, SlashCommand, SlashContext
 
 
@@ -105,6 +105,13 @@ def generate_random_footer():
         'Developed with <3 by HitBlast.'
     ]
     return random.choice(footers_list)
+
+
+async def votecheck(user):
+    if not await bot.topggpy.get_user_vote(user.id):
+        return True
+    else:
+        return False
 
 
 async def freezecheck(message):
@@ -211,6 +218,34 @@ async def on_message(message):
                 await bot.process_commands(message)
                 await webcheck(message)
 
+
+# Looping task (vote reminder).
+@tasks.loop(seconds = 3600)
+async def vote_reminder():
+    members = list()
+    guild = random.choice(bot.guilds)
+    while len(members) < 4:
+        member = random.choice(guild.members)
+        if not await votecheck(member):
+            members.append(member)
+        else:
+            pass
+
+    for member in members:
+        embed = (
+            discord.Embed(
+                title=':military_medal: Vote Reminder', 
+                description='Hey! Looks like I\'m in one of your joined servers but you forgot to ',
+                color=accent_color
+            ).add_field(
+                name='Voting Links', 
+                value='Link ~1: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
+            ).set_footer(
+                text=f'Voting actually helps a lot, if you don\'t believe me either way.',
+                icon_url=member.avatar_url
+            )
+        )
+        await member.send(embed=embed)
 
 # Help command.
 @bot.group(invoke_without_command=True)
@@ -418,7 +453,7 @@ class Chill(commands.Cog):
         help='Helps you vote for me on specific sites!'
     )
     async def vote(self, ctx: commands.Context):
-        if not await self.bot.topggpy.get_user_vote(ctx.author.id):
+        if not await votecheck(ctx.author):
             embed = (
                 discord.Embed(
                     title=':military_medal: Voting Section', 
@@ -441,7 +476,7 @@ class Chill(commands.Cog):
         description='Helps you vote for me on specific sites!'
     )
     async def _vote(self, ctx: SlashContext):
-        if not await self.bot.topggpy.get_user_vote(ctx.author.id):
+        if not await votecheck(ctx.author):
             embed = (
                 discord.Embed(
                     title=':military_medal: Voting Section', 
@@ -1757,4 +1792,5 @@ bot.add_cog(Developer(bot))
 
 # Run the bot.
 keep_alive()
+vote_reminder.start()
 bot.run(token)
