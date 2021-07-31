@@ -113,7 +113,7 @@ def generate_random_footer():
 
 
 async def votecheck(user):
-    if not await bot.topggpy.get_user_vote(user.id):
+    if await bot.topggpy.get_user_vote(user.id):
         return True
     else:
         return False
