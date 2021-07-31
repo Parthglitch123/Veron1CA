@@ -235,11 +235,11 @@ async def vote_reminder():
         embed = (
             discord.Embed(
                 title=':military_medal: Vote Reminder', 
-                description='Hey! Looks like I\'m in one of your joined servers but you forgot to ',
+                description='Hey! Looks like I\'m in one of your joined servers but you forgot to vote for me today. It\'s free, it takes a minute to do and it also supports my creator a lot.',
                 color=accent_color
             ).add_field(
                 name='Voting Links', 
-                value='Link ~1: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
+                value='Top.gg: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
             ).set_footer(
                 text=f'Voting actually helps a lot, if you don\'t believe me either way.',
                 icon_url=member.avatar_url
@@ -457,7 +457,7 @@ class Chill(commands.Cog):
             embed = (
                 discord.Embed(
                     title=':military_medal: Voting Section', 
-                    description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourage him to launch more updates.',
+                    description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourages him to launch more updates.',
                     color=accent_color
                 ).add_field(
                     name='Voting Links', 
