@@ -112,14 +112,14 @@ def generate_random_footer():
     return random.choice(footers_list)
 
 
-async def votecheck(user):
+async def vote_check(user):
     if await bot.topggpy.get_user_vote(user.id):
         return True
     else:
         return False
 
 
-async def freezecheck(message):
+async def freeze_check(message):
     if freeze_chats_toggle:
         for frozen_guild in frozen:
             if frozen_guild[1] == message.guild and frozen_guild[2] == message.channel and frozen_guild[0] != message.author:
@@ -127,7 +127,7 @@ async def freezecheck(message):
                 return True
 
 
-async def swearcheck(message):
+async def swear_check(message):
     profanity_inside = int()
     if anti_swear_toggle:
         if not message.author.bot:
@@ -155,7 +155,7 @@ async def swearcheck(message):
                 return True
 
 
-async def jailcheck(message):
+async def jail_check(message):
     if jail_toggle:
         for jail_member in jail_members:
             if jail_member[1] == message.guild and jail_member[0] == message.author:
@@ -163,7 +163,7 @@ async def jailcheck(message):
                 return True
 
 
-async def webcheck(message):
+async def web_trap_check(message):
     global msg_web_target
     global msg_web_records
 
@@ -217,11 +217,11 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if not await freezecheck(message):
-        if not await swearcheck(message):
-            if not await jailcheck(message):
+    if not await freeze_check(message):
+        if not await swear_check(message):
+            if not await jail_check(message):
                 await bot.process_commands(message)
-                await webcheck(message)
+                await web_trap_check(message)
 
 
 # Looping task (vote reminder).
@@ -231,7 +231,7 @@ async def vote_reminder():
     guild = random.choice(bot.guilds)
     while len(members) < 4:
         member = random.choice(guild.members)
-        if not await votecheck(member):
+        if not await vote_check(member):
             members.append(member)
         else:
             pass
@@ -459,7 +459,7 @@ class Chill(commands.Cog):
         help='Helps you vote for me on specific sites!'
     )
     async def vote(self, ctx: commands.Context):
-        if not await votecheck(ctx.author):
+        if not await vote_check(ctx.author):
             embed = (
                 discord.Embed(
                     title=':military_medal: Voting Section', 
@@ -482,7 +482,7 @@ class Chill(commands.Cog):
         description='Helps you vote for me on specific sites!'
     )
     async def _vote(self, ctx: SlashContext):
-        if not await votecheck(ctx.author):
+        if not await vote_check(ctx.author):
             embed = (
                 discord.Embed(
                     title=':military_medal: Voting Section', 
