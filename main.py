@@ -61,12 +61,14 @@ freeze_chats_toggle = True
 # Global variables.
 global jail_members
 jail_members = list()
-global frozen
-frozen = list()
+global frozen_guilds
+frozen_guilds = list()
 global msg_web_target
 msg_web_target = list()
 global msg_web_records
 msg_web_records = list()
+global snipeables
+snipeables = list()
 
 
 # System functions.
@@ -121,7 +123,7 @@ async def vote_check(user):
 
 async def freeze_check(message):
     if freeze_chats_toggle:
-        for frozen_guild in frozen:
+        for frozen_guild in frozen_guilds:
             if frozen_guild[1] == message.guild and frozen_guild[2] == message.channel and frozen_guild[0] != message.author:
                 await message.delete()
                 return True
@@ -214,14 +216,24 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    global last_msg
     if message.author == bot.user:
         return
 
+    last_msg = message
     if not await freeze_check(message):
         if not await swear_check(message):
             if not await jail_check(message):
                 await bot.process_commands(message)
                 await web_trap_check(message)
+                
+
+@bot.event
+async def on_message_delete(message):
+    global snipeables
+    snipeables.append(message)
+    await asyncio.sleep(20)
+    snipeables.remove(message)
 
 
 # Help command.
@@ -773,6 +785,29 @@ class Moderation(commands.Cog):
             await ctx.message.delete()
 
     @commands.command(
+        name='snipe-msg',
+        help='Snipes a recent message from the channel.'
+    )
+    @commands.has_any_role(lock_roles[0], lock_roles[1])
+    async def snipe_msg(self, ctx: commands.Context):
+        if snipeables:
+            for snipeable in snipeables:
+                if snipeable.guild == ctx.guild:
+                    embed = (
+                        discord.Embed(
+                            title=snipeable.content,
+                            description=f'Deleted by {snipeable.author.mention} to keep things secret.'
+                        )
+                    ).set_footer(
+                        text=generate_random_footer(),
+                        icon_url=ctx.author.avatar_url
+                    )
+                    await ctx.send(embed=embed)
+
+        else:
+            await ctx.send('No messages were found to be sniped.')
+
+    @commands.command(
         name='jail', 
         help='Temporarily prevents a member from chatting in server.'
     )
@@ -1083,7 +1118,7 @@ class Moderation(commands.Cog):
     @commands.has_role(lock_roles[1])
     async def freeze_chat(self, ctx: commands.Context):
         if freeze_chats_toggle:
-            frozen.append([ctx.author, ctx.guild, ctx.message.channel])
+            frozen_guilds.append([ctx.author, ctx.guild, ctx.message.channel])
             await ctx.message.delete()
             await ctx.send(f'**Chat was frozen by {ctx.author.mention}!**')
         else:
@@ -1096,9 +1131,9 @@ class Moderation(commands.Cog):
     @commands.has_role(lock_roles[1])
     async def thaw_chat(self, ctx: commands.Context):
         if freeze_chats_toggle:
-            for frozen_guild in frozen:
+            for frozen_guild in frozen_guilds:
                 if frozen_guild[1] == ctx.guild:
-                    frozen.remove(frozen_guild)
+                    frozen_guilds.remove(frozen_guild)
                     await ctx.message.add_reaction('✅')
         else:
             await ctx.send('Chat freezes have been temporarily disabled by the developer.')
@@ -1738,7 +1773,7 @@ class Developer(commands.Cog):
                     color=accent_color
                 ).add_field(
                     name='Chats Frozen', 
-                    value=len(frozen)
+                    value=len(frozen_guilds)
                 ).add_field(
                     name='Jailer Count', 
                     value=len(jail_members)
