@@ -25,7 +25,7 @@ import youtube_dl
 from decouple import config
 from async_timeout import timeout
 from keep_alive import keep_alive
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord_slash import cog_ext, SlashCommand, SlashContext
 
 
@@ -44,9 +44,7 @@ last_restarted_obj = time.time()
 
 
 # Setting up bot and slash objects.
-intents = discord.Intents.default()
-intents.members = True
-bot = commands.Bot(commands.when_mentioned_or(prefix), intents=intents, help_command=None)
+bot = commands.Bot(commands.when_mentioned_or(prefix), help_command=None)
 bot.topggpy = topgg.DBLClient(bot, dbl_token)
 slash = SlashCommand(bot, sync_commands=True)
 
@@ -224,38 +222,6 @@ async def on_message(message):
             if not await jail_check(message):
                 await bot.process_commands(message)
                 await web_trap_check(message)
-
-
-# Looping task (vote reminder).
-@tasks.loop(seconds = 3600)
-async def vote_reminder():
-    members_to_remind = list()
-    members = bot.get_all_members()
-    while len(members_to_remind) < 4:
-        member = random.choice(members_to_remind)
-        if not await vote_check(member):
-            if not member.bot:
-                if member not in members_to_remind:
-                    members.append(member)
-        else:
-            pass
-
-    for member in members:
-        embed = (
-            discord.Embed(
-                title=':military_medal: Vote Reminder', 
-                description='Hey! Looks like I\'m in one of your joined servers but you forgot to vote for me today. It\'s free, it takes a minute to do and it also supports my creator a lot.',
-                color=accent_color
-            ).add_field(
-                name='Voting Links', 
-                value='Top.gg: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
-            ).set_footer(
-                text=f'Voting actually helps a lot, if you don\'t believe me either way.',
-                icon_url=member.avatar_url
-            )
-        )
-        print(f'Log: Sending vote reminder to {member}')
-        await member.send(embed=embed)
 
 
 # Help command.
@@ -1803,5 +1769,4 @@ bot.add_cog(Developer(bot))
 
 # Run the bot.
 keep_alive()
-vote_reminder.start()
 bot.run(token)
