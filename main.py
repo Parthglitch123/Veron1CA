@@ -231,7 +231,7 @@ async def on_message(message):
 async def vote_reminder():
     members_to_remind = list()
     members = bot.get_all_members()
-    while len(members) < 4:
+    while len(members_to_remind) < 4:
         member = random.choice(members_to_remind)
         if not await vote_check(member):
             if not member.bot:
