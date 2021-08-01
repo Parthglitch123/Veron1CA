@@ -232,7 +232,7 @@ async def on_message(message):
 async def on_message_delete(message):
     global snipeables
     snipeables.append(message)
-    await asyncio.sleep(20)
+    await asyncio.sleep(100)
     snipeables.remove(message)
 
 
