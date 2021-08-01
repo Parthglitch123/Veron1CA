@@ -44,7 +44,9 @@ last_restarted_obj = time.time()
 
 
 # Setting up bot and slash objects.
-bot = commands.Bot(commands.when_mentioned_or(prefix), help_command=None)
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(commands.when_mentioned_or(prefix), intents=intents, help_command=None)
 bot.topggpy = topgg.DBLClient(bot, dbl_token)
 slash = SlashCommand(bot, sync_commands=True)
 
@@ -227,12 +229,14 @@ async def on_message(message):
 # Looping task (vote reminder).
 @tasks.loop(seconds = 3600)
 async def vote_reminder():
-    members = list()
-    guild = random.choice(bot.guilds)
+    members_to_remind = list()
+    members = bot.get_all_members()
     while len(members) < 4:
-        member = random.choice(guild.members)
+        member = random.choice(members_to_remind)
         if not await vote_check(member):
-            members.append(member)
+            if not member.bot:
+                if member not in members_to_remind:
+                    members.append(member)
         else:
             pass
 
@@ -250,6 +254,7 @@ async def vote_reminder():
                 icon_url=member.avatar_url
             )
         )
+        print(f'Log: Sending vote reminder to {member}')
         await member.send(embed=embed)
 
 
