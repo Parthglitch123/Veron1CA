@@ -227,7 +227,7 @@ async def on_message(message):
 async def on_message_delete(message):
     global snipeables
     snipeables.append(message)
-    await asyncio.sleep(100)
+    await asyncio.sleep(40)
     snipeables.remove(message)
 
 
@@ -766,6 +766,7 @@ class Moderation(commands.Cog):
                     webhook = await ctx.message.channel.create_webhook(name=snipeable.author.name)
                     await webhook.send(snipeable.content, username=snipeable.author.name, avatar_url=snipeable.author.avatar_url)
                     await webhook.delete()
+                    snipeables.remove(snipeable)
 
         else:
             await ctx.send('No messages were found to be sniped.')
@@ -972,7 +973,7 @@ class Moderation(commands.Cog):
         help='Creates an invite code or link.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def create_invite(self, ctx: commands.Context, max_age=60, max_uses=1, *, reason='No reason provided.'):
+    async def mk_inv(self, ctx: commands.Context, max_age=60, max_uses=1, *, reason='No reason provided.'):
         if not reason:
             reason = f'Inviter: {ctx.author.name}'
 
@@ -1015,7 +1016,7 @@ class Moderation(commands.Cog):
         help='Removes a previously generated invite code or link.'
     )
     @commands.has_role(lock_roles[1])
-    async def remove_invite(self, ctx: commands.Context, invite_id):
+    async def rm_inv(self, ctx: commands.Context, invite_id):
         invites = await ctx.guild.invites()
         for invite in invites:
             if invite.id == invite_id:
@@ -1027,7 +1028,7 @@ class Moderation(commands.Cog):
         help='Creates a role.'
     )
     @commands.has_role(lock_roles[1])
-    async def create_new_role(self, ctx: commands.Context, *, role):
+    async def mk_role(self, ctx: commands.Context, *, role):
         await ctx.guild.create_role(name=role)
         await ctx.message.add_reaction('✅')
 
@@ -1036,7 +1037,7 @@ class Moderation(commands.Cog):
         help='Removes an existing role.'
     )
     @commands.has_role(lock_roles[1])
-    async def remove_role(self, ctx: commands.Context, *, role: discord.Role):
+    async def rm_role(self, ctx: commands.Context, *, role: discord.Role):
         if role is None:
             await ctx.send('That\'s not a role, I guess?')
 
@@ -1058,7 +1059,7 @@ class Moderation(commands.Cog):
         help='Creates a server channel.'
     )
     @commands.has_role(lock_roles[1])
-    async def create_channel(self, ctx: commands.Context, *, channel_name):
+    async def mk_ch(self, ctx: commands.Context, *, channel_name):
         guild = ctx.guild
         existing_channel = discord.utils.get(guild.channels, name=channel_name)
         if not existing_channel:
@@ -1070,7 +1071,7 @@ class Moderation(commands.Cog):
         help='Removes an existing server channel.'
     )
     @commands.has_role(lock_roles[1])
-    async def delete_channel(self, ctx: commands.Context, channel_name: discord.TextChannel):
+    async def rm_ch(self, ctx: commands.Context, channel_name: discord.TextChannel):
         await channel_name.delete()
         await ctx.message.add_reaction('✅')
 
