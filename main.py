@@ -146,9 +146,7 @@ async def swear_check(message):
                     if filtered_word.lower() == msg_word.lower():
                         profanity_inside += 1
 
-            if profanity_inside != 0:
-                filtered_messages.append(
-                    [message.author, message.guild, message.content])
+            if profanity_inside:
                 await message.delete()
 
                 if profanity_inside >= 3:
@@ -198,10 +196,7 @@ async def web_trap_check(message):
 
 # Opening wordlist file for word filter feature.
 with open('filtered.txt', 'r') as filtered_wordfile:
-    global filtered_wordlist
-    global filtered_messages
     filtered_wordlist = filtered_wordfile.read().split()
-    filtered_messages = list()
 
 
 # Bot events.
@@ -743,31 +738,6 @@ class Moderation(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command(
-        name='restore-msg', 
-        help='Tries to restore previously filtered message if it was deleted by mistake.'
-    )
-    @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def restore_msg(self, ctx: commands.Context):
-        filtered_messages_guild = []
-        for filtered_message in filtered_messages:
-            if filtered_message[1] == ctx.guild:
-                filtered_messages_guild.append(filtered_message)
-                filtered_messages.remove(filtered_message)
-
-        if not filtered_messages_guild:
-            await ctx.send('No messages were removed by me in the recent timeline.')
-
-        else:
-            await ctx.message.add_reaction('✅')
-            for filtered_message_guild in filtered_messages_guild:
-                webhook = await ctx.message.channel.create_webhook(name=filtered_message_guild[0].name)
-
-            webhooks = await ctx.message.channel.webhooks()
-            for webhook in webhooks:
-                await webhook.send(filtered_message_guild[2], username=filtered_message_guild[0].name, avatar_url=filtered_message_guild[0].avatar_url)
-                await webhook.delete()
-
-    @commands.command(
         name='msgweb', 
         help='Enables a web trap to capture six messages sent by a specific user.'
     )
@@ -793,16 +763,9 @@ class Moderation(commands.Cog):
         if snipeables:
             for snipeable in snipeables:
                 if snipeable.guild == ctx.guild:
-                    embed = (
-                        discord.Embed(
-                            title=snipeable.content,
-                            description=f'Deleted by {snipeable.author.mention} to keep things secret.'
-                        )
-                    ).set_footer(
-                        text=generate_random_footer(),
-                        icon_url=ctx.author.avatar_url
-                    )
-                    await ctx.send(embed=embed)
+                    webhook = await ctx.message.channel.create_webhook(name=snipeable.author.name)
+                    await webhook.send(snipeable.content, username=snipeable.author.name, avatar_url=snipeable.author.avatar_url)
+                    await webhook.delete()
 
         else:
             await ctx.send('No messages were found to be sniped.')
