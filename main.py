@@ -44,7 +44,7 @@ last_restarted_obj = time.time()
 
 
 # Setting up bot and slash objects.
-bot = commands.Bot(commands.when_mentioned_or(prefix), help_command=None)
+bot = commands.Bot(commands.when_mentioned_or(prefix), intents=discord.Intents.all(), help_command=None)
 bot.topggpy = topgg.DBLClient(bot, dbl_token)
 slash = SlashCommand(bot, sync_commands=True)
 
@@ -229,6 +229,11 @@ async def on_message_delete(message):
     snipeables.append(message)
     await asyncio.sleep(40)
     snipeables.remove(message)
+
+
+@bot.event
+async def on_member_join(member):
+    await member.send(f'Welcome to {member.guild}, {member.mention}! Hope you enjoy your stay here.')
 
 
 # Help command.
@@ -541,15 +546,15 @@ class Moderation(commands.Cog):
 
         embed = (
             discord.Embed(
-                title=f'{user.name}\'s Bio', 
+                title=f'{user.name}\'s Bio',
                 color=accent_color
             )
         ).add_field(
-            name='Name', 
+            name='Name & Tag', 
             value=user.name
         ).add_field(
-            name='Nick', 
-            value=user.display_name
+            name='Status', 
+            value=user.status
         ).add_field(
             name='User ID', 
             value=user.id
