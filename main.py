@@ -774,7 +774,7 @@ class Moderation(commands.Cog):
                     snipeables.remove(snipeable)
 
         else:
-            await ctx.send('No messages were found to be sniped.')
+            await ctx.send('No messages were found in my list.')
 
     @commands.command(
         name='jail', 
