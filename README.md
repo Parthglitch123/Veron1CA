@@ -48,7 +48,6 @@ COMMAND_PREFIX=your_command_prefix_here
 ```
 python main.py
 ```
-<br><br>
 
 ## Contribution
 As mentioned in an earlier statement, Veron1CA is open source, and if you feel like submitting your own ideas and improving the codebase, you can do that in the form of a pull request! We will check what you've done and maybe it will get added if it's good enough.
