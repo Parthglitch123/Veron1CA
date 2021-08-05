@@ -9,7 +9,24 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 ## Getting to know...
 Veron1CA is designed to be the collab of a Discord moderation bot and a chill music bot. It mainly focuses on next level server moderation, which can make customizing and controlling Discord servers a breeze! It's source is open as well, which means anybody can contribute to it if they spot a nasty bug in the code. We would like you to explore the powers of Veron1CA by yourself, as there's a lot of stuff out there waiting! A complete documentation of the project is under work-in-progress so that you can have a more detailed view on itself.
 
-## Self-hosting Veron1CA
+Learn more / invite Veron1CA from [the official website here!](https://shiddharth.github.io/Veron1CA)
+<br><br>
+
+## Things to note...
+Now that you've successfully added Veron1CA to your server, it's time for some key things to note down. The **default prefix** for accessing Veron1CA is `vrn.` in this case. Here's a bunch of stuff that you can do with it:
+* Use `vrn.<command>` to run your desired command. As an example, you can use `vrn.ping` to get the Veron1CA's latency.
+* Use `vrn.help` to get into the help section.
+* Use `vrn.help all` to get an entire list of commands that you can use.
+* Use `vrn.help <command>` to get help regarding a specific command. For example, you can use `vrn.help ping` in order to get help for the ping command.
+
+There's also another thing to consider in this case, and that's **role locking**. By default, Veron1CA's moderation and customization-based features are locked to specific roles. We have two unlockable ones to create here:
+* `BotMod` - Assign this to the moderators of your server.
+* `BotAdmin` - Assign this to the admininstrators of your server.
+
+Keep in mind that being careless with any of these can cause chaotic results. Hope you will be able to do it and will have a good time playing with Veron1CA. 
+<br><br>
+
+## Self-hosting
 * Navigate to the root project directory and install [Poetry](https://python-poetry.org/) using Python's built-in package manager, [Pip](https://pypi.org/project/pip/).
 ```
 python3 -m pip install -U poetry
@@ -31,11 +48,11 @@ COMMAND_PREFIX=your_command_prefix_here
 ```
 python main.py
 ```
+<br><br>
 
 ## Contribution
 As mentioned in an earlier statement, Veron1CA is open source, and if you feel like submitting your own ideas and improving the codebase, you can do that in the form of a pull request! We will check what you've done and maybe it will get added if it's good enough.
-
-Learn more / invite Veron1CA from [the official website here!](https://shiddharth.github.io/Veron1CA)
+<br><br>
 
 ## Licence
 <blockquote>
