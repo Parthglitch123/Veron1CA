@@ -10,7 +10,7 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 Veron1CA is designed to be the collab of a Discord moderation bot and a chill music bot. It mainly focuses on next level server moderation, which can make customizing and controlling Discord servers a breeze! It's source is open as well, which means anybody can contribute to it if they spot a nasty bug in the code. We would like you to explore the powers of Veron1CA by yourself, as there's a lot of stuff out there waiting! A complete documentation of the project is under work-in-progress so that you can have a more detailed view on itself.
 
 ## Self-hosting Veron1CA
-* Install [Poetry](https://python-poetry.org/) using Python's built-in package manager, pip.
+* Navigate to the root project directory and install [Poetry](https://python-poetry.org/) using Python's built-in package manager, [Pip](https://pypi.org/project/pip/).
 ```
 python3 -m pip install -U poetry
 ```
@@ -18,6 +18,13 @@ python3 -m pip install -U poetry
 * Run the following command to install Veron1CA's dependencies.
 ```
 python3 -m poetry install
+```
+
+* Once it's done, create a `.env` file in the same directory and assign the values accordingly.
+```
+TOKEN=your_token_here
+OWNER_ID=your_Discord_ID_here
+COMMAND_PREFIX=your_command_prefix_here
 ```
 
 * Finally, install [FFmpeg](https://ffmpeg.org/) for your platform and run Veron1CA simply by using:
