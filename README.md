@@ -27,12 +27,17 @@ Keep in mind that being careless with any of these can cause chaotic results. Ho
 <br><br>
 
 ## Self-hosting
-* Navigate to the root project directory and install [Poetry](https://python-poetry.org/) using Python's built-in package manager, [Pip](https://pypi.org/project/pip/).
+* Clone the project. You can easily do this using:
+```
+git clone https://github.com/shiddharth/Veron1CA.git
+```
+
+* Install [Poetry](https://python-poetry.org/) using Python's built-in package manager, [Pip](https://pypi.org/project/pip/).
 ```
 python3 -m pip install -U poetry
 ```
 
-* Run the following command to install Veron1CA's dependencies.
+* Navigate to the cloned directory and run the following command to install Veron1CA's dependencies.
 ```
 python3 -m poetry install
 ```
