@@ -7,14 +7,14 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 ![GitHub watchers](https://img.shields.io/github/watchers/shiddharth/Veron1CA?color=blue&style=for-the-badge)
 
 ## Getting to know...
-Veron1CA is designed to be the collab of a Discord moderation bot and a chill music bot. It mainly focuses on next level server moderation, which can make customizing and controlling Discord servers a breeze! It's source is open as well, which means anybody can contribute to it if they spot a nasty bug in the code. We would like you to explore the powers of Veron1CA by yourself, as there's a lot of stuff out there waiting! A complete documentation of the project is under work-in-progress so that you can have a more detailed view on itself.
+Veron1CA is designed to be the collab of a Discord moderation bot and a chill music bot. It mainly focuses on next level server moderation, which can make customizing and controlling Discord servers a breeze! It's source is open as well, which means anybody can contribute to it if they spot a nasty bug in the code. We would like you to explore the powers of Veron1CA by yourself, as there's a lot of stuff out there waiting!
 
 Learn more / invite Veron1CA from [the official website here!](https://shiddharth.github.io/Veron1CA)
 <br><br>
 
 ## Things to note...
 Now that you've successfully added Veron1CA to your server, it's time for some key things to note down. The **default prefix** for accessing Veron1CA is `vrn.` in this case. Here's a bunch of stuff that you can do with it:
-* Use `vrn.<command>` to run your desired command. As an example, you can use `vrn.ping` to get the Veron1CA's latency.
+* Use `vrn.<command>` to run your desired command. As an example, you can use `vrn.ping` to get Veron1CA's latency.
 * Use `vrn.help` to get into the help section.
 * Use `vrn.help all` to get an entire list of commands that you can use.
 * Use `vrn.help <command>` to get help regarding a specific command. For example, you can use `vrn.help ping` in order to get help for the ping command.

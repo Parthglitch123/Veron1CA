@@ -30,10 +30,10 @@ from discord_slash import cog_ext, SlashCommand, SlashContext
 
 
 # Environment variables.
-token = config('TOKEN', cast=str)
-dbl_token = config('DBL_TOKEN', cast=str)
-owner = config('OWNER_ID', cast=int)
-prefix = config('COMMAND_PREFIX', cast=str)
+token = config('TOKEN', default=None, cast=str)
+dbl_token = config('DBL_TOKEN', default=None, cast=str)
+owner = config('OWNER_ID', default=None, cast=int)
+prefix = config('COMMAND_PREFIX', default=None, cast=str)
 
 
 # System variables.
@@ -43,7 +43,7 @@ last_restarted_str = str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 last_restarted_obj = time.time()
 
 
-# Setting up bot and slash objects.
+# Setting up bot and slash commands.
 bot = commands.Bot(commands.when_mentioned_or(prefix), intents=discord.Intents.all(), help_command=None)
 bot.topggpy = topgg.DBLClient(bot, dbl_token)
 slash = SlashCommand(bot, sync_commands=True)
