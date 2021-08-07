@@ -1730,8 +1730,7 @@ class Developer(commands.Cog):
                     )
                 )
                 await ctx.send(embed=embed)
-                repo = git.Repo(os.getcwd())
-                repo.remotes.origin.pull()
+                os.system('git pull origin master')
 
             except git.exc.InvalidGitRepositoryError:
                 await ctx.send('I am not connected with a Git repository, so I can\'t retrieve the latest code. Restarting anyway...')
