@@ -4,7 +4,7 @@ Licensed under MIT; Copyright 2021 Anindya Shiddhartha
 '''
 
 
-# Import default libraries.
+# Import built-in libraries.
 import os
 import sys
 import time
