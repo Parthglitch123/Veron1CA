@@ -1731,29 +1731,6 @@ class Developer(commands.Cog):
                 os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.command(
-        name='panel', 
-        help='Shows overall system status.'
-    )
-    async def devpanel(self, ctx: commands.Context):
-        if developer_check(ctx.author.id):
-            embed = (
-                discord.Embed(
-                    title='Developer Panel', 
-                    color=accent_color
-                ).add_field(
-                    name='Chats Frozen', 
-                    value=len(frozen_guilds)
-                ).add_field(
-                    name='Jailer Count', 
-                    value=len(jail_members)
-                ).set_footer(
-                    text=f'Type {prefix}devtools to get all the commands that you can use as a developer.', 
-                    icon_url=ctx.author.avatar_url
-                )
-            )
-            await ctx.send(embed=embed)
-
-    @commands.command(
         name='logout', 
         help='Logs out from the system.'
     )
