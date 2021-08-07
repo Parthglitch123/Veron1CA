@@ -15,6 +15,7 @@ import datetime
 import functools
 import itertools
 import traceback
+from threading import Thread
 
 
 # Import third-party libraries.
@@ -22,10 +23,10 @@ import git
 import topgg
 import discord
 import youtube_dl
+from flask import Flask
 from decouple import config
-from async_timeout import timeout
-from keep_alive import keep_alive
 from discord.ext import commands
+from async_timeout import timeout
 from discord_slash import cog_ext, SlashCommand, SlashContext
 
 
@@ -52,6 +53,8 @@ slash = SlashCommand(bot, sync_commands=True)
 # Toggles.
 global jail_toggle
 jail_toggle = True
+global keep_alive_toggle
+keep_alive_toggle = True
 global anti_swear_toggle
 anti_swear_toggle = True
 global freeze_chats_toggle
@@ -1662,10 +1665,10 @@ class Developer(commands.Cog):
     async def toggle(self, ctx: commands.Context, toggle_obj=None):
         if developer_check(ctx.author.id):
             global jail_toggle
+            global keep_alive_toggle
             global anti_swear_toggle
             global freeze_chats_toggle
-            global capture_msgs_toggle
-            toggle_objs = ['jail', 'antiswear', 'freezechats']
+            toggle_objs = ['jail', 'keepalive', 'antiswear', 'freezechats']
 
             async def show_message_toggled(toggle_obj, toggle):
                 await ctx.send(f'{toggle_obj} has been toggled to `{not toggle}`')
@@ -1682,9 +1685,12 @@ class Developer(commands.Cog):
                         value=jail_toggle
                     ).add_field(
                         name=toggle_objs[1], 
-                        value=anti_swear_toggle
+                        value=keep_alive_toggle
                     ).add_field(
                         name=toggle_objs[2], 
+                        value=anti_swear_toggle
+                    ).add_field(
+                        name=toggle_objs[3], 
                         value=freeze_chats_toggle
                     ).set_footer(
                         text=generate_random_footer(), 
@@ -1697,9 +1703,11 @@ class Developer(commands.Cog):
                 if toggle_obj.lower() == toggle_objs[0]:
                     jail_toggle = await show_message_toggled(toggle_objs[0], jail_toggle)
                 elif toggle_obj.lower() == toggle_objs[1]:
-                    anti_swear_toggle = await show_message_toggled(toggle_objs[1], anti_swear_toggle)
+                    keep_alive_toggle = await show_message_toggled(toggle_objs[1], keep_alive_toggle)
                 elif toggle_obj.lower() == toggle_objs[2]:
-                    freeze_chats_toggle = await show_message_toggled(toggle_objs[2], freeze_chats_toggle)
+                    anti_swear_toggle = await show_message_toggled(toggle_objs[2], anti_swear_toggle)
+                elif toggle_obj.lower() == toggle_objs[3]:
+                    freeze_chats_toggle = await show_message_toggled(toggle_objs[3], freeze_chats_toggle)
                 else:
                     await ctx.send(f'Invalid option! Try typing `{prefix}toggle` for more information.')
 
@@ -1722,7 +1730,8 @@ class Developer(commands.Cog):
                     )
                 )
                 await ctx.send(embed=embed)
-                os.system('git pull origin master')
+                repo = git.Repo(os.getcwd())
+                repo.remotes.origin.pull()
 
             except git.exc.InvalidGitRepositoryError:
                 await ctx.send('I am not connected with a Git repository, so I can\'t retrieve the latest code. Restarting anyway...')
@@ -1741,6 +1750,24 @@ class Developer(commands.Cog):
             await self.bot.close()
 
 
+# Keep alive (additional support layer for Repls).
+if keep_alive_toggle:
+    app = Flask('')
+    @app.route('/')
+
+    def home():
+        return f"<h2>{bot.user.name} is now live!</h2>"
+
+    def run():
+        app.run(host='0.0.0.0',port=8080)
+        
+    def keep_alive():
+        t = Thread(target=run)
+        t.start()
+
+    keep_alive()
+
+
 # Add available cogs.
 bot.add_cog(Chill(bot))
 bot.add_cog(Moderation(bot))
@@ -1749,5 +1776,4 @@ bot.add_cog(Developer(bot))
 
 
 # Run the bot.
-keep_alive()
 bot.run(token)
