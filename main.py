@@ -117,8 +117,8 @@ def generate_random_footer():
     return random.choice(footers_list)
 
 
-async def vote_check(user):
-    if await bot.topggpy.get_user_vote(user.id):
+async def vote_check(user_id):
+    if await bot.topggpy.get_user_vote(user_id):
         return True
     else:
         return False
@@ -445,7 +445,7 @@ class Chill(commands.Cog):
         help='Helps you vote for me on specific sites!'
     )
     async def vote(self, ctx: commands.Context):
-        if not await vote_check(ctx.author):
+        if not await vote_check(ctx.author.id):
             embed = (
                 discord.Embed(
                     title=':military_medal: Voting Section', 
@@ -468,7 +468,7 @@ class Chill(commands.Cog):
         description='Helps you vote for me on specific sites!'
     )
     async def _vote(self, ctx: SlashContext):
-        if not await vote_check(ctx.author):
+        if not await vote_check(ctx.author.id):
             embed = (
                 discord.Embed(
                     title=':military_medal: Voting Section', 
@@ -550,6 +550,7 @@ class Moderation(commands.Cog):
         embed = (
             discord.Embed(
                 title=f'{user.name}\'s Bio',
+                description=user.activities[0],
                 color=accent_color
             )
         ).add_field(
