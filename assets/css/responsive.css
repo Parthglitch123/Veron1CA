@@ -1,0 +1,63 @@
+@media only screen and (min-width: 768px) {
+
+    .header-right {
+        display: block;
+        float: right;
+        padding: 6px 20px;
+    }
+
+    .header-headline {
+        text-align: left;
+        max-width: 380px;
+        padding-top: 75px;
+    }
+
+    .header-running-text {
+        line-height: 30px;
+        margin: 0;
+        text-align: left;
+    }
+
+    .hero {
+        padding-bottom: 230px;
+    }
+
+    .hero-button {
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+
+    .hero-right {
+        text-align: left;
+    }
+
+    .plate {
+        display: block;
+        position: absolute;
+        right: 100px;
+        z-index: 1;
+        height: 427px;
+        margin-top: 45px;
+        transform: rotate(-6deg);
+        max-width: 45%;
+        border-radius: 25px;
+        border: 1px solid rgba( 255, 255, 255, 0.18 );
+        background: rgba( 255, 255, 255, 0.25 );
+        box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+        backdrop-filter: blur( 4px );
+        -webkit-backdrop-filter: blur( 4px );
+    }
+
+    .plate-screen {
+        display: block;
+        margin-top: 19px;
+        right: 1px;
+        border-radius: 1rem;
+    }
+}
+
+@media only screen and (min-width: 992px) {
+}
+
+@media only screen and (min-width: 1200px) {
+}
