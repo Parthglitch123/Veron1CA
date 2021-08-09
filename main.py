@@ -554,7 +554,7 @@ class Moderation(commands.Cog):
                 color=accent_color
             )
         ).add_field(
-            name='Name & Tag', 
+            name='Name', 
             value=user.name
         ).add_field(
             name='Status', 
