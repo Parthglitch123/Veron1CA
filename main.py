@@ -28,6 +28,7 @@ from decouple import config
 from discord.ext import commands
 from async_timeout import timeout
 from discord_slash import cog_ext, SlashCommand, SlashContext
+from discord_slash.utils.manage_commands import create_option
 
 
 # Environment variables.
@@ -256,7 +257,7 @@ async def help(ctx: commands.Context, cmd=None):
             value='I\'m an open source Discord music & moderation bot, and I can help you make customizing and modding your server easy as a feather! From blowing up scammers to freezing the entire crowded chat, there\'s a ton of stuff that I can do. Peace!'
         ).add_field(
             name='How to access me?',
-            value=f'My default command prefix is `{prefix}` and you can type `{prefix}help all` to get an entire list of usable commands or `{prefix}help commandname` to get information on a particular command.', 
+            value=f'My default command prefix is `{prefix}` and you can type `{prefix}help all` to get an entire list of usable commands or `{prefix}help <command>` to get information on a particular command.', 
             inline=False
         ).add_field(
             name='A handful of clickables!',
@@ -269,7 +270,7 @@ async def help(ctx: commands.Context, cmd=None):
         embed = (
             discord.Embed(
                 title='Here\'s an entire list of commands!',
-                description=f'My default command prefix is `{prefix}` and you can type `{prefix}help commandname` in the chat to get information on a particular command.', 
+                description=f'My default command prefix is `{prefix}` and you can type `{prefix}help <command>` in the chat to get information on a particular command.', 
                 color=accent_color
             ).set_footer(
                 text=f'Command list requested by {ctx.author.name}',
@@ -277,13 +278,24 @@ async def help(ctx: commands.Context, cmd=None):
             )
         ).add_field(
             name='Chill', 
-            value=get_cog_commands('Chill')
+            value=get_cog_commands('Chill'),
+            inline=False
+        ).add_field(
+            name='Inspection',
+            value=get_cog_commands('Inspection'),
+            inline=False
         ).add_field(
             name='Moderation',
-            value=get_cog_commands('Moderation')
+            value=get_cog_commands('Moderation'),
+            inline=False
+        ).add_field(
+            name='Customization',
+            value=get_cog_commands('Customization'),
+            inline=False
         ).add_field(
             name='Music', 
-            value=get_cog_commands('Music')
+            value=get_cog_commands('Music'),
+            inline=False
         )
         await ctx.send(embed=embed)
 
@@ -331,6 +343,58 @@ async def help(ctx: commands.Context, cmd=None):
                     await ctx.send(embed=embed)
 
 
+# Global exception handler cog.
+class ExceptionHandler(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, error):
+        if hasattr(ctx.command, 'on_error'):
+            return
+
+        cog = ctx.cog
+        if cog:
+            if cog._get_overridden_method(cog.cog_command_error) is not None:
+                return
+
+        ignored = (commands.CommandNotFound, )
+        error = getattr(error, 'original', error)
+
+        if isinstance(error, ignored):
+            return
+
+        if isinstance(error, commands.DisabledCommand):
+            await ctx.send(f'{ctx.command} has been disabled.')
+
+        elif isinstance(error, commands.NoPrivateMessage):
+            try:
+                await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')
+            except discord.HTTPException:
+                pass
+
+        elif isinstance(error, commands.MissingRole):
+            await ctx.send(f'Whoops! {error}')
+
+        elif isinstance(error, commands.MissingAnyRole):
+            await ctx.send(f'Whoops! {error}')
+
+        elif isinstance(error, commands.errors.UserNotFound):
+            await ctx.send(f'Whoops! {error} Try mentioning or pinging them! You can also try using their ID as an argument.')
+
+        elif isinstance(error, commands.errors.RoleNotFound):
+            await ctx.send(f'Whoops! {error} Try mentioning or pinging the role. You can also try using it\'s ID as an argument.')
+
+        elif isinstance(error, commands.errors.MissingRequiredArgument):
+            await ctx.send(f'Oops, {error} Try typing `//help <command>` if you don\'t know how to use the command.')
+
+        else:
+            print('Ignoring exception in command {}:'.format(
+                ctx.command), file=sys.stderr)
+            traceback.print_exception(
+                type(error), error, error.__traceback__, file=sys.stderr)
+
+
 # Chill category commands.
 class Chill(commands.Cog):
     def __init__(self, bot):
@@ -340,7 +404,7 @@ class Chill(commands.Cog):
         name='avatar', 
         help='Shows a member\'s Discord avatar.',
     )
-    async def avatar(self, ctx: commands.Context, member: discord.Member = None):
+    async def avatar(self, ctx: commands.Context, member: discord.Member=None):
         if not member:
             member = ctx.message.author
 
@@ -360,8 +424,16 @@ class Chill(commands.Cog):
     @cog_ext.cog_slash(
         name='avatar',
         description='Shows a member\'s Discord avatar.',
+        options=[
+            create_option(
+                name='member', 
+                description='Mention the user to fetch the avatar from.', 
+                option_type=6, 
+                required=False
+            )
+        ]
     )
-    async def _avatar(self, ctx: SlashContext, member: discord.Member = None):
+    async def _avatar(self, ctx: SlashContext, member: discord.Member=None):
         if not member:
             member = ctx.author
 
@@ -487,63 +559,60 @@ class Chill(commands.Cog):
             await ctx.send('You have already voted for me today, yay!')
 
 
-# Moderation category commands.
-class Moderation(commands.Cog):
+# Casual category commands.
+class Inspection(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, error):
-        if hasattr(ctx.command, 'on_error'):
-            return
+    @commands.command(
+        name='sayhi', 
+        help='Helps to greet channel members.'
+    )
+    @commands.has_any_role(lock_roles[0], lock_roles[1])
+    async def sayhi(self, ctx: commands.Context, member: discord.Member):
+        greeting_messages = [
+            f"Hi {member.mention} Glad you're here.", 
+            f"Hello there! {member.mention}", 
+            f"Hey {member.mention}! Nice to meet you.", 
+            f"Hey, {member.mention} What's up?", 
+            f"Looks like someone just spoke my name. Anyway, how are you doing {member.mention}?",
+            f"Happy to see you here, {member.mention}", 
+            f"Welcome! {member.mention} Have fun chatting!", 
+            f"Nice to meet you, {member.mention}! The name's {self.bot.user.name} by the way."
+        ]
+        await ctx.message.delete()
+        response = random.choice(greeting_messages)
+        await ctx.send(response)
 
-        cog = ctx.cog
-        if cog:
-            if cog._get_overridden_method(cog.cog_command_error) is not None:
-                return
-
-        ignored = (commands.CommandNotFound, )
-        error = getattr(error, 'original', error)
-
-        if isinstance(error, ignored):
-            return
-
-        if isinstance(error, commands.DisabledCommand):
-            await ctx.send(f'{ctx.command} has been disabled.')
-
-        elif isinstance(error, commands.NoPrivateMessage):
-            try:
-                await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')
-            except discord.HTTPException:
-                pass
-
-        elif isinstance(error, commands.MissingRole):
-            await ctx.send(f'Whoops! {error}')
-
-        elif isinstance(error, commands.MissingAnyRole):
-            await ctx.send(f'Whoops! {error}')
-
-        elif isinstance(error, commands.errors.UserNotFound):
-            await ctx.send(f'Whoops! {error} Try mentioning or pinging them! You can also try using their ID as an argument.')
-
-        elif isinstance(error, commands.errors.RoleNotFound):
-            await ctx.send(f'Whoops! {error} Try mentioning or pinging the role. You can also try using it\'s ID as an argument.')
-
-        elif isinstance(error, commands.errors.MissingRequiredArgument):
-            await ctx.send(f'Oops, {error} Try typing `//help commandname` if you don\'t know how to use the command.')
-
-        else:
-            print('Ignoring exception in command {}:'.format(
-                ctx.command), file=sys.stderr)
-            traceback.print_exception(
-                type(error), error, error.__traceback__, file=sys.stderr)
+    @commands.command(
+        name='senddm', 
+        help='Helps to send DMs to specific users.'
+    )
+    @commands.has_any_role(lock_roles[0], lock_roles[1])
+    async def senddm(self, ctx: commands.Context, user: discord.User, *, message):
+        embed = (
+            discord.Embed(
+                title=f'{ctx.author.name} has something up for you!', 
+                color=accent_color
+            )
+        ).add_field(
+            name='Message:', 
+            value=message
+        ).set_thumbnail(
+            url=ctx.author.avatar_url
+        ).set_footer(
+            text='Delivered with <3 by Veron1CA!'
+        )
+        await user.send(embed=embed)
+        await ctx.send(f'{ctx.author.mention} your message has been sent!')
+        await ctx.message.delete()
 
     @commands.command(
         name='userinfo', 
         help='Shows all important information on a user.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def userinfo(self, ctx: commands.Context, user: discord.Member = None):
+    async def userinfo(self, ctx: commands.Context, user: discord.Member=None):
         if not user:
             user = ctx.author
 
@@ -658,67 +727,6 @@ class Moderation(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(
-        name='purge', 
-        help='Clears messages within the given index.'
-    )
-    @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def purge(self, ctx: commands.Context, amount=1):
-        if amount > 200:
-            await ctx.send('Purges are limited to 200 messages per use!')
-        else:
-            amount += 1
-            await ctx.channel.purge(limit=amount)
-
-    @commands.command(
-        name='ripplepurge', 
-        help='Clears messages that are sent by a specific user within the given index.'
-    )
-    @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def ripplepurge(self, ctx: commands.Context, member: discord.Member, amount=2):
-        if amount > 100:
-            await ctx.send('Ripple purges are limited to 100 messages per use!')
-        else:
-            messages = await ctx.history(limit=amount).flatten()
-            for message in messages:
-                if message.author == member:
-                    await message.delete()
-
-    @commands.command(
-        name='sayhi', 
-        help='Helps to greet channel members.'
-    )
-    @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def sayhi(self, ctx: commands.Context, member: discord.Member):
-        greeting_messages = [f"Hi {member.mention} Glad you're here.", f"Hello there! {member.mention}", f"Hey {member.mention}! Nice to meet you.", f"Hey, {member.mention} What's up?", f"Looks like someone just spoke my name. Anyway, how are you doing {member.mention}?",
-                             f"Happy to see you here, {member.mention}", f"Welcome! {member.mention} Have fun chatting!", f"Nice to meet you, {member.mention}! The name's {self.bot.user.name} by the way."]
-        await ctx.message.delete()
-        response = random.choice(greeting_messages)
-        await ctx.send(response)
-
-    @commands.command(
-        name='send-dm', 
-        help='Helps to send DMs to specific users.'
-    )
-    @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def send_dm(self, ctx: commands.Context, user: discord.User, *, message):
-        embed = (
-            discord.Embed(
-                title=f'{ctx.author.name} has something up for you!', 
-                color=accent_color
-            )
-        ).add_field(
-            name='Message:', 
-            value=message
-        ).set_thumbnail(
-            url=ctx.author.avatar_url
-        ).set_footer(
-            text='Delivered with <3 by Veron1CA!'
-        )
-        await user.send(embed=embed)
-        await ctx.send(f'{ctx.author.mention} your message has been sent!')
-        await ctx.message.delete()
-
-    @commands.command(
         name='audit', 
         help='Views the latest entries of the audit log in detail (limited to 100 entries).'
     )
@@ -746,6 +754,38 @@ class Moderation(commands.Cog):
                 )
             await ctx.send(embed=embed)
 
+
+# Moderation category commands.
+class Moderation(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(
+        name='purge', 
+        help='Clears messages within the given index.'
+    )
+    @commands.has_any_role(lock_roles[0], lock_roles[1])
+    async def purge(self, ctx: commands.Context, amount=1):
+        if amount > 200:
+            await ctx.send('Purges are limited to 200 messages per use!')
+        else:
+            amount += 1
+            await ctx.channel.purge(limit=amount)
+
+    @commands.command(
+        name='ripplepurge', 
+        help='Clears messages that are sent by a specific user within the given index.'
+    )
+    @commands.has_any_role(lock_roles[0], lock_roles[1])
+    async def ripplepurge(self, ctx: commands.Context, member: discord.Member, amount=2):
+        if amount > 100:
+            await ctx.send('Ripple purges are limited to 100 messages per use!')
+        else:
+            messages = await ctx.history(limit=amount).flatten()
+            for message in messages:
+                if message.author == member:
+                    await message.delete()
+
     @commands.command(
         name='msgweb', 
         help='Enables a web trap to capture six messages sent by a specific user.'
@@ -764,11 +804,11 @@ class Moderation(commands.Cog):
             await ctx.message.delete()
 
     @commands.command(
-        name='snipe-msg',
+        name='snipemsg',
         help='Snipes a recent message from the channel.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def snipe_msg(self, ctx: commands.Context):
+    async def snipemsg(self, ctx: commands.Context):
         if snipeables:
             for snipeable in snipeables:
                 if snipeable.guild == ctx.guild:
@@ -947,6 +987,39 @@ class Moderation(commands.Cog):
         await ctx.send(f'Member **{member.name}** has been unbanned!')
 
     @commands.command(
+        name='freeze', 
+        help='Calms down chat.'
+    )
+    @commands.has_role(lock_roles[1])
+    async def freeze(self, ctx: commands.Context):
+        if freeze_chats_toggle:
+            frozen_guilds.append([ctx.author, ctx.guild, ctx.message.channel])
+            await ctx.message.delete()
+            await ctx.send(f'**Chat was frozen by {ctx.author.mention}!**')
+        else:
+            await ctx.send('Chat freezes have been temporarily disabled by the developer.')
+
+    @commands.command(
+        name='thaw', 
+        help='Removes frozen state from chat.'
+    )
+    @commands.has_role(lock_roles[1])
+    async def thaw(self, ctx: commands.Context):
+        if freeze_chats_toggle:
+            for frozen_guild in frozen_guilds:
+                if frozen_guild[1] == ctx.guild:
+                    frozen_guilds.remove(frozen_guild)
+                    await ctx.message.add_reaction('✅')
+        else:
+            await ctx.send('Chat freezes have been temporarily disabled by the developer.')
+
+
+# Customization category commands.
+class Customization(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(
         name='invites', 
         help='Shows all active server invite codes.'
     )
@@ -978,11 +1051,11 @@ class Moderation(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command(
-        name='mk-inv', 
+        name='makeinv', 
         help='Creates an invite code or link.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def mk_inv(self, ctx: commands.Context, max_age=60, max_uses=1, *, reason='No reason provided.'):
+    async def makeinv(self, ctx: commands.Context, max_age=60, max_uses=1, *, reason='No reason provided.'):
         if not reason:
             reason = f'Inviter: {ctx.author.name}'
 
@@ -1021,11 +1094,11 @@ class Moderation(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(
-        name='rm-inv', 
+        name='removeinv', 
         help='Removes a previously generated invite code or link.'
     )
     @commands.has_role(lock_roles[1])
-    async def rm_inv(self, ctx: commands.Context, invite_id):
+    async def removeinv(self, ctx: commands.Context, invite_id):
         invites = await ctx.guild.invites()
         for invite in invites:
             if invite.id == invite_id:
@@ -1033,20 +1106,20 @@ class Moderation(commands.Cog):
                 await ctx.send('Invite has been deleted.')
 
     @commands.command(
-        name='mk-role', 
+        name='makerole', 
         help='Creates a role.'
     )
     @commands.has_role(lock_roles[1])
-    async def mk_role(self, ctx: commands.Context, *, role):
+    async def makerole(self, ctx: commands.Context, *, role):
         await ctx.guild.create_role(name=role)
         await ctx.message.add_reaction('✅')
 
     @commands.command(
-        name='rm-role', 
+        name='removerole', 
         help='Removes an existing role.'
     )
     @commands.has_role(lock_roles[1])
-    async def rm_role(self, ctx: commands.Context, *, role: discord.Role):
+    async def removerole(self, ctx: commands.Context, *, role: discord.Role):
         if role is None:
             await ctx.send('That\'s not a role, I guess?')
 
@@ -1055,20 +1128,20 @@ class Moderation(commands.Cog):
             await ctx.message.add_reaction('✅')
 
     @commands.command(
-        name='assign-role', 
+        name='assignrole', 
         help='Assigns an existing role to a server member.', pass_context=True
     )
     @commands.has_role(lock_roles[1])
-    async def assign_role(self, ctx: commands.Context, member: discord.Member, role: discord.Role):
+    async def assignrole(self, ctx: commands.Context, member: discord.Member, role: discord.Role):
         await member.add_roles(role)
         await ctx.send(f'Role {role.mention} has been given to {member.mention}, peace! :partying_face:')
 
     @commands.command(
-        name='mk-ch', 
+        name='makech', 
         help='Creates a server channel.'
     )
     @commands.has_role(lock_roles[1])
-    async def mk_ch(self, ctx: commands.Context, *, channel_name):
+    async def makech(self, ctx: commands.Context, *, channel_name):
         guild = ctx.guild
         existing_channel = discord.utils.get(guild.channels, name=channel_name)
         if not existing_channel:
@@ -1076,40 +1149,13 @@ class Moderation(commands.Cog):
             await ctx.message.add_reaction('✅')
 
     @commands.command(
-        name='rm-ch', 
+        name='removech', 
         help='Removes an existing server channel.'
     )
     @commands.has_role(lock_roles[1])
-    async def rm_ch(self, ctx: commands.Context, channel_name: discord.TextChannel):
+    async def removech(self, ctx: commands.Context, channel_name: discord.TextChannel):
         await channel_name.delete()
         await ctx.message.add_reaction('✅')
-
-    @commands.command(
-        name='freeze-chat', 
-        help='Calms down chat.'
-    )
-    @commands.has_role(lock_roles[1])
-    async def freeze_chat(self, ctx: commands.Context):
-        if freeze_chats_toggle:
-            frozen_guilds.append([ctx.author, ctx.guild, ctx.message.channel])
-            await ctx.message.delete()
-            await ctx.send(f'**Chat was frozen by {ctx.author.mention}!**')
-        else:
-            await ctx.send('Chat freezes have been temporarily disabled by the developer.')
-
-    @commands.command(
-        name='thaw-chat', 
-        help='Removes frozen state from chat.'
-    )
-    @commands.has_role(lock_roles[1])
-    async def thaw_chat(self, ctx: commands.Context):
-        if freeze_chats_toggle:
-            for frozen_guild in frozen_guilds:
-                if frozen_guild[1] == ctx.guild:
-                    frozen_guilds.remove(frozen_guild)
-                    await ctx.message.add_reaction('✅')
-        else:
-            await ctx.send('Chat freezes have been temporarily disabled by the developer.')
 
 
 # Music category commands.
@@ -1175,7 +1221,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop = None):
-        loop = loop or asyncio.get_event_loop()
+        loop = loop or asyncio.get_eventloop()
 
         partial = functools.partial(
             cls.ytdl.extract_info, search, download=False, process=False)
@@ -1273,38 +1319,38 @@ class Song:
 class SongQueue(asyncio.Queue):
     def __getitem__(self, item):
         if isinstance(item, slice):
-            return list(itertools.islice(self._queue, item.start, item.stop, item.step))
+            return list(itertools.islice(self.queue, item.start, item.stop, item.step))
         else:
-            return self._queue[item]
+            return self.queue[item]
 
     def __iter__(self):
-        return self._queue.__iter__()
+        return self.queue.__iter__()
 
     def __len__(self):
         return self.qsize()
 
     def clear(self):
-        self._queue.clear()
+        self.queue.clear()
 
     def shuffle(self):
-        random.shuffle(self._queue)
+        random.shuffle(self.queue)
 
     def remove(self, index: int):
-        del self._queue[index]
+        del self.queue[index]
 
 
 class VoiceState:
     def __init__(self, bot: commands.Bot, ctx: commands.Context):
         self.bot = bot
-        self._ctx = ctx
+        self.ctx = ctx
 
         self.current = None
         self.voice = None
         self.next = asyncio.Event()
         self.songs = SongQueue()
 
-        self._loop = False
-        self._volume = 0.5
+        self.loop = False
+        self.volume = 0.5
         self.skip_votes = set()
 
         self.audio_player = bot.loop.create_task(self.audio_player_task())
@@ -1314,19 +1360,19 @@ class VoiceState:
 
     @property
     def loop(self):
-        return self._loop
+        return self.loop
 
     @loop.setter
     def loop(self, value: bool):
-        self._loop = value
+        self.loop = value
 
     @property
     def volume(self):
-        return self._volume
+        return self.volume
 
     @volume.setter
     def volume(self, value: float):
-        self._volume = value
+        self.volume = value
 
     @property
     def is_playing(self):
@@ -1346,7 +1392,7 @@ class VoiceState:
                     self.exists = False
                     return
                 
-                self.current.source.volume = self._volume
+                self.current.source.volume = self.volume
                 self.voice.play(self.current.source, after=self.play_next_song)
 
             elif self.loop == True:
@@ -1410,7 +1456,7 @@ class Music(commands.Cog):
         help='Joins a specific voice channel.', 
         invoke_without_subcommand=True
     )
-    async def _join(self, ctx: commands.Context):
+    async def join(self, ctx: commands.Context):
         destination = ctx.author.voice.channel
         if ctx.voice_state.voice:
             await ctx.voice_state.voice.move_to(destination)
@@ -1423,10 +1469,9 @@ class Music(commands.Cog):
         name='summon', 
         help='Summons bot to a particular voice channel.'
     )
-    async def _summon(self, ctx: commands.Context, *, channel: discord.VoiceChannel = None):
+    async def summon(self, ctx: commands.Context, *, channel: discord.VoiceChannel = None):
         if not channel and not ctx.author.voice:
-            raise VoiceError(
-                'You are neither connected to a voice channel nor specified a channel to join.')
+            raise VoiceError('You are neither connected to a voice channel nor specified a channel to join.')
 
         destination = channel or ctx.author.voice.channel
         if ctx.voice_state.voice:
@@ -1440,7 +1485,7 @@ class Music(commands.Cog):
         name='leave', 
         help='Clears the queue and leaves the voice channel.'
     )
-    async def _leave(self, ctx: commands.Context):
+    async def leave(self, ctx: commands.Context):
         if not ctx.voice_state.voice:
             return await ctx.send('I am not connected to any voice channel.')
 
@@ -1452,7 +1497,7 @@ class Music(commands.Cog):
         name='volume', 
         help='Sets the volume of the player.'
     )
-    async def _volume(self, ctx: commands.Context, *, volume: int):
+    async def volume(self, ctx: commands.Context, *, volume: int):
         if await self.bot.topggpy.get_user_vote(ctx.author.id):
             if not ctx.voice_state.is_playing:
                 return await ctx.send('There\'s nothing being played at the moment.')
@@ -1480,14 +1525,14 @@ class Music(commands.Cog):
         name='now', 
         help='Displays the currently playing song.'
     )
-    async def _now(self, ctx: commands.Context):
+    async def now(self, ctx: commands.Context):
         await ctx.send(embed=ctx.voice_state.current.create_embed())
 
     @commands.command(
         name='pause', 
         help='Pauses the currently playing song.'
     )
-    async def _pause(self, ctx: commands.Context):
+    async def pause(self, ctx: commands.Context):
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
             await ctx.message.add_reaction('✅')
@@ -1496,7 +1541,7 @@ class Music(commands.Cog):
         name='resume', 
         help='Resumes a currently paused song.'
     )
-    async def _resume(self, ctx: commands.Context):
+    async def resume(self, ctx: commands.Context):
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
             await ctx.message.add_reaction('✅')
@@ -1505,7 +1550,7 @@ class Music(commands.Cog):
         name='stop', 
         help='Stops playing song and clears the queue.'
     )
-    async def _stop(self, ctx: commands.Context):
+    async def stop(self, ctx: commands.Context):
         ctx.voice_state.songs.clear()
 
         if ctx.voice_state.is_playing:
@@ -1516,7 +1561,7 @@ class Music(commands.Cog):
         name='skip', 
         help='Vote to skip a song. The requester can automatically skip.'
     )
-    async def _skip(self, ctx: commands.Context):
+    async def skip(self, ctx: commands.Context):
         if not ctx.voice_state.is_playing:
             return await ctx.send('Not playing any music right now, so no skipping for you.')
 
@@ -1542,7 +1587,7 @@ class Music(commands.Cog):
         name='queue', 
         help='Shows the player\'s queue.'
     )
-    async def _queue(self, ctx: commands.Context, *, page: int = 1):
+    async def queue(self, ctx: commands.Context, *, page: int = 1):
         if len(ctx.voice_state.songs) == 0:
             return await ctx.send('Empty queue.')
 
@@ -1570,9 +1615,9 @@ class Music(commands.Cog):
         name='shuffle', 
         help='Shuffles the queue.'
     )
-    async def _shuffle(self, ctx: commands.Context):
+    async def shuffle(self, ctx: commands.Context):
         if len(ctx.voice_state.songs) == 0:
-            return await ctx.send('The queue is empty, play some songs, maybe?')
+            return await ctx.send('The queue is empty, maybe add some songs?')
 
         ctx.voice_state.songs.shuffle()
         await ctx.message.add_reaction('✅')
@@ -1581,7 +1626,7 @@ class Music(commands.Cog):
         name='remove',
         help='Removes a song from the queue at a given index.'
     )
-    async def _remove(self, ctx: commands.Context, index: int):
+    async def remove(self, ctx: commands.Context, index: int):
         if len(ctx.voice_state.songs) == 0:
             return await ctx.send('The queue is empty, so nothing to be removed.')
 
@@ -1592,9 +1637,9 @@ class Music(commands.Cog):
         name='loop', 
         help='Loops the currently playing song.'
     )
-    async def _loop(self, ctx: commands.Context):
+    async def loop(self, ctx: commands.Context):
         if not ctx.voice_state.is_playing:
-            return await ctx.send('Nothing being played at the moment.')
+            return await ctx.send('Can\'t loop because nothing is being played at the moment.')
 
         ctx.voice_state.loop = not ctx.voice_state.loop
         if ctx.voice_state.loop:
@@ -1606,9 +1651,9 @@ class Music(commands.Cog):
         name='play', 
         help='Plays a song.'
     )
-    async def _play(self, ctx: commands.Context, *, search: str):
+    async def play(self, ctx: commands.Context, *, search: str):
         if not ctx.voice_state.voice:
-            await ctx.invoke(self._join)
+            await ctx.invoke(self.join)
 
         async with ctx.typing():
             try:
@@ -1621,8 +1666,8 @@ class Music(commands.Cog):
                 await ctx.voice_state.songs.put(song)
                 await ctx.send('Enqueued {} for the jam!'.format(str(source)))
 
-    @_join.before_invoke
-    @_play.before_invoke
+    @join.before_invoke
+    @play.before_invoke
     async def ensure_voice_state(self, ctx: commands.Context):
         if not ctx.author.voice or not ctx.author.voice.channel:
             raise commands.CommandError(
@@ -1769,8 +1814,11 @@ if keep_alive_toggle:
 
 
 # Add available cogs.
+bot.add_cog(ExceptionHandler(bot))
 bot.add_cog(Chill(bot))
+bot.add_cog(Inspection(bot))
 bot.add_cog(Moderation(bot))
+bot.add_cog(Customization(bot))
 bot.add_cog(Music(bot))
 bot.add_cog(Developer(bot))
 

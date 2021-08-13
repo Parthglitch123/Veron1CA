@@ -45,7 +45,7 @@ python3 -m poetry install
 * Once it's done, create a `.env` file in the same directory and assign the values accordingly.
 ```
 TOKEN=your_token_here
-DBL_TOKEN=your_topgg_token_here
+DBL_TOKEN=your_topgg_token_here(optional)
 OWNER_ID=your_Discord_ID_here
 COMMAND_PREFIX=your_command_prefix_here
 ```
