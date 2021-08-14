@@ -1020,37 +1020,6 @@ class Customization(commands.Cog):
         self.bot = bot
 
     @commands.command(
-        name='invites', 
-        help='Shows all active server invite codes.'
-    )
-    @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def invites(self, ctx: commands.Context):
-        invites = await ctx.guild.invites()
-        embed = (
-            discord.Embed(
-                title='Now viewing invite codes!', 
-                color=accent_color
-            ).set_footer(
-                icon_url=ctx.author.avatar_url, 
-                text=generate_random_footer()
-            )
-        )
-
-        if not invites:
-            await ctx.send('No invite codes have been generated.')
-
-        else:
-            invcount = 0
-            for invite in invites:
-                invcount += 1
-                embed.add_field(
-                    name=invite, 
-                    value=f'Uses: {invite.uses} | Inviter: {invite.inviter.name} | ID: `{invite.id}`', 
-                    inline=False
-                )
-            await ctx.send(embed=embed)
-
-    @commands.command(
         name='makeinv', 
         help='Creates an invite code or link.'
     )
@@ -1094,6 +1063,37 @@ class Customization(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(
+        name='invites', 
+        help='Shows all active server invite codes.'
+    )
+    @commands.has_any_role(lock_roles[0], lock_roles[1])
+    async def invites(self, ctx: commands.Context):
+        invites = await ctx.guild.invites()
+        embed = (
+            discord.Embed(
+                title='Now viewing invite codes!', 
+                color=accent_color
+            ).set_footer(
+                icon_url=ctx.author.avatar_url, 
+                text=generate_random_footer()
+            )
+        )
+
+        if not invites:
+            await ctx.send('No invite codes have been generated.')
+
+        else:
+            invcount = 0
+            for invite in invites:
+                invcount += 1
+                embed.add_field(
+                    name=invite, 
+                    value=f'Uses: {invite.uses} | Inviter: {invite.inviter.name} | ID: `{invite.id}`', 
+                    inline=False
+                )
+            await ctx.send(embed=embed)
+
+    @commands.command(
         name='removeinv', 
         help='Removes a previously generated invite code or link.'
     )
@@ -1104,7 +1104,7 @@ class Customization(commands.Cog):
             if invite.id == invite_id:
                 await invite.delete()
                 await ctx.send('Invite has been deleted.')
-
+                
     @commands.command(
         name='makerole', 
         help='Creates a role.'
