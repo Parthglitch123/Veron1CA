@@ -210,7 +210,7 @@ async def on_ready():
     print(f'{bot.user.name} | Viewing Terminal\n')
     print(
         f'\nLog: {bot.user.name} has been deployed in {len(bot.guilds)} server(s).')
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(bot.guilds)} server(s)!'))
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(bot.guilds)} server(s)!'))
 
 
 @bot.event
