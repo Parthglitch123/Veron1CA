@@ -576,7 +576,7 @@ class Inspection(commands.Cog):
             f"Looks like someone just spoke my name. Anyway, how are you doing {member.mention}?",
             f"Happy to see you here, {member.mention}", 
             f"Welcome! {member.mention} Have fun chatting!", 
-            f"Nice to meet you, {member.mention}! The name's {self.bot.user.name} by the way."
+            f"Nice to meet you, {member.mention}! The name's {self.bot.user.name} by the way.",
             f"{member.mention} pudding."
         ]
         await ctx.message.delete()
