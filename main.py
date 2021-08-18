@@ -389,10 +389,8 @@ class ExceptionHandler(commands.Cog):
             await ctx.send(f'Oops, {error} Try typing `//help <command>` if you don\'t know how to use the command.')
 
         else:
-            print('Ignoring exception in command {}:'.format(
-                ctx.command), file=sys.stderr)
-            traceback.print_exception(
-                type(error), error, error.__traceback__, file=sys.stderr)
+            print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+            traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
 # Chill category commands.
@@ -579,6 +577,7 @@ class Inspection(commands.Cog):
             f"Happy to see you here, {member.mention}", 
             f"Welcome! {member.mention} Have fun chatting!", 
             f"Nice to meet you, {member.mention}! The name's {self.bot.user.name} by the way."
+            f"{member.mention} pudding."
         ]
         await ctx.message.delete()
         response = random.choice(greeting_messages)
