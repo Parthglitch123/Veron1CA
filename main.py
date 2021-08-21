@@ -52,14 +52,8 @@ slash = SlashCommand(bot, sync_commands=True)
 
 
 # Toggles.
-global jail_toggle
-jail_toggle = True
 global keep_alive_toggle
 keep_alive_toggle = True
-global anti_swear_toggle
-anti_swear_toggle = True
-global freeze_chats_toggle
-freeze_chats_toggle = True
 
 
 # Global variables.
@@ -105,6 +99,7 @@ def developer_check(author_id):
 def generate_random_footer():
     footers_list = [
         'Hey there pal :D',
+        'Hey! Want some pants?',
         'When pigs fly.',
         'Hey! This looks sketchy, not gonna lie.',
         'Have a good day...... or good night whatever.',
@@ -126,45 +121,42 @@ async def vote_check(user_id):
 
 
 async def freeze_check(message):
-    if freeze_chats_toggle:
-        for frozen_guild in frozen_guilds:
-            if frozen_guild[1] == message.guild and frozen_guild[2] == message.channel and frozen_guild[0] != message.author:
-                await message.delete()
-                return True
+    for frozen_guild in frozen_guilds:
+        if frozen_guild[1] == message.guild and frozen_guild[2] == message.channel and frozen_guild[0] != message.author:
+            await message.delete()
+            return True
 
 
 async def swear_check(message):
     profanity_inside = int()
-    if anti_swear_toggle:
-        if not message.author.bot:
-            msg = message.content
-            symbols = ['?', '.', ',', '(', ')', '[', ']', '{', '}', '+', '-', '/',
-                       '=', '|', '_', '*', '&', '!', '@', '#', '$', '%', '^', '<', '>', '`', '~']
+    if not message.author.bot:
+        msg = message.content
+        symbols = ['?', '.', ',', '(', ')', '[', ']', '{', '}', '+', '-', '/',
+                    '=', '|', '_', '*', '&', '!', '@', '#', '$', '%', '^', '<', '>', '`', '~']
 
-            for msg_word in msg.split():
-                for symbol in symbols:
-                    if symbol in msg_word:
-                        msg_word = msg_word.replace(symbol, '')
+        for msg_word in msg.split():
+            for symbol in symbols:
+                if symbol in msg_word:
+                    msg_word = msg_word.replace(symbol, '')
 
-                for filtered_word in filtered_wordlist:
-                    if filtered_word.lower() == msg_word.lower():
-                        profanity_inside += 1
+            for filtered_word in filtered_wordlist:
+                if filtered_word.lower() == msg_word.lower():
+                    profanity_inside += 1
 
-            if profanity_inside:
-                await message.delete()
+        if profanity_inside:
+            await message.delete()
 
-                if profanity_inside >= 3:
-                    await message.channel.set_permissions(message.author, send_messages=False)
-                    await message.channel.send(f'You\'ve been automatically blocked from chatting, {message.author.mention}! Try not to swear that much.')
-                return True
+            if profanity_inside >= 3:
+                await message.channel.set_permissions(message.author, send_messages=False)
+                await message.channel.send(f'You\'ve been automatically blocked from chatting, {message.author.mention}! Try not to swear that much.')
+            return True
 
 
 async def jail_check(message):
-    if jail_toggle:
-        for jail_member in jail_members:
-            if jail_member[1] == message.guild and jail_member[0] == message.author:
-                await message.delete()
-                return True
+    for jail_member in jail_members:
+        if jail_member[1] == message.guild and jail_member[0] == message.author:
+            await message.delete()
+            return True
 
 
 async def web_trap_check(message):
@@ -212,7 +204,6 @@ async def on_ready():
         f'\nLog: {bot.user.name} has been deployed in {len(bot.guilds)} server(s).')
     await bot.change_presence(status=discord.Status.dnd, activity=discord.Activity(type=discord.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(bot.guilds)} server(s)!'))
 
-
 @bot.event
 async def on_message(message):
     global last_msg
@@ -226,14 +217,12 @@ async def on_message(message):
                 await bot.process_commands(message)
                 await web_trap_check(message)
                 
-
 @bot.event
 async def on_message_delete(message):
     global snipeables
     snipeables.append(message)
     await asyncio.sleep(25)
     snipeables.remove(message)
-
 
 @bot.event
 async def on_member_join(member):
@@ -297,6 +286,14 @@ async def help(ctx: commands.Context, cmd=None):
             value=get_cog_commands('Music'),
             inline=False
         )
+
+        if developer_check(ctx.author.id):
+            embed.add_field(
+                name='Developer',
+                value=get_cog_commands('Developer'),
+                inline=False
+            )
+
         await ctx.send(embed=embed)
 
     else:
@@ -825,30 +822,26 @@ class Moderation(commands.Cog):
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def jail(self, ctx: commands.Context, member: discord.Member, *, reason='No reason provided.'):
-        if jail_toggle:
-            do_jail = False
+        do_jail = False
 
-            if member != self.bot.user:
-                if member != ctx.author:
-                    if member.guild_permissions.administrator:
-                        if ctx.author.guild_permissions.administrator:
-                            do_jail = True
-                        else:
-                            await ctx.send('You can\'t jail an admin!')
-                    else:
+        if member != self.bot.user:
+            if member != ctx.author:
+                if member.guild_permissions.administrator:
+                    if ctx.author.guild_permissions.administrator:
                         do_jail = True
+                    else:
+                        await ctx.send('You can\'t jail an admin!')
                 else:
-                    await ctx.send('You can\'t jail yourself!')
+                    do_jail = True
             else:
-                await ctx.send('Why are you even trying to jail me?')
-
-            if do_jail:
-                jail_members.append([member, ctx.guild, reason, ctx.author])
-                await ctx.message.delete()
-                await ctx.send(f'You\'ve been captured! {member.mention} | Reason: {reason}')
-
+                await ctx.send('You can\'t jail yourself!')
         else:
-            await ctx.send('Jails have been temporarily disabled by the developer.')
+            await ctx.send('Why are you even trying to jail me?')
+
+        if do_jail:
+            jail_members.append([member, ctx.guild, reason, ctx.author])
+            await ctx.message.delete()
+            await ctx.send(f'You\'ve been captured! {member.mention} | Reason: {reason}')
 
     @commands.command(
         name='jailed', 
@@ -856,33 +849,30 @@ class Moderation(commands.Cog):
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def jailed(self, ctx: commands.Context):
-        if jail_toggle:
-            jail_has_member = False
-            embed = (
-                discord.Embed(
-                    title='Now viewing the prison!', 
-                    color=accent_color
-                ).set_footer(
-                    icon_url=ctx.author.avatar_url, 
-                    text=generate_random_footer()
-                )
+        jail_has_member = False
+        embed = (
+            discord.Embed(
+                title='Now viewing the prison!', 
+                color=accent_color
+            ).set_footer(
+                icon_url=ctx.author.avatar_url, 
+                text=generate_random_footer()
             )
-            for jail_member in jail_members:
-                if jail_member[1] == ctx.guild:
-                    embed.add_field(
-                        name=jail_member[0].name, 
-                        value=('Jailed by ' + jail_member[3].mention + ' | Reason: `' + jail_member[2] + '`'), 
-                        inline=False
-                    )
-                    jail_has_member = True
+        )
+        for jail_member in jail_members:
+            if jail_member[1] == ctx.guild:
+                embed.add_field(
+                    name=jail_member[0].name, 
+                    value=('Jailed by ' + jail_member[3].mention + ' | Reason: `' + jail_member[2] + '`'), 
+                    inline=False
+                )
+                jail_has_member = True
 
-            if jail_has_member is False:
-                await ctx.send('No members are inside the jail.')
+        if jail_has_member is False:
+            await ctx.send('No members are inside the jail.')
 
-            else:
-                await ctx.send(embed=embed)
         else:
-            await ctx.send('Jails have been temporarily disabled by the developer.')
+            await ctx.send(embed=embed)
 
     @commands.command(
         name='unjail', 
@@ -890,17 +880,14 @@ class Moderation(commands.Cog):
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def unjail(self, ctx: commands.Context, member: discord.Member):
-        if jail_toggle:
-            for jail_member in jail_members:
-                if jail_member[1] == ctx.guild and jail_member[0] == member:
-                    if member != ctx.author:
-                        jail_members.remove(jail_member)
-                        await ctx.message.add_reaction('✅')
+        for jail_member in jail_members:
+            if jail_member[1] == ctx.guild and jail_member[0] == member:
+                if member != ctx.author:
+                    jail_members.remove(jail_member)
+                    await ctx.message.add_reaction('✅')
 
-                    else:
-                        await ctx.send('You can\'t free yourself!')
-        else:
-            await ctx.send('Jails have been temporarily disabled by the developer.')
+                else:
+                    await ctx.send('You can\'t free yourself!')
 
     @commands.command(
         name='block', 
@@ -991,12 +978,9 @@ class Moderation(commands.Cog):
     )
     @commands.has_role(lock_roles[1])
     async def freeze(self, ctx: commands.Context):
-        if freeze_chats_toggle:
-            frozen_guilds.append([ctx.author, ctx.guild, ctx.message.channel])
-            await ctx.message.delete()
-            await ctx.send(f'**Chat was frozen by {ctx.author.mention}!**')
-        else:
-            await ctx.send('Chat freezes have been temporarily disabled by the developer.')
+        frozen_guilds.append([ctx.author, ctx.guild, ctx.message.channel])
+        await ctx.message.delete()
+        await ctx.send(f'**Chat was frozen by {ctx.author.mention}!**')
 
     @commands.command(
         name='thaw', 
@@ -1004,13 +988,10 @@ class Moderation(commands.Cog):
     )
     @commands.has_role(lock_roles[1])
     async def thaw(self, ctx: commands.Context):
-        if freeze_chats_toggle:
-            for frozen_guild in frozen_guilds:
-                if frozen_guild[1] == ctx.guild:
-                    frozen_guilds.remove(frozen_guild)
-                    await ctx.message.add_reaction('✅')
-        else:
-            await ctx.send('Chat freezes have been temporarily disabled by the developer.')
+        for frozen_guild in frozen_guilds:
+            if frozen_guild[1] == ctx.guild:
+                frozen_guilds.remove(frozen_guild)
+                await ctx.message.add_reaction('✅')
 
 
 # Customization category commands.
@@ -1684,78 +1665,13 @@ class Developer(commands.Cog):
         self.bot = bot
 
     @commands.command(
-        name='devtools', 
-        help='Shows all the developer tools that can be used.'
+        name='togglekeepalive',
+        help='Toggles the optional support layer for keeping the system alive.'
     )
-    async def devtools(self, ctx: commands.Context):
-        if developer_check(ctx.author.id):
-            embed = (
-                discord.Embed(
-                    title='Developer Tools', 
-                    description=f'Make sure to use these with consciousness. Type `{prefix}help toolname` to get help on a particular command/tool.', 
-                    color=accent_color
-                ).set_footer(
-                    text=generate_random_footer(), 
-                    icon_url=ctx.author.avatar_url
-                ).add_field(
-                    name='Commands', 
-                    value=get_cog_commands('Developer')
-                )
-            )
-            await ctx.send(embed=embed)
-
-    @commands.command(
-        name='toggle', 
-        help='Toggles specific features.'
-    )
-    async def toggle(self, ctx: commands.Context, toggle_obj=None):
-        if developer_check(ctx.author.id):
-            global jail_toggle
-            global keep_alive_toggle
-            global anti_swear_toggle
-            global freeze_chats_toggle
-            toggle_objs = ['jail', 'keepalive', 'antiswear', 'freezechats']
-
-            async def show_message_toggled(toggle_obj, toggle):
-                await ctx.send(f'{toggle_obj} has been toggled to `{not toggle}`')
-                return not toggle
-
-            if not toggle_obj:
-                embed = (
-                    discord.Embed(
-                        title='Toggle-able Features', 
-                        description=f'You can see the boolean values that are assigned to each of the fields. This represents that either the feature is turned ON (True) or OFF (False). Type `{prefix}toggle togglename` to modify values of specific options.', 
-                        color=accent_color
-                    ).add_field(
-                        name=toggle_objs[0], 
-                        value=jail_toggle
-                    ).add_field(
-                        name=toggle_objs[1], 
-                        value=keep_alive_toggle
-                    ).add_field(
-                        name=toggle_objs[2], 
-                        value=anti_swear_toggle
-                    ).add_field(
-                        name=toggle_objs[3], 
-                        value=freeze_chats_toggle
-                    ).set_footer(
-                        text=generate_random_footer(), 
-                        icon_url=ctx.author.avatar_url
-                    )
-                )
-                await ctx.send(embed=embed)
-
-            else:
-                if toggle_obj.lower() == toggle_objs[0]:
-                    jail_toggle = await show_message_toggled(toggle_objs[0], jail_toggle)
-                elif toggle_obj.lower() == toggle_objs[1]:
-                    keep_alive_toggle = await show_message_toggled(toggle_objs[1], keep_alive_toggle)
-                elif toggle_obj.lower() == toggle_objs[2]:
-                    anti_swear_toggle = await show_message_toggled(toggle_objs[2], anti_swear_toggle)
-                elif toggle_obj.lower() == toggle_objs[3]:
-                    freeze_chats_toggle = await show_message_toggled(toggle_objs[3], freeze_chats_toggle)
-                else:
-                    await ctx.send(f'Invalid option! Try typing `{prefix}toggle` for more information.')
+    async def togglekeepalive(self, ctx: commands.Context):
+        global keep_alive_toggle
+        keep_alive_toggle = not keep_alive_toggle
+        await ctx.send(f'Keep alive has been toggled to `{keep_alive_toggle}`!')
 
     @commands.command(
         name='restart', 
@@ -1795,7 +1711,7 @@ class Developer(commands.Cog):
             await self.bot.close()
 
 
-# Keep alive (additional support layer for Repls).
+# Optional support layer for keeping the system alive.
 if keep_alive_toggle:
     app = Flask('')
     @app.route('/')
