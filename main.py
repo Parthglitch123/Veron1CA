@@ -229,7 +229,7 @@ async def on_member_join(member):
     await member.send(f'Welcome to {member.guild}, {member.mention}! Hope you enjoy your stay here.')
 
 
-# Help command.
+# The global help command.
 @bot.group(invoke_without_command=True)
 async def help(ctx: commands.Context, cmd=None):
     if not cmd:
@@ -561,7 +561,7 @@ class Inspection(commands.Cog):
 
     @commands.command(
         name='sayhi', 
-        help='Helps to greet channel members.'
+        help='Greets server members with a cute message.'
     )
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def sayhi(self, ctx: commands.Context, member: discord.Member):
