@@ -28,17 +28,17 @@ Keep in mind that being careless with any of these can cause chaotic results. Ho
 
 ## Self-hosting
 * Clone the project. You can easily do this using:
-```
+```bash
 git clone https://github.com/shiddharth/Veron1CA.git
 ```
 
 * Install [Poetry](https://python-poetry.org/) using Python's built-in package manager, [Pip](https://pypi.org/project/pip/).
-```
+```bash
 python3 -m pip install -U poetry
 ```
 
 * Navigate to the cloned directory and run the following command to install Veron1CA's dependencies.
-```
+```bash
 python3 -m poetry install
 ```
 
@@ -51,7 +51,7 @@ COMMAND_PREFIX=your_command_prefix_here
 ```
 
 * Finally, install [FFmpeg](https://ffmpeg.org/) for your platform and run Veron1CA simply by using:
-```
+```bash
 python main.py
 ```
 <br>
