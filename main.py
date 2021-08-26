@@ -250,7 +250,7 @@ async def help(ctx: commands.Context, cmd=None):
             inline=False
         ).add_field(
             name='A handful of clickables!',
-            value='[Invite Me](https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1039658487&scope=bot%20applications.commands) / [My Website](https://shiddharth.github.io/Veron1CA) / [My Discord Server](https://discord.gg/rxd5v4n6KV)',
+            value='[Invite Me](https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1039658487&scope=bot%20applications.commands) / [My Website](https://shiddharth.github.io/Veron1CA) / [My Discord Server](https://discord.gg/6GNgcu7hjn)',
             inline=False
         )
         await ctx.send(embed=embed)
@@ -383,7 +383,7 @@ class ExceptionHandler(commands.Cog):
             await ctx.send(f'Whoops! {error} Try mentioning or pinging the role. You can also try using it\'s ID as an argument.')
 
         elif isinstance(error, commands.errors.MissingRequiredArgument):
-            await ctx.send(f'Oops, {error} Try typing `//help <command>` if you don\'t know how to use the command.')
+            await ctx.send(f'Oops, {error} Try typing `{prefix}help <command>` if you don\'t know how to use the command.')
 
         else:
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
@@ -1720,7 +1720,7 @@ if keep_alive_toggle:
         return f"<h2>{bot.user.name} is now live!</h2>"
 
     def run():
-        app.run(host='0.0.0.0',port=8080)
+        app.run(host='0.0.0.0', port=8080)
         
     def keep_alive():
         t = Thread(target=run)
