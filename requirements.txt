@@ -1,0 +1,10 @@
+# These are all the dependencies if you wanna run Veron1CA.
+# Go through README.md to know about the installation process.
+
+python-decouple
+gitpython
+discord.py[voice]
+topggpy
+youtube-dl
+flask
+discord-py-slash-command

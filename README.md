@@ -42,6 +42,11 @@ python3 -m pip install -U poetry
 python3 -m poetry install
 ```
 
+* Alternatively, you can use the `requirements.txt` file to install the dependencies with [Pip](https://pypi.org/project/pip/) if you don't have [Poetry](https://python-poetry.org/).
+```bash
+python3 -m pip install -r requirements.txt
+```
+
 * Once it's done, create a `.env` file in the same directory and assign the values accordingly.
 ```
 TOKEN=your_token_here
