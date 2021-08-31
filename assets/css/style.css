@@ -55,7 +55,8 @@ body {
 .header-btn {
     background-color: #283048;
     border-radius: 10px;
-    border: #283048;
+    border: 3px solid #859398;;
+    font-weight: 700;
     float: right;
     width: 195px;
     height: 51px;
