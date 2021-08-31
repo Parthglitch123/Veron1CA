@@ -78,9 +78,9 @@ python-versions = "*"
 "discord.py" = ">=1.7.3"
 
 [[package]]
-name = "discord-py-slash-command"
-version = "2.4.2"
-description = "A simple interaction handler for discord.py."
+name = "discord-py-interactions"
+version = "3.0.2"
+description = "A simple API wrapper for Discord interactions."
 category = "main"
 optional = false
 python-versions = ">=3.6"
@@ -258,7 +258,7 @@ python-versions = ">= 3.6"
 
 [[package]]
 name = "typing-extensions"
-version = "3.10.0.0"
+version = "3.10.0.2"
 description = "Backported and Experimental Type Hints for Python 3.5+"
 category = "main"
 optional = false
@@ -299,7 +299,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "07fcfe83d599a47047ca1ca541501e7be03db0bd0f5ce8875c30dd610c8bc627"
+content-hash = "a9fd8f255c1f0aa52ccf08323b4041fd1cf75dd2e932163de394b91638a18dd5"
 
 [metadata.files]
 aiohttp = [
@@ -408,9 +408,9 @@ discord = [
     {file = "discord-1.7.3-py3-none-any.whl", hash = "sha256:248d728356e149c818a81b94659047a19305ea1623d4810bbb342f6b7df55f36"},
     {file = "discord-1.7.3.tar.gz", hash = "sha256:846dd3d66888c2e0a8bd9120d8778a0fe088c003a7f6451668497f14e322a304"},
 ]
-discord-py-slash-command = [
-    {file = "discord-py-slash-command-2.4.2.tar.gz", hash = "sha256:12491cb2e79778da5539f88b21834dad024f4ff5576341737f0d1c5e6a24ee2c"},
-    {file = "discord_py_slash_command-2.4.2-py3-none-any.whl", hash = "sha256:00aabfc11b905785c55a199f896812b6986a1d1d378ca248264e4fdbfc58ca05"},
+discord-py-interactions = [
+    {file = "discord-py-interactions-3.0.2.tar.gz", hash = "sha256:14f11c2333a2287991abfe5169cd7be5d25fdaadec546f0da6cbd3de00fc75bd"},
+    {file = "discord_py_interactions-3.0.2-py3-none-any.whl", hash = "sha256:b50eb92d2b86bda71b02077d95a3089205f6b981baea28304ee80916e0a22029"},
 ]
 "discord.py" = [
     {file = "discord.py-1.7.3-py3-none-any.whl", hash = "sha256:c6f64db136de0e18e090f6752ea68bdd4ab0a61b82dfe7acecefa22d6477bb0c"},
@@ -576,9 +576,9 @@ topggpy = [
     {file = "topggpy-1.3.0.tar.gz", hash = "sha256:84d871b098117ca806b8b5817e6f587656d69b19268b3e8dbcf723f28069bb50"},
 ]
 typing-extensions = [
-    {file = "typing_extensions-3.10.0.0-py2-none-any.whl", hash = "sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497"},
-    {file = "typing_extensions-3.10.0.0-py3-none-any.whl", hash = "sha256:779383f6086d90c99ae41cf0ff39aac8a7937a9283ce0a414e5dd782f4c94a84"},
-    {file = "typing_extensions-3.10.0.0.tar.gz", hash = "sha256:50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342"},
+    {file = "typing_extensions-3.10.0.2-py2-none-any.whl", hash = "sha256:d8226d10bc02a29bcc81df19a26e56a9647f8b0a6d4a83924139f4a8b01f17b7"},
+    {file = "typing_extensions-3.10.0.2-py3-none-any.whl", hash = "sha256:f1d25edafde516b146ecd0613dabcc61409817af4766fbbcfb8d1ad4ec441a34"},
+    {file = "typing_extensions-3.10.0.2.tar.gz", hash = "sha256:49f75d16ff11f1cd258e1b988ccff82a3ca5570217d7ad8c5f48205dd99a677e"},
 ]
 werkzeug = [
     {file = "Werkzeug-1.0.1-py2.py3-none-any.whl", hash = "sha256:2de2a5db0baeae7b2d2664949077c2ac63fbd16d98da0ff71837f7d1dea3fd43"},
