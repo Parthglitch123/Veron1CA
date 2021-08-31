@@ -2,14 +2,14 @@
 <img src="https://i.imgur.com/oSyJaep.jpg"><br><br>
 An open source Discord moderation bot with all-in-one server moderation and beat handling capabilties.
 
-![GitHub](https://img.shields.io/github/license/shiddharth/Veron1CA?color=blue&style=for-the-badge)
-![GitHub Repo stars](https://img.shields.io/github/stars/shiddharth/Veron1CA?color=blue&style=for-the-badge)
-![GitHub watchers](https://img.shields.io/github/watchers/shiddharth/Veron1CA?color=blue&style=for-the-badge)
+![GitHub](https://img.shields.io/github/license/hitblast/Veron1CA?color=blue&style=for-the-badge)
+![GitHub Repo stars](https://img.shields.io/github/stars/hitblast/Veron1CA?color=blue&style=for-the-badge)
+![GitHub watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue&style=for-the-badge)
 
 ## Getting to know...
 Veron1CA is designed to be the collab of a Discord moderation bot and a chill music bot. It mainly focuses on next level server moderation, which can make customizing and controlling Discord servers a breeze! It's source is open as well, which means anybody can contribute to it if they spot a nasty bug in the code. We would like you to explore the powers of Veron1CA by yourself, as there's a lot of stuff out there waiting!
 
-Learn more / invite Veron1CA from [the official website here!](https://shiddharth.github.io/Veron1CA)
+Learn more / invite Veron1CA from [the official website here!](https://hitblast.github.io/Veron1CA)
 <br><br>
 
 ## Things to note...
@@ -29,7 +29,7 @@ Keep in mind that being careless with any of these can cause chaotic results. Ho
 ## Self-hosting
 * Clone the project. You can easily do this using:
 ```bash
-git clone https://github.com/shiddharth/Veron1CA.git
+git clone https://github.com/hitblast/Veron1CA.git
 ```
 
 * Install [Poetry](https://python-poetry.org/) using Python's built-in package manager, [Pip](https://pypi.org/project/pip/).
@@ -69,7 +69,7 @@ As mentioned in an earlier statement, Veron1CA is open source, and if you feel l
 <blockquote>
 MIT License
 
-Copyright (c) 2021 Anindya Shiddhartha
+Copyright (c) 2021 HitBlast
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

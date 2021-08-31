@@ -1,6 +1,6 @@
 '''
 Veron1CA
-Licensed under MIT; Copyright 2021 Anindya Shiddhartha
+Licensed under MIT; Copyright 2021 HitBlast
 '''
 
 
@@ -250,7 +250,7 @@ async def help(ctx: commands.Context, cmd=None):
             inline=False
         ).add_field(
             name='A handful of clickables!',
-            value='[Invite Me](https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1039658487&scope=bot%20applications.commands) / [My Website](https://shiddharth.github.io/Veron1CA) / [My Discord Server](https://discord.gg/6GNgcu7hjn)',
+            value='[Invite Me](https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1039658487&scope=bot%20applications.commands) / [My Website](https://hitblast.github.io/Veron1CA) / [My Discord Server](https://discord.gg/6GNgcu7hjn)',
             inline=False
         )
         await ctx.send(embed=embed)
