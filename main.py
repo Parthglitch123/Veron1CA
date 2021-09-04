@@ -113,6 +113,20 @@ def generate_random_footer():
     return random.choice(footers_list)
 
 
+def generate_error_embed(title, description, footer_avatar_url):
+    embed = (
+        discord.Embed(
+            title=f'Whoops! {title}',
+            description=description,
+            color=accent_color
+        ).set_footer(
+            text=generate_random_footer(),
+            icon_url=footer_avatar_url
+        )
+    )
+    return embed
+
+
 async def vote_check(user_id):
     if await bot.topggpy.get_user_vote(user_id):
         return True
@@ -362,30 +376,31 @@ class ExceptionHandler(commands.Cog):
             return
 
         if isinstance(error, commands.DisabledCommand):
-            await ctx.send(f'{ctx.command} has been disabled.')
+            await ctx.send(embed=generate_error_embed(title='This command is disabled.', error=f'The command `{ctx.command}` has been disabled by the developer.', footer_avatar_url=ctx.author.avatar_url))
 
         elif isinstance(error, commands.NoPrivateMessage):
             try:
-                await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')
+                await ctx.send(embed=generate_error_embed(title='This command can\'t be used in DMs.', error=f'The command `{ctx.command}` has been configured to only be executed in servers, not DM channels.', footer_avatar_url=ctx.author.avatar_url))
             except discord.HTTPException:
                 pass
 
         elif isinstance(error, commands.MissingRole):
-            await ctx.send(f'Whoops! {error}')
+            await ctx.send(embed=generate_error_embed(title='You\'re missing a role!', description=error, footer_avatar_url=ctx.author.avatar_url))
 
         elif isinstance(error, commands.MissingAnyRole):
-            await ctx.send(f'Whoops! {error}')
+            await ctx.send(embed=generate_error_embed(title='You\'re missing one of these roles.', description=error, footer_avatar_url=ctx.author.avatar_url))
 
         elif isinstance(error, commands.errors.UserNotFound):
-            await ctx.send(f'Whoops! {error} Try mentioning or pinging them! You can also try using their ID as an argument.')
+            await ctx.send(embed=generate_error_embed(title='The user wasn\'t found.', description=f'{error} Try mentioning or pinging them. You can also pass their ID as the argument.', footer_avatar_url=ctx.author.avatar_url))
 
         elif isinstance(error, commands.errors.RoleNotFound):
-            await ctx.send(f'Whoops! {error} Try mentioning or pinging the role. You can also try using it\'s ID as an argument.')
+            await ctx.send(embed=generate_error_embed(title='The role wasn\'t found.', description=f'{error} Try mentioning or pinging it. You can also pass it\'s ID as the argument.', footer_avatar_url=ctx.author.avatar_url))
 
         elif isinstance(error, commands.errors.MissingRequiredArgument):
-            await ctx.send(f'Oops, {error} Try typing `{prefix}help <command>` if you don\'t know how to use the command.')
+            await ctx.send(embed=generate_error_embed(title='You\'re missing a required argument.', description=f'{error} Try typing `{prefix}help {ctx.command}` for more information on how to use this command.', footer_avatar_url=ctx.author.avatar_url))
 
         else:
+            await ctx.send(embed=generate_error_embed(title='An internal error occured.', description='If you think that it shouldn\'t happen, then try opening a ticket in our [support server]() and describe the issue. We\'ll try our best to demolish the bug for you (if it\'s there).', footer_avatar_url=ctx.author.avatar_url))
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
@@ -777,7 +792,9 @@ class Moderation(commands.Cog):
         if amount > 100:
             await ctx.send('Ripple purges are limited to 100 messages per use!')
         else:
+            await ctx.message.add_reaction('✅')
             messages = await ctx.history(limit=amount).flatten()
+
             for message in messages:
                 if message.author == member:
                     await message.delete()
