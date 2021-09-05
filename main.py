@@ -80,7 +80,6 @@ def calc_ping(ping):
     else:
         return 'Average'
 
-
 def get_cog_commands(cog_name):
     all_commands = str()
     cog = bot.get_cog(cog_name)
@@ -88,13 +87,11 @@ def get_cog_commands(cog_name):
         all_commands += f'`{command}` '
     return all_commands
 
-
 def developer_check(author_id):
     if author_id == owner:
         return True
     else:
         return False
-
 
 def generate_random_footer():
     footers_list = [
@@ -112,7 +109,6 @@ def generate_random_footer():
     ]
     return random.choice(footers_list)
 
-
 def generate_error_embed(title, description, footer_avatar_url):
     embed = (
         discord.Embed(
@@ -126,20 +122,17 @@ def generate_error_embed(title, description, footer_avatar_url):
     )
     return embed
 
-
 async def vote_check(user_id):
     if await bot.topggpy.get_user_vote(user_id):
         return True
     else:
         return False
 
-
 async def freeze_check(message):
     for frozen_guild in frozen_guilds:
         if frozen_guild[1] == message.guild and frozen_guild[2] == message.channel and frozen_guild[0] != message.author:
             await message.delete()
             return True
-
 
 async def swear_check(message):
     profanity_inside = int()
@@ -165,13 +158,11 @@ async def swear_check(message):
                 await message.channel.send(f'You\'ve been automatically blocked from chatting, {message.author.mention}! Try not to swear that much.')
             return True
 
-
 async def jail_check(message):
     for jail_member in jail_members:
         if jail_member[1] == message.guild and jail_member[0] == message.author:
             await message.delete()
             return True
-
 
 async def web_trap_check(message):
     global msg_web_target
