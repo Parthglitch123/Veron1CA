@@ -57,7 +57,7 @@ COMMAND_PREFIX=your_command_prefix_here
 
 * Finally, install [FFmpeg](https://ffmpeg.org/) for your platform and run Veron1CA simply by using:
 ```bash
-python main.py
+python3 main.py
 ```
 <br>
 
