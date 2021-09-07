@@ -1515,7 +1515,10 @@ class Music(commands.Cog):
         help='Displays the currently playing song.'
     )
     async def _now(self, ctx: commands.Context):
-        await ctx.send(embed=ctx.voice_state.current.create_embed())
+        try:
+            await ctx.send(embed=ctx.voice_state.current.create_embed())
+        except AttributeError:
+            await ctx.send('There\'s nothing being played at the moment.')
 
     @commands.command(
         name='pause', 
@@ -1628,7 +1631,7 @@ class Music(commands.Cog):
     )
     async def _loop(self, ctx: commands.Context):
         if not ctx.voice_state.is_playing:
-            return await ctx.send('Nothing being played at the moment.')
+            return await ctx.send('There\'s nothing being played at the moment.')
 
         ctx.voice_state.loop = not ctx.voice_state.loop
         if ctx.voice_state.loop:
