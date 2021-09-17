@@ -21,34 +21,63 @@ from threading import Thread
 # Import third-party libraries.
 import git
 import topgg
-import discord
 import youtube_dl
 from flask import Flask
-from decouple import config
-from discord.ext import commands
+from tinydb import TinyDB, Query
 from async_timeout import timeout
+from better_profanity import profanity
+from decouple import config, UndefinedValueError
+import discord
+from discord.ext import commands
 from discord_slash import cog_ext, SlashCommand, SlashContext
 from discord_slash.utils.manage_commands import create_option
 
 
 # Environment variables.
-token = config('TOKEN', default=None, cast=str)
-dbl_token = config('DBL_TOKEN', default=None, cast=str)
-owner = config('OWNER_ID', default=None, cast=int)
-prefix = config('COMMAND_PREFIX', default=None, cast=str)
+try:
+    token = config('TOKEN', cast=str)
+    dbl_token = config('DBL_TOKEN', default=None, cast=str)
+    owner = config('OWNER_ID', cast=int)
+    prefix = config('COMMAND_PREFIX', default='vrn.', cast=str)
+
+except UndefinedValueError:
+    print('One or more secrets have been left undefined. Consider going through the README.md file for proper instructions on setting Veron1CA up.')
+    time.sleep(5)
+    exit()
+
+
+# Setting up the database for guild-based operations.
+db = TinyDB('guild-db.json')
+Guild = Query()
+
+
+# Get command prefix by guild ID.
+def get_prefix(bot, message):
+    guild_prefix = prefix
+
+    for guild in db.all():
+        if guild['id'] == message.guild.id: 
+            if guild['prefix']:
+                guild_prefix = guild['prefix']
+
+    return commands.when_mentioned_or(guild_prefix)(bot, message)
 
 
 # System variables.
-accent_color = 0xb6c1c6
+accent_color = [11977158, 14573921]
 lock_roles = ['BotMod', 'BotAdmin']
 last_restarted_str = str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 last_restarted_obj = time.time()
 
 
 # Setting up bot and slash commands.
-bot = commands.Bot(commands.when_mentioned_or(prefix), intents=discord.Intents.all(), help_command=None)
+bot = commands.Bot(command_prefix=get_prefix, intents=discord.Intents.all(), help_command=None)
 bot.topggpy = topgg.DBLClient(bot, dbl_token)
 slash = SlashCommand(bot, sync_commands=True)
+
+
+# Loading the word list for the swear filter.
+profanity.load_censor_words_from_file('filtered.txt')
 
 
 # Toggles.
@@ -70,6 +99,10 @@ snipeables = list()
 
 
 # System functions.
+def get_guild_prefix(id):
+    guild = db.search(Guild.id == id)
+    return guild[0]['prefix']
+
 def calc_ping(ping):
     if ping <= 20:
         return 'Excellent'
@@ -90,8 +123,6 @@ def get_cog_commands(cog_name):
 def developer_check(author_id):
     if author_id == owner:
         return True
-    else:
-        return False
 
 def generate_random_footer():
     footers_list = [
@@ -114,7 +145,7 @@ def generate_error_embed(title, description, footer_avatar_url):
         discord.Embed(
             title=f'Whoops! {title}',
             description=description,
-            color=accent_color
+            color=accent_color[1]
         ).set_footer(
             text=generate_random_footer(),
             icon_url=footer_avatar_url
@@ -125,8 +156,6 @@ def generate_error_embed(title, description, footer_avatar_url):
 async def vote_check(user_id):
     if await bot.topggpy.get_user_vote(user_id):
         return True
-    else:
-        return False
 
 async def freeze_check(message):
     for frozen_guild in frozen_guilds:
@@ -135,28 +164,9 @@ async def freeze_check(message):
             return True
 
 async def swear_check(message):
-    profanity_inside = int()
     if not message.author.bot:
-        msg = message.content
-        symbols = ['?', '.', ',', '(', ')', '[', ']', '{', '}', '+', '-', '/',
-                    '=', '|', '_', '*', '&', '!', '@', '#', '$', '%', '^', '<', '>', '`', '~']
-
-        for msg_word in msg.split():
-            for symbol in symbols:
-                if symbol in msg_word:
-                    msg_word = msg_word.replace(symbol, '')
-
-            for filtered_word in filtered_wordlist:
-                if filtered_word.lower() == msg_word.lower():
-                    profanity_inside += 1
-
-        if profanity_inside:
+        if profanity.contains_profanity(message.content):
             await message.delete()
-
-            if profanity_inside >= 3:
-                await message.channel.set_permissions(message.author, send_messages=False)
-                await message.channel.send(f'You\'ve been automatically blocked from chatting, {message.author.mention}! Try not to swear that much.')
-            return True
 
 async def jail_check(message):
     for jail_member in jail_members:
@@ -178,7 +188,7 @@ async def web_trap_check(message):
                         discord.Embed(
                             title='Web Trap Retracted', 
                             description='The web trap that you had enabled has been retracted successfully after it\'s operation. Below is the list of five messages that the web captured.',
-                            color=accent_color
+                            color=accent_color[0]
                         )
                         .set_footer(
                             text=generate_random_footer(), 
@@ -195,16 +205,11 @@ async def web_trap_check(message):
                     msg_web_records = list()
 
 
-# Opening wordlist file for word filter feature.
-with open('filtered.txt', 'r') as filtered_wordfile:
-    filtered_wordlist = filtered_wordfile.read().split()
-
-
 # Bot events.
 @bot.event
 async def on_ready():
     os.system('clear')
-    print(f'{bot.user.name} | Viewing Terminal\n')
+    print(f'{bot.user.name} | Read-only Terminal\n')
     print(
         f'\nLog: {bot.user.name} has been deployed in {len(bot.guilds)} server(s).')
     await bot.change_presence(status=discord.Status.dnd, activity=discord.Activity(type=discord.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(bot.guilds)} server(s)!'))
@@ -219,6 +224,9 @@ async def on_message(message):
     if not await freeze_check(message):
         if not await swear_check(message):
             if not await jail_check(message):
+                if not db.search(Guild.id == message.guild.id):
+                    db.insert({'id': message.guild.id, 'prefix': None})
+
                 await bot.process_commands(message)
                 await web_trap_check(message)
                 
@@ -241,7 +249,7 @@ async def help(ctx: commands.Context, cmd=None):
         embed = (
             discord.Embed(
                 title=f'It\'s {bot.user.name} onboard!', 
-                color=accent_color
+                color=accent_color[0]
             ).set_footer(
                 text=f'Help requested by {ctx.author.name}',
                 icon_url=ctx.author.avatar_url
@@ -265,7 +273,7 @@ async def help(ctx: commands.Context, cmd=None):
             discord.Embed(
                 title='Here\'s an entire list of commands!',
                 description=f'My default command prefix is `{prefix}` and you can type `{prefix}help <command>` in the chat to get information on a particular command.', 
-                color=accent_color
+                color=accent_color[0]
             ).set_footer(
                 text=f'Command list requested by {ctx.author.name}',
                 icon_url=ctx.author.avatar_url
@@ -313,7 +321,7 @@ async def help(ctx: commands.Context, cmd=None):
                     embed = (
                         discord.Embed(
                             title=f'Command Docs -> {command.name}', 
-                            color=accent_color
+                            color=accent_color[0]
                         ).set_footer(
                             text=f'Command help requested by {ctx.author.name}',
                             icon_url=ctx.author.avatar_url
@@ -384,11 +392,20 @@ class ExceptionHandler(commands.Cog):
         elif isinstance(error, commands.errors.UserNotFound):
             await ctx.send(embed=generate_error_embed(title='The user wasn\'t found.', description=f'{error} Try mentioning or pinging them. You can also pass their ID as the argument.', footer_avatar_url=ctx.author.avatar_url))
 
+        elif isinstance(error, commands.errors.MemberNotFound):
+            await ctx.send(embed=generate_error_embed(title='The member wasn\'t found.', description=f'{error} Try mentioning or pinging them. You can also pass their ID as the argument.', footer_avatar_url=ctx.author.avatar_url))
+
         elif isinstance(error, commands.errors.RoleNotFound):
             await ctx.send(embed=generate_error_embed(title='The role wasn\'t found.', description=f'{error} Try mentioning or pinging it. You can also pass it\'s ID as the argument.', footer_avatar_url=ctx.author.avatar_url))
 
         elif isinstance(error, commands.errors.MissingRequiredArgument):
             await ctx.send(embed=generate_error_embed(title='You\'re missing a required argument.', description=f'{error} Try typing `{prefix}help {ctx.command}` for more information on how to use this command.', footer_avatar_url=ctx.author.avatar_url))
+
+        elif isinstance(error, discord.errors.Forbidden):
+            await ctx.send(embed=generate_error_embed(title='The command couldn\'t be processed.', description='Either I\'m missing the required permissions or I just need to be at a higher position in the role hierarchy.', footer_avatar_url=ctx.author.avatar_url))
+
+        elif isinstance(error, discord.errors.NotFound):
+            pass
 
         else:
             await ctx.send(embed=generate_error_embed(title='An internal error occured.', description='If you think that it shouldn\'t happen, then try opening a ticket in our [support server]() and describe the issue. We\'ll try our best to demolish the bug for you (if it\'s there).', footer_avatar_url=ctx.author.avatar_url))
@@ -412,7 +429,7 @@ class Chill(commands.Cog):
         embed = (
             discord.Embed(
                 title='Here\'s what I found!', 
-                color=accent_color
+                color=accent_color[0]
             ).set_image(
                 url=member.avatar_url
             ).set_footer(
@@ -441,7 +458,7 @@ class Chill(commands.Cog):
         embed = (
             discord.Embed(
                 title='Here\'s what I found!', 
-                color=accent_color
+                color=accent_color[0]
             ).set_image(
                 url=member.avatar_url
             ).set_footer(
@@ -462,7 +479,7 @@ class Chill(commands.Cog):
         embed = (
             discord.Embed(
                 title='System Status', 
-                color=accent_color
+                color=accent_color[0]
             ).add_field(
                 name='Latency', 
                 value=f'{ping}ms ({calc_ping(ping)})', 
@@ -493,7 +510,7 @@ class Chill(commands.Cog):
         embed = (
             discord.Embed(
                 title='System Status', 
-                color=accent_color
+                color=accent_color[0]
             ).add_field(
                 name='Latency', 
                 value=f'{ping}ms ({calc_ping(ping)})', 
@@ -523,7 +540,7 @@ class Chill(commands.Cog):
                 discord.Embed(
                     title=':military_medal: Voting Section', 
                     description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourages him to launch more updates.',
-                    color=accent_color
+                    color=accent_color[0]
                 ).add_field(
                     name='Voting Links', 
                     value='Link ~1: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
@@ -546,7 +563,7 @@ class Chill(commands.Cog):
                 discord.Embed(
                     title=':military_medal: Voting Section', 
                     description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourage him to launch more updates.',
-                    color=accent_color
+                    color=accent_color[0]
                 ).add_field(
                     name='Voting Links', 
                     value='Link ~1: [Click here to redirect!](https://top.gg/bot/867998923250352189/vote/)'
@@ -595,7 +612,7 @@ class Inspection(commands.Cog):
         embed = (
             discord.Embed(
                 title=f'{ctx.author.name} has something up for you!', 
-                color=accent_color
+                color=accent_color[0]
             )
         ).add_field(
             name='Message:', 
@@ -622,7 +639,7 @@ class Inspection(commands.Cog):
             discord.Embed(
                 title=f'{user.name}\'s Bio',
                 description=user.activities[0],
-                color=accent_color
+                color=accent_color[0]
             )
         ).add_field(
             name='Name', 
@@ -665,7 +682,7 @@ class Inspection(commands.Cog):
             discord.Embed(
                 title=guild.name,
                 description=f'Showing all necessary information related to this guild. Scroll to find out more about {guild.name}!', 
-                color=accent_color
+                color=accent_color[0]
             )
         ).add_field(
             name='Creation Date',
@@ -685,6 +702,9 @@ class Inspection(commands.Cog):
         ).add_field(
             name='Channels', 
             value=len(guild.channels)
+        ).add_field(
+            name='Command Prefix',
+            value=prefix if not get_guild_prefix(ctx.guild.id) else get_guild_prefix(ctx.guild.id)
         ).set_thumbnail(
             url=ctx.guild.icon_url
         ).set_footer(
@@ -702,7 +722,7 @@ class Inspection(commands.Cog):
         embed = (
             discord.Embed(
                 title=f'Role Information: {str(role)}', 
-                color=accent_color
+                color=accent_color[0]
             )
         ).add_field(
             name='Creation Date:', 
@@ -742,7 +762,7 @@ class Inspection(commands.Cog):
                 discord.Embed(
                     title='Audit Log', 
                     description=f'Showing the latest {audit_limit} entries that were made in the audit log of {ctx.guild.name}.', 
-                    color=accent_color
+                    color=accent_color[0]
                 ).set_footer(
                     text=generate_random_footer(), 
                     icon_url=ctx.author.avatar_url
@@ -861,7 +881,7 @@ class Moderation(commands.Cog):
         embed = (
             discord.Embed(
                 title='Now viewing the prison!', 
-                color=accent_color
+                color=accent_color[0]
             ).set_footer(
                 icon_url=ctx.author.avatar_url, 
                 text=generate_random_footer()
@@ -953,7 +973,7 @@ class Moderation(commands.Cog):
         embed = (
             discord.Embed(
                 title='Now viewing banned members!', 
-                color=accent_color
+                color=accent_color[0]
             ).set_footer(
                 icon_url=ctx.author.avatar_url, 
                 text=generate_random_footer()
@@ -1019,7 +1039,7 @@ class Customization(commands.Cog):
         invite = await ctx.channel.create_invite(max_age=max_age, max_uses=max_uses, reason=reason)
         embed = (
             discord.Embed(
-                color=accent_color
+                color=accent_color[0]
             ).add_field(
                 name='Link', 
                 value=invite
@@ -1060,7 +1080,7 @@ class Customization(commands.Cog):
         embed = (
             discord.Embed(
                 title='Now viewing invite codes!', 
-                color=accent_color
+                color=accent_color[0]
             ).set_footer(
                 icon_url=ctx.author.avatar_url, 
                 text=generate_random_footer()
@@ -1125,6 +1145,15 @@ class Customization(commands.Cog):
         await ctx.send(f'Role {role.mention} has been given to {member.mention}, peace! :partying_face:')
 
     @commands.command(
+        name='nick',
+        value='Changes the nickname of a member.'
+    )
+    @commands.has_role(lock_roles[1])
+    async def nick(self, ctx: commands.Context, member: discord.Member, nick):
+        await member.edit(nick=nick)
+        await ctx.message.add_reaction('✅')
+
+    @commands.command(
         name='makech', 
         help='Creates a server channel.'
     )
@@ -1144,6 +1173,15 @@ class Customization(commands.Cog):
     async def removech(self, ctx: commands.Context, channel_name: discord.TextChannel):
         await channel_name.delete()
         await ctx.message.add_reaction('✅')
+
+    @commands.command(
+        name='prefix',
+        help='Shows / changes the server\'s default command prefix.'
+    )
+    @commands.has_role(lock_roles[1])
+    async def prefix(self, ctx: commands.Context, prefix=None):
+        db.update({'prefix': prefix}, Guild.id == ctx.guild.id)
+        await ctx.send(f'Changed server prefix to `{prefix}`!')
 
 
 # Music category commands.
@@ -1181,6 +1219,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
     }
 
     ytdl = youtube_dl.YoutubeDL(YTDL_OPTIONS)
+    ytdl.cache.remove()
 
     def __init__(self, ctx: commands.Context, source: discord.FFmpegPCMAudio, *, data: dict, volume: float = 0.5):
         super().__init__(source, volume)
@@ -1280,14 +1319,16 @@ class Song:
         self.requester = source.requester
 
     def create_embed(self):
+        duration = 'Live' if not self.source.duration else self.source.duration
+
         embed = (
             discord.Embed(
                 title='Now vibin\' to:',
                 description='```css\n{0.source.title}\n```'.format(self),
-                color=accent_color
+                color=accent_color[0]
             ).add_field(
                 name='Duration', 
-                value=self.source.duration
+                value=duration
             ).add_field(
                 name='Requested by', 
                 value=self.requester.mention
@@ -1334,6 +1375,7 @@ class VoiceState:
 
         self.current = None
         self.voice = None
+        self.exists = True
         self.next = asyncio.Event()
         self.songs = SongQueue()
 
@@ -1383,7 +1425,7 @@ class VoiceState:
                 self.current.source.volume = self._volume
                 self.voice.play(self.current.source, after=self.play_next_song)
 
-            elif self.loop == True:
+            elif self.loop:
                 self.now = discord.FFmpegPCMAudio(self.current.source.stream_url, **YTDLSource.FFMPEG_OPTIONS)
                 self.voice.play(self.now, after=self.play_next_song)
             
@@ -1416,7 +1458,7 @@ class Music(commands.Cog):
 
     def get_voice_state(self, ctx: commands.Context):
         state = self.voice_states.get(ctx.guild.id)
-        if not state:
+        if not state or not state.exists:
             state = VoiceState(self.bot, ctx)
             self.voice_states[ctx.guild.id] = state
 
@@ -1495,14 +1537,14 @@ class Music(commands.Cog):
                 return await ctx.send('Volume must be between 0 and 100 to execute the command.')
 
             ctx.voice_state.current.source.volume = volume / 100
-            await ctx.send('Volume of the player is now set to **{}%**'.format(volume))
+            await ctx.send(f'Volume of the player is now set to **{volume}%**')
 
         else:
             embed = (
                 discord.Embed(
                     title='Whoops!',
                     description='This command is locked for performance reasons. If you wanna adjust the volume, make sure to [vote for me](https://top.gg/bot/867998923250352189/vote/) in order to unlock the command.',
-                    color=accent_color
+                    color=accent_color[0]
                 ).set_footer(
                     text='It\'s free, it only takes a minute to do and it also supports my creator a lot!',
                     icon_url=ctx.author.avatar_url
@@ -1656,14 +1698,13 @@ class Music(commands.Cog):
                 song = Song(source)
 
                 await ctx.voice_state.songs.put(song)
-                await ctx.send('Enqueued {} for the jam!'.format(str(source)))
+                await ctx.send(f'Enqueued {str(source)} for the jam!')
 
     @_join.before_invoke
     @_play.before_invoke
     async def ensure_voice_state(self, ctx: commands.Context):
         if not ctx.author.voice or not ctx.author.voice.channel:
-            raise commands.CommandError(
-                'You are not connected to any voice channel.')
+            raise commands.CommandError('You are not connected to any voice channel.')
 
         if ctx.voice_client:
             if ctx.voice_client.channel != ctx.author.voice.channel:
@@ -1696,7 +1737,7 @@ class Developer(commands.Cog):
                     discord.Embed(
                         title=f'Fetching latest code for me...', 
                         description='I will automatically restart when the possible updates are done setting up! Please be patient.',
-                        color=accent_color
+                        color=accent_color[0]
                     ).set_footer(
                         text=generate_random_footer(), 
                         icon_url=ctx.author.avatar_url
