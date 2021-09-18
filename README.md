@@ -11,7 +11,7 @@ Veron1CA is designed to be the collab of a Discord moderation bot and a chill mu
 
 - Almost every necessary moderation command with some creative ones as well.
 - Continuously updating codebase with regular maintenance.
-- Built with modern Pythonic syntax and the [Discord.py](https://github.com/Rapptz/discord.py) library.
+- Built with modern, organized Python syntax.
 
 Learn more / invite Veron1CA from [the official website here!](https://hitblast.github.io/Veron1CA)
 <br><br>
