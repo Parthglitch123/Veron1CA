@@ -2,11 +2,11 @@
 # Go through README.md to know about the installation process.
 
 flask
+uvloop
 tinydb
 topggpy
 gitpython
 youtube-dl
 python-decouple
 better_profanity
-discord.py[voice]
-discord-py-interactions
+disnake[voice]
