@@ -879,7 +879,6 @@ class Moderation(commands.Cog):
                     webhook = await ctx.message.channel.create_webhook(name=snipeable.author.name)
                     await webhook.send(snipeable.content, username=snipeable.author.name, avatar_url=snipeable.author.avatar)
                     await webhook.delete()
-                    snipeables.remove(snipeable)
 
         else:
             await ctx.reply('No messages were found in my list.')
