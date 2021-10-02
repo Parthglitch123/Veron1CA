@@ -20,7 +20,7 @@ Learn more / invite Veron1CA from [the official website here!](https://hitblast.
 Now that you've successfully added Veron1CA to your server, it's time for some key things to note down. The **default prefix** for accessing Veron1CA is `vrn.` in this case. Here's a bunch of stuff that you can do with it:
 * Use `vrn.<command>` to run your desired command. As an example, you can use `vrn.ping` to get Veron1CA's latency.
 * Use `vrn.help` to get into the help section.
-* Use `vrn.help all` to get an entire list of commands that you can use.
+* Use `vrn.help <category>` to get an entire list of commands depending on which category you choose.
 * Use `vrn.help <command>` to get help regarding a specific command. For example, you can use `vrn.help ping` in order to get help for the ping command.
 
 There's also another thing to consider in this case, and that's **role locking**. By default, Veron1CA's moderation and customization-based features are locked to specific roles. We have two unlockable ones to create here:
