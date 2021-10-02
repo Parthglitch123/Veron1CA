@@ -877,7 +877,7 @@ class Moderation(commands.Cog):
             for snipeable in snipeables:
                 if snipeable.guild == ctx.guild:
                     webhook = await ctx.message.channel.create_webhook(name=snipeable.author.name)
-                    await webhook.send(snipeable.content, username=snipeable.author.name, avatar=snipeable.author.avatar)
+                    await webhook.send(snipeable.content, username=snipeable.author.name, avatar_url=snipeable.author.avatar)
                     await webhook.delete()
                     snipeables.remove(snipeable)
 
