@@ -314,6 +314,10 @@ class HelpCommand(commands.HelpCommand):
         )
         await ctx.reply(embed=embed)
 
+    async def send_error_message(self, error):
+        ctx = self.context
+        await ctx.send(embed=generate_error_embed(title='This isn\'t a command.', description=error, footer_avatar=ctx.author.avatar))
+
 
 # The main Bot class for root operations and events.
 class Bot(commands.AutoShardedBot):
@@ -359,12 +363,11 @@ class Bot(commands.AutoShardedBot):
 
     async def on_member_join(self, member: disnake.Member):
         guild = db.search(Guild.id == member.guild.id)
-        if guild:
-            if guild[0]['greet_members']:
-                await member.send(f'Welcome to {member.guild}, {member.mention}! Hope you enjoy your stay here.')
+        if guild and guild[0]['greet_members']:
+            await member.send(f'Welcome to {member.guild}, {member.mention}! Hope you enjoy your stay here.')
 
 
-# setting up the fundamentals.
+# Setting up the fundamentals.
 uvloop.install()
 bot = Bot()
 bot.topggpy = topgg.DBLClient(bot, dbl_token)
@@ -1392,8 +1395,7 @@ class Song:
 
         embed = (
             disnake.Embed(
-                title='Now vibing!',
-                description='```css\n{0.source.title}\n```'.format(self),
+                title=f'{self.source.title}',
                 color=accent_color[0]
             ).add_field(
                 name='Duration', 
@@ -1519,7 +1521,7 @@ class VoiceState:
 class Music(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
-        self.voice_states = {}
+        self.voice_states = dict()
 
     def get_voice_state(self, ctx: commands.Context):
         state = self.voice_states.get(ctx.guild.id)
