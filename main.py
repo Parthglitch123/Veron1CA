@@ -1787,7 +1787,7 @@ class Music(commands.Cog):
             embed = (
                 disnake.Embed(
                     title='Looping right now...' if ctx.voice_state.loop else 'Looping stopped...',
-                    color=accent_color
+                    color=accent_color[0]
                 ).set_footer(
                     text=generate_random_footer(),
                     icon_url=ctx.author.avatar
