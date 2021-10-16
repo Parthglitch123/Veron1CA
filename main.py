@@ -21,6 +21,7 @@ from threading import Thread
 # Import third-party libraries.
 import git
 import topgg
+import qrcode
 import youtube_dl
 from flask import Flask
 from tinydb import TinyDB, Query
@@ -110,6 +111,15 @@ def generate_random_footer():
     ]
     return random.choice(footers_list)
 
+def generate_qr_code(id: str, text_to_embed: str):
+    img = qrcode.make(text_to_embed)
+
+    file_name = f'{id}.png'
+    img.save(file_name)
+    file = disnake.File(file_name, filename=file_name)
+
+    return file_name, file
+
 def generate_error_embed(title: str, description: str, footer_avatar):
     embed = (
         disnake.Embed(
@@ -187,7 +197,7 @@ def is_developer(ctx: commands.Context):
         return True
 
 
-# Views.
+# Views (static).
 class VoteCommandView(disnake.ui.View):
     def __init__(self, *, timeout: float=30):
         super().__init__(timeout=timeout)
@@ -202,14 +212,6 @@ class HelpCommandView(disnake.ui.View):
         self.add_item(disnake.ui.Button(label='Invite Me', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1039658487&scope=bot%20applications.commands'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
         self.add_item(disnake.ui.Button(label='Discord Server', url='https://discord.gg/6GNgcu7hjn'))
-
-class NowCommandView(disnake.ui.View):
-    def __init__(self, *, url=str, views=str, likes=str, timeout: float=30):
-        super().__init__(timeout=timeout)
-
-        self.add_item(disnake.ui.Button(label='Redirect', url=url))
-        self.add_item(disnake.ui.Button(label=f'{int(views):,} Views', style=disnake.ButtonStyle.grey))
-        self.add_item(disnake.ui.Button(label=f'{int(likes):,} Likes', style=disnake.ButtonStyle.grey))
 
 
 # Custom help command.
@@ -326,8 +328,7 @@ class Bot(commands.AutoShardedBot):
 
     async def on_connect(self):
         os.system('clear')
-        print(f'{bot.user.name} | Read-only Terminal\n\n')
-        print(f'Log: Connected to Discord, warming up...')
+        print(f'{bot.user.name} | Read-only Terminal\n\nLog: Connected to Discord, warming up...')
 
     async def on_ready(self):
         print(f'Log: {bot.user.name} has been deployed in {len(bot.guilds)} server(s) with {bot.shard_count} shard(s) active.')
@@ -383,8 +384,7 @@ class YTDLError(Exception):
 
 # Global exception handler cog.
 class ExceptionHandler(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -440,7 +440,17 @@ class ExceptionHandler(commands.Cog):
             pass
 
         else:
-            await ctx.reply(embed=generate_error_embed(title='An internal error occured.', description='If you think that it shouldn\'t happen, then try opening a ticket in our [support server]() and describe the issue. We\'ll try our best to demolish the bug for you (if it\'s there).', footer_avatar=ctx.author.avatar))
+            embed = (
+                generate_error_embed(
+                    title='An internal error occured.', 
+                    description='If you think that it shouldn\'t happen, then try opening a ticket in our [support server]() and describe the issue. We\'ll try our best to demolish the bug for you (if it\'s there).', 
+                    footer_avatar=ctx.author.avatar
+                ).add_field(
+                    name='Raised Error:',
+                    value=f'```{error}```'
+                )
+            )
+            await ctx.reply(embed=embed)
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
@@ -452,8 +462,7 @@ class ExceptionHandler(commands.Cog):
 
 # Chill category commands.
 class Chill(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.command(
@@ -632,8 +641,7 @@ class Chill(commands.Cog):
 
 # Casual category commands.
 class Inspection(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.command(
@@ -670,10 +678,10 @@ class Inspection(commands.Cog):
         if not user:
             user = ctx.author
 
+        qr_file_name, qr_file = generate_qr_code(id=ctx.author.id, text_to_embed=f'https://discordapp.com/users/{ctx.author.id}/')
+
         embed = (
             disnake.Embed(
-                title=f'{user.name}\'s Bio',
-                description=user.activities[0],
                 color=accent_color[0]
             )
         ).add_field(
@@ -683,8 +691,8 @@ class Inspection(commands.Cog):
             name='Status', 
             value=user.status
         ).add_field(
-            name='User ID', 
-            value=user.id
+            name='Joining Date', 
+            value=user.created_at.strftime("%b %d, %Y")
         ).add_field(
             name='Discriminator', 
             value=user.discriminator
@@ -695,16 +703,28 @@ class Inspection(commands.Cog):
             name='Roles', 
             value=len(user.roles)
         ).add_field(
-            name='Discord Joining Date',
-            value=user.created_at.strftime("%b %d, %Y"), 
+            name='Identifier',
+            value=user.id, 
             inline=False
         ).set_thumbnail(
-            url=user.avatar
-        ).set_footer(
-            text=generate_random_footer(),
-            icon_url=ctx.author.avatar
+            url=f'attachment://{qr_file_name}'
         )
-        await ctx.reply(embed=embed)
+        
+        try:
+            embed.set_footer(
+                text=user.activities[0],
+                icon_url=ctx.author.avatar
+            )
+        except:
+            embed.set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar
+            )
+
+        await ctx.reply(file=qr_file, embed=embed)
+        
+        if os.path.exists(qr_file_name):
+            os.remove(qr_file_name)
 
     @commands.command(
         name='guildinfo', 
@@ -742,7 +762,7 @@ class Inspection(commands.Cog):
             name='Command Prefix',
             value=prefix if not guild['prefix'] else guild['prefix']
         ).set_thumbnail(
-            url=ctx.guild.icon_url
+            url=ctx.guild.icon
         ).set_footer(
             text=generate_random_footer(),
             icon_url=ctx.author.avatar
@@ -817,8 +837,7 @@ class Inspection(commands.Cog):
 
 # Moderation category commands.
 class Moderation(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.command(
@@ -1077,8 +1096,7 @@ class Moderation(commands.Cog):
 
 # Customization category commands.
 class Customization(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.command(
@@ -1240,8 +1258,7 @@ class Customization(commands.Cog):
 
 # Tweaks category commands.
 class Tweaks(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot 
 
     @commands.command(
@@ -1381,6 +1398,16 @@ class YTDLSource(disnake.PCMVolumeTransformer):
             duration.append('{} seconds'.format(seconds))
 
         return ', '.join(duration)
+
+
+# Views (static / dynamic, for music commands).
+class NowCommandView(disnake.ui.View):
+    def __init__(self, *, url=str, views=str, likes=str, timeout: float=30):
+        super().__init__(timeout=timeout)
+
+        self.add_item(disnake.ui.Button(label='Redirect', url=url))
+        self.add_item(disnake.ui.Button(label=f'{int(views):,} Views', style=disnake.ButtonStyle.grey))
+        self.add_item(disnake.ui.Button(label=f'{int(likes):,} Likes', style=disnake.ButtonStyle.grey))
 
 
 class Song:
@@ -1756,10 +1783,18 @@ class Music(commands.Cog):
                 return await ctx.reply('There\'s nothing being played at the moment.')
 
             ctx.voice_state.loop = not ctx.voice_state.loop
-            if ctx.voice_state.loop:
-                await ctx.message.add_reaction('✅')
-            else:
-                await ctx.message.add_reaction('❎')
+
+            embed = (
+                disnake.Embed(
+                    title='Looping right now...' if ctx.voice_state.loop else 'Looping stopped...',
+                    color=accent_color
+                ).set_footer(
+                    text=generate_random_footer(),
+                    icon_url=ctx.author.avatar
+                )
+            )
+
+            await ctx.send(embed=embed)
         
         else:
             embed = (
@@ -1792,7 +1827,8 @@ class Music(commands.Cog):
                 song = Song(source)
 
                 await ctx.voice_state.songs.put(song)
-                await ctx.reply(f'Enqueued {str(source)} for the jam!')
+                await asyncio.sleep(1)
+                await ctx.invoke(self._now)
 
     @_join.before_invoke
     @_play.before_invoke
@@ -1807,8 +1843,7 @@ class Music(commands.Cog):
 
 # Developer commands/tools.
 class Developer(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.command(
