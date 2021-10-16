@@ -471,7 +471,7 @@ class Chill(commands.Cog):
         help='Shows a member\'s Discord avatar.',
     )
     @commands.guild_only()
-    async def avatar(self, ctx: commands.Context, member: Optional[disnake.Member]):
+    async def avatar(self, ctx: commands.Context, member: Optional[disnake.Member]=None):
         if not member:
             member = ctx.message.author
 
@@ -496,7 +496,7 @@ class Chill(commands.Cog):
         ]
     )
     @commands.guild_only()
-    async def _avatar(self, inter: ApplicationCommandInteraction, member: Optional[disnake.Member]):
+    async def _avatar(self, inter: ApplicationCommandInteraction, member: Optional[disnake.Member]=None):
         if not member:
             member = inter.author
 
@@ -675,7 +675,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def userinfo(self, ctx: commands.Context, user: Optional[disnake.Member]):
+    async def userinfo(self, ctx: commands.Context, user: Optional[disnake.Member]=None):
         if not user:
             user = ctx.author
 
@@ -1278,7 +1278,7 @@ class Tweaks(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles[1])
-    async def prefix(self, ctx: commands.Context, prefix: Optional[str]):
+    async def prefix(self, ctx: commands.Context, prefix: Optional[str]=None):
         db.update({'prefix': prefix}, Guild.id == ctx.guild.id)
         await ctx.reply(f'Changed server prefix to `{prefix}`!')
 
@@ -1596,7 +1596,7 @@ class Music(commands.Cog):
         help='Summons Veron1CA to a particular voice channel.'
     )
     @commands.guild_only()
-    async def _summon(self, ctx: commands.Context, *, channel: Optional[disnake.VoiceChannel]):
+    async def _summon(self, ctx: commands.Context, *, channel: Optional[disnake.VoiceChannel]=None):
         if not channel and not ctx.author.voice:
             raise VoiceError('You are neither connected to a voice channel nor specified a channel to join.')
 
