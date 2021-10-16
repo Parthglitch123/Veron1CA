@@ -17,6 +17,7 @@ import functools
 import itertools
 import traceback
 from threading import Thread
+from typing import Optional, Union
 
 # Import third-party libraries.
 import git
@@ -470,7 +471,7 @@ class Chill(commands.Cog):
         help='Shows a member\'s Discord avatar.',
     )
     @commands.guild_only()
-    async def avatar(self, ctx: commands.Context, member: disnake.Member=None):
+    async def avatar(self, ctx: commands.Context, member: Optional[disnake.Member]):
         if not member:
             member = ctx.message.author
 
@@ -495,7 +496,7 @@ class Chill(commands.Cog):
         ]
     )
     @commands.guild_only()
-    async def _avatar(self, inter: ApplicationCommandInteraction, member: disnake.Member=None):
+    async def _avatar(self, inter: ApplicationCommandInteraction, member: Optional[disnake.Member]):
         if not member:
             member = inter.author
 
@@ -674,7 +675,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles[0], lock_roles[1])
-    async def userinfo(self, ctx: commands.Context, user: disnake.Member=None):
+    async def userinfo(self, ctx: commands.Context, user: Optional[disnake.Member]):
         if not user:
             user = ctx.author
 
@@ -1246,13 +1247,23 @@ class Customization(commands.Cog):
             await ctx.message.add_reaction('✅')
 
     @commands.command(
+        name='clonech',
+        help='Clones a given channel.'
+    )
+    @commands.guild_only()
+    @commands.has_role(lock_roles[1])
+    async def clonech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
+        await channel.clone()
+        await ctx.message.add_reaction('✅')
+
+    @commands.command(
         name='removech', 
         help='Removes an existing server channel.'
     )
     @commands.guild_only()
     @commands.has_role(lock_roles[1])
-    async def removech(self, ctx: commands.Context, channel_name: disnake.TextChannel):
-        await channel_name.delete()
+    async def removech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
+        await channel.delete()
         await ctx.message.add_reaction('✅')
 
 
@@ -1267,7 +1278,7 @@ class Tweaks(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles[1])
-    async def prefix(self, ctx: commands.Context, prefix: str=None):
+    async def prefix(self, ctx: commands.Context, prefix: Optional[str]):
         db.update({'prefix': prefix}, Guild.id == ctx.guild.id)
         await ctx.reply(f'Changed server prefix to `{prefix}`!')
 
@@ -1338,7 +1349,7 @@ class YTDLSource(disnake.PCMVolumeTransformer):
         return "**{0.title}** by **{0.uploader}**".format(self)
 
     @classmethod
-    async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop = None):
+    async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop=None):
         loop = loop or asyncio.get_event_loop()
 
         partial = functools.partial(
@@ -1585,7 +1596,7 @@ class Music(commands.Cog):
         help='Summons Veron1CA to a particular voice channel.'
     )
     @commands.guild_only()
-    async def _summon(self, ctx: commands.Context, *, channel: disnake.VoiceChannel=None):
+    async def _summon(self, ctx: commands.Context, *, channel: Optional[disnake.VoiceChannel]):
         if not channel and not ctx.author.voice:
             raise VoiceError('You are neither connected to a voice channel nor specified a channel to join.')
 
