@@ -275,7 +275,7 @@ class HelpCommand(commands.HelpCommand):
                 icon_url=ctx.author.avatar
             )
         )
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     async def send_command_help(self, command: commands.Command):
         ctx = self.context
@@ -318,7 +318,7 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_error_message(self, error):
         ctx = self.context
-        await ctx.send(embed=generate_error_embed(title='This isn\'t a command.', description=error, footer_avatar=ctx.author.avatar))
+        await ctx.reply(embed=generate_error_embed(title='This isn\'t a command.', description=error, footer_avatar=ctx.author.avatar))
 
 
 # The main Bot class for root operations and events.
@@ -1794,7 +1794,7 @@ class Music(commands.Cog):
                 )
             )
 
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed)
         
         else:
             embed = (
