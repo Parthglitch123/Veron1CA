@@ -1289,7 +1289,7 @@ class Tweaks(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles[1])
-    async def toggle_greeting(self, ctx: commands.Context, *, greet_message: str=None):
+    async def greetings(self, ctx: commands.Context, *, greet_message: str=None):
         if greet_message:
             embed = (
                 disnake.Embed(
