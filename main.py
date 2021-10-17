@@ -759,7 +759,7 @@ class Inspection(commands.Cog):
             name='Prefix',
             value=prefix if not guild['prefix'] else guild['prefix']
         ).add_field(
-            name='Server ID', 
+            name='Identifier', 
             value=ctx.guild.id,
             inline=False
         ).set_thumbnail(
@@ -798,7 +798,7 @@ class Inspection(commands.Cog):
             name='Role Position', 
             value=role.position
         ).add_field(
-            name='Role ID', 
+            name='Identifier', 
             value=f'`{role.id}`'
         ).set_footer(
             text=generate_random_footer(),
@@ -1118,7 +1118,7 @@ class Customization(commands.Cog):
                 name='Link', 
                 value=invite
             ).add_field(
-                name='ID', 
+                name='Identifier', 
                 value=f'`{invite.id}`'
             ).add_field(
                 name='Channel', 
