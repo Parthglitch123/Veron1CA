@@ -303,12 +303,10 @@ class HelpCommand(commands.HelpCommand):
             inline=False
         )
 
-        aliases = str()
         if command.aliases == []:
             aliases = "No aliases are available."
         else:
-            aliases = str(command.aliases).replace(
-                '[', '').replace(']', '').replace('\'', '')
+            aliases = ', '.join(command.aliases)
 
         embed.add_field(
             name='Aliases', 
@@ -478,7 +476,7 @@ class Chill(commands.Cog):
 
     @commands.command(
         name='avatar', 
-        help='Shows a member\'s Discord avatar.',
+        help='Shows a member\'s Discord avatar.'
     )
     @commands.guild_only()
     async def avatar(self, ctx: commands.Context, member: disnake.Member=None):
@@ -618,9 +616,6 @@ class Chill(commands.Cog):
             
         elif vote is True:
             await ctx.reply('You have already voted for me today, yay!')
-
-        else:
-            pass
 
     @commands.slash_command(
         name='vote',
@@ -951,6 +946,7 @@ class Moderation(commands.Cog):
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def jailed(self, ctx: commands.Context):
         jail_has_member = False
+        
         embed = (
             disnake.Embed(
                 title='Now viewing the prison!', 
@@ -960,6 +956,7 @@ class Moderation(commands.Cog):
                 text=generate_random_footer()
             )
         )
+
         for jail_member in jail_members:
             if jail_member[1] == ctx.guild.id:
                 embed.add_field(
@@ -1959,7 +1956,37 @@ if keep_alive_toggle:
     @app.route('/')
 
     def home():
-        return f"<h2>{bot.user.name} is now live!</h2>"
+        return """
+            <div class="container">
+                <h1>Veron1CA is now live!</h1>
+            </div>
+
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@700&display=swap');
+
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background-image: linear-gradient(to bottom right, #859398, #283048);
+                }
+
+                .container {
+                    height: 15em;
+                    position: relative;
+                }
+
+                .container h1 {
+                    font-family: 'Raleway', sans-serif;
+                    font-weight: 700;
+                    color: #ffffff;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    margin-right: -50%;
+                    transform: translate(-50%, -50%);
+                }
+            </style>
+        """
 
     def run():
         app.run(host='0.0.0.0', port=8080)
