@@ -1969,14 +1969,14 @@ if keep_alive_toggle:
 
 
 # Add available cogs.
-bot.add_cog(cog=ExceptionHandler(bot))
-bot.add_cog(cog=Chill(bot))
-bot.add_cog(cog=Inspection(bot))
-bot.add_cog(cog=Moderation(bot))
-bot.add_cog(cog=Customization(bot))
-bot.add_cog(cog=Tweaks(bot))
-bot.add_cog(cog=Music(bot))
-bot.add_cog(cog=Developer(bot))
+bot.add_cog(ExceptionHandler(bot))
+bot.add_cog(Chill(bot))
+bot.add_cog(Inspection(bot))
+bot.add_cog(Moderation(bot))
+bot.add_cog(Customization(bot))
+bot.add_cog(Tweaks(bot))
+bot.add_cog(Music(bot))
+bot.add_cog(Developer(bot))
 
 
 # Run the bot.
