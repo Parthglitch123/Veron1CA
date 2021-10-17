@@ -742,7 +742,7 @@ class Inspection(commands.Cog):
             name='Command Prefix',
             value=prefix if not guild['prefix'] else guild['prefix']
         ).set_thumbnail(
-            url=ctx.guild.icon_url
+            url=ctx.guild.icon
         ).set_footer(
             text=generate_random_footer(),
             icon_url=ctx.author.avatar
