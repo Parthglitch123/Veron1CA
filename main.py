@@ -345,7 +345,8 @@ class Bot(commands.AutoShardedBot):
                     {
                         'id': message.guild.id, 
                         'prefix': None, 
-                        'greet_members': False
+                        'greet_members': False,
+                        'greet_message': None
                     }
                 )
         except AttributeError:
@@ -364,9 +365,9 @@ class Bot(commands.AutoShardedBot):
         snipeables.remove(message)
 
     async def on_member_join(self, member: disnake.Member):
-        guild = db.search(Guild.id == member.guild.id)
-        if guild and guild[0]['greet_members']:
-            await member.send(f'Welcome to {member.guild}, {member.mention}! Hope you enjoy your stay here.')
+        guild = get_guild_dict(member.guild.id)
+        if guild and guild['greet_members']:
+            await member.send(guild['greet_message'])
 
 
 # Setting up the fundamentals.
@@ -1284,15 +1285,27 @@ class Tweaks(commands.Cog):
 
     @commands.command(
         name='greetings',
-        help='Toggles the greeting message which is sent to an incoming Discord user upon joining.'
+        help='Toggles the greeting message which is sent to an incoming Discord user upon joining the server.'
     )
     @commands.guild_only()
     @commands.has_role(lock_roles[1])
-    async def toggle_greeting(self, ctx: commands.Context):
-        greet_members = get_guild_dict(ctx.guild.id)['greet_members']
-        db.update({'greet_members': not greet_members}, Guild.id == ctx.guild.id)
-        greet_members = get_guild_dict(ctx.guild.id)['greet_members']
-        await ctx.reply(f'Greetings have been toggled to `{greet_members}`!')
+    async def toggle_greeting(self, ctx: commands.Context, *, greet_message: str=None):
+        if greet_message:
+            embed = (
+                disnake.Embed(
+                    title='Greetings enabled!',
+                    description=f'`{greet_message}` will be sent to anyone who joins this server from now on. You can disable it by using this command without any arguments.',
+                    color=accent_color[0]
+                ).set_footer(
+                    text=generate_random_footer(),
+                    icon_url=ctx.author.avatar
+                )
+            )
+            db.update({'greet_members': True, 'greet_message': greet_message}, Guild.id == ctx.guild.id)
+            await ctx.reply(embed=embed)
+        else:
+            db.update({'greet_members': False, 'greet_message': None}, Guild.id == ctx.guild.id)
+            await ctx.reply('Greetings have been disabled.')
 
 
 # Music category commands.
