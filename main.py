@@ -738,8 +738,6 @@ class Inspection(commands.Cog):
         guild = get_guild_dict(ctx.guild.id)
         embed = (
             disnake.Embed(
-                title=ctx.guild.name,
-                description=f'Showing all necessary information related to this guild. Scroll to find out more about {ctx.guild.name}!', 
                 color=accent_color[0]
             )
         ).add_field(
@@ -748,9 +746,6 @@ class Inspection(commands.Cog):
         ).add_field(
             name='Region', 
             value=ctx.guild.region
-        ).add_field(
-            name='Server ID', 
-            value=ctx.guild.id
         ).add_field(
             name='Members', 
             value=ctx.guild.member_count
@@ -761,8 +756,12 @@ class Inspection(commands.Cog):
             name='Channels', 
             value=len(ctx.guild.channels)
         ).add_field(
-            name='Command Prefix',
+            name='Prefix',
             value=prefix if not guild['prefix'] else guild['prefix']
+        ).add_field(
+            name='Server ID', 
+            value=ctx.guild.id,
+            inline=False
         ).set_thumbnail(
             url=ctx.guild.icon
         ).set_footer(
