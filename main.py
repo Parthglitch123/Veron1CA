@@ -143,7 +143,7 @@ async def wait_for_message(member: disnake.Member, check_if_member: bool) -> dis
     def is_author(message):
         return (message.author == member) if check_if_member else (message.author != member)
 
-    message = await bot.wait_for('message', check=is_author)
+    message = await bot.wait_for('message', check=is_author, timeout=30)
     return message
 
 async def check_if_frozen(message: disnake.Message) -> bool:
