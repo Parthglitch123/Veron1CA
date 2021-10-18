@@ -439,6 +439,9 @@ class ExceptionHandler(commands.Cog):
         elif isinstance(error, commands.errors.MissingRequiredArgument):
             await ctx.reply(embed=generate_error_embed(title='You\'re missing a required argument.', description=f'{error} Try typing `{ctx.prefix}help {ctx.command}` for more information on how to use this command.', footer_avatar=ctx.author.avatar))
 
+        elif isinstance(error, commands.errors.CommandError):
+            await ctx.reply(embed=generate_error_embed(title='A problem occured!', description=error, footer_avatar=ctx.author.avatar))
+
         elif isinstance(error, commands.errors.CheckFailure):
             pass
 
@@ -1466,12 +1469,18 @@ class YTDLSource(disnake.PCMVolumeTransformer):
 
 # Views (static / dynamic, for music commands).
 class NowCommandView(disnake.ui.View):
-    def __init__(self, *, url=str, views=str, likes=str, timeout: float=30):
+    def __init__(self, *, url: str, views: str, likes: str, timeout: float=30):
         super().__init__(timeout=timeout)
 
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
         self.add_item(disnake.ui.Button(label=f'{int(views):,} Views', style=disnake.ButtonStyle.grey))
         self.add_item(disnake.ui.Button(label=f'{int(likes):,} Likes', style=disnake.ButtonStyle.grey))
+
+class PlayCommandView(disnake.ui.View):
+    def __init__(self, *, url: str, timeout: float=30):
+        super().__init__(timeout=timeout)
+    
+        self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
 
 class Song:
@@ -1889,10 +1898,17 @@ class Music(commands.Cog):
                 await ctx.reply('Whoops! An error occurred while processing this request: {}'.format(str(e)))
             else:
                 song = Song(source)
-
+                embed = (
+                    disnake.Embed(
+                        title=f'Enqueued {song.source.title} for the jam!',
+                        color=accent_color[0]
+                    ).set_footer(
+                        text=generate_random_footer(),
+                        icon_url=ctx.author.avatar
+                    )
+                )
                 await ctx.voice_state.songs.put(song)
-                await asyncio.sleep(1)
-                await ctx.invoke(self._now)
+                await ctx.reply(embed=embed, view=PlayCommandView(url=song.source.url))
 
     @_join.before_invoke
     @_play.before_invoke
