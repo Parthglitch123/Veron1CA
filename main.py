@@ -143,6 +143,13 @@ async def has_voted(id: int):
     except topgg.errors.Unauthorized:
         return None
 
+async def wait_for_message(author: disnake.User) -> disnake.Message:
+    def is_author(message):
+        return message.author == author
+
+    message = await bot.wait_for('message', check=is_author)
+    return message
+
 async def is_frozen(message: disnake.Message) -> bool:
     for frozen_guild in frozen_guilds:
         if frozen_guild[1] == message.guild.id and frozen_guild[2] == message.channel.id and frozen_guild[0] != message.author.id:
@@ -327,14 +334,14 @@ class Bot(commands.AutoShardedBot):
 
     async def on_connect(self):
         os.system('clear')
-        print(f'{bot.user.name} | Read-only Terminal\n\nLog: Connected to Discord, warming up...')
+        print(f'{self.user.name} | Read-only Terminal\n\nLog: Connected to Discord, warming up...')
 
     async def on_ready(self):
-        print(f'Log: {bot.user.name} has been deployed in {len(bot.guilds)} server(s) with {bot.shard_count} shard(s) active.')
-        await bot.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(bot.guilds)} server(s)!'))
+        print(f'Log: {self.user.name} has been deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
+        await self.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(self.guilds)} server(s)!'))
 
     async def on_message(self, message: disnake.Message):
-        if message.author == bot.user:
+        if message.author == self.user:
             return
 
         try:
@@ -357,11 +364,11 @@ class Bot(commands.AutoShardedBot):
                     guild = get_guild_dict(id=message.guild.id)
 
                     if not guild['default_commands_channel']:
-                        await bot.process_commands(message)
+                        await self.process_commands(message)
 
                     else:
                         if message.channel.id == guild['default_commands_channel']:
-                            await bot.process_commands(message)
+                            await self.process_commands(message)
 
                     await has_triggered_web_trap(message)
 
@@ -1887,15 +1894,21 @@ class Music(commands.Cog):
         help='Plays music for you.'
     )
     @commands.guild_only()
-    async def _play(self, ctx: commands.Context, *, search: str):
+    async def _play(self, ctx: commands.Context, *, search: str=None):
         if not ctx.voice_state.voice:
             await ctx.invoke(self._join)
 
         async with ctx.typing():
             try:
+                if not search:
+                    await ctx.reply('Type the name of a song, or anything! I\'m listening.')
+                    search = (await wait_for_message(ctx.author)).content
+
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+
             except YTDLError as e:
                 await ctx.reply('Whoops! An error occurred while processing this request: {}'.format(str(e)))
+
             else:
                 song = Song(source)
                 embed = (
