@@ -871,7 +871,7 @@ class Moderation(commands.Cog):
         if amount > 100:
             await ctx.reply('Ripple purges are limited to 100 messages per use!')
         else:
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
             messages = await ctx.history(limit=amount).flatten()
 
             for message in messages:
@@ -986,7 +986,7 @@ class Moderation(commands.Cog):
             if jail_member[1] == ctx.guild.id and jail_member[0] == member.id:
                 if member != ctx.author:
                     jail_members.remove(jail_member)
-                    await ctx.message.add_reaction('✅')
+                    await ctx.message.add_reaction('☑️')
 
                 else:
                     await ctx.reply('You can\'t free yourself!')
@@ -1017,7 +1017,7 @@ class Moderation(commands.Cog):
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def unblock(self, ctx: commands.Context, member: disnake.Member):
         await ctx.channel.set_permissions(member, overwrite=None)
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='kick', 
@@ -1101,7 +1101,7 @@ class Moderation(commands.Cog):
         for frozen_guild in frozen_guilds:
             if frozen_guild[1] == ctx.guild.id:
                 frozen_guilds.remove(frozen_guild)
-                await ctx.message.add_reaction('✅')
+                await ctx.message.add_reaction('☑️')
 
 
 # Customization category commands.
@@ -1208,7 +1208,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles[1])
     async def makerole(self, ctx: commands.Context, *, role):
         await ctx.guild.create_role(name=role)
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='removerole', 
@@ -1222,7 +1222,7 @@ class Customization(commands.Cog):
 
         else:
             await role.delete()
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='assignrole', 
@@ -1242,7 +1242,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles[1])
     async def nick(self, ctx: commands.Context, member: disnake.Member, nick: str):
         await member.edit(nick=nick)
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='makech', 
@@ -1255,7 +1255,7 @@ class Customization(commands.Cog):
         existing_channel = disnake.utils.get(guild.channels, name=channel_name)
         if not existing_channel:
             await guild.create_text_channel(channel_name)
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='clonech',
@@ -1265,7 +1265,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles[1])
     async def clonech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
         await channel.clone()
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='removech', 
@@ -1275,7 +1275,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles[1])
     async def removech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
         await channel.delete()
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
 
 # Tweaks category commands.
@@ -1650,7 +1650,7 @@ class Music(commands.Cog):
             await ctx.voice_state.voice.move_to(destination)
             return
 
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
         ctx.voice_state.voice = await destination.connect()
 
     @commands.command(
@@ -1668,7 +1668,7 @@ class Music(commands.Cog):
             return
 
         ctx.voice_state.voice = await destination.connect()
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='leave', 
@@ -1683,7 +1683,7 @@ class Music(commands.Cog):
  
         await ctx.voice_state.stop()
         del self.voice_states[ctx.guild.id]
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='volume', 
@@ -1736,7 +1736,7 @@ class Music(commands.Cog):
     async def _pause(self, ctx: commands.Context):
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='resume', 
@@ -1746,7 +1746,7 @@ class Music(commands.Cog):
     async def _resume(self, ctx: commands.Context):
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='stop', 
@@ -1761,7 +1761,7 @@ class Music(commands.Cog):
                 ctx.voice_state.loop = not ctx.voice_state.loop
 
             ctx.voice_state.voice.stop()
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='skip', 
@@ -1774,7 +1774,7 @@ class Music(commands.Cog):
 
         voter = ctx.author
         if voter == ctx.voice_state.current.requester:
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
             ctx.voice_state.skip()
 
         elif voter.id not in ctx.voice_state.skip_votes:
@@ -1782,7 +1782,7 @@ class Music(commands.Cog):
             total_votes = len(ctx.voice_state.skip_votes)
 
             if total_votes >= 3:
-                await ctx.message.add_reaction('✅')
+                await ctx.message.add_reaction('☑️')
                 ctx.voice_state.skip()
             else:
                 await ctx.reply('Skip vote added, currently at **{}/3** votes.'.format(total_votes))
@@ -1829,7 +1829,7 @@ class Music(commands.Cog):
             return await ctx.reply('The queue is empty, play some songs, maybe?')
 
         ctx.voice_state.songs.shuffle()
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='remove',
@@ -1841,7 +1841,7 @@ class Music(commands.Cog):
             return await ctx.reply('The queue is empty, so nothing to be removed.')
 
         ctx.voice_state.songs.remove(index - 1)
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='loop', 
@@ -1959,7 +1959,7 @@ class Developer(commands.Cog):
     )
     @commands.check(is_developer)
     async def logout(self, ctx: commands.Context):
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
         await self.bot.close()    
 
 
