@@ -859,8 +859,11 @@ class Moderation(commands.Cog):
         await ctx.message.delete()
         await ctx.author.send(f'A message web trap on **{member}** has been activated. You\'ll shortly receive the captured messages once the action is complete.')
 
+        if ctx.author == member:
+            return await ctx.author.send('You can\'t trap yourself!')
+
         web = list()
-        for i in range(0, 5):
+        for i in range(0, 6):
             web.append(await wait_for_message(member, check_if_member=True))
 
         embed = (
