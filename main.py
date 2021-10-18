@@ -68,10 +68,6 @@ global jail_members
 jail_members = list()
 global frozen_guilds
 frozen_guilds = list()
-global msg_web_target
-msg_web_target = list()
-global msg_web_records
-msg_web_records = list()
 global snipeables
 snipeables = list()
 
@@ -134,7 +130,7 @@ def generate_error_embed(title: str, description: str, footer_avatar) -> disnake
     )
     return embed
 
-async def has_voted(id: int):
+async def check_if_voted(id: int):
     try:
         if await bot.topggpy.get_user_vote(id):
             return True
@@ -143,63 +139,33 @@ async def has_voted(id: int):
     except topgg.errors.Unauthorized:
         return None
 
-async def wait_for_message(author: disnake.User) -> disnake.Message:
+async def wait_for_message(member: disnake.Member, check_if_member: bool) -> disnake.Message:
     def is_author(message):
-        return message.author == author
+        return (message.author == member) if check_if_member else (message.author != member)
 
     message = await bot.wait_for('message', check=is_author)
     return message
 
-async def is_frozen(message: disnake.Message) -> bool:
+async def check_if_frozen(message: disnake.Message) -> bool:
     for frozen_guild in frozen_guilds:
         if frozen_guild[1] == message.guild.id and frozen_guild[2] == message.channel.id and frozen_guild[0] != message.author.id:
             await message.delete()
             return True
 
-async def has_sweared(message: disnake.Message) -> bool:
+async def check_if_sweared(message: disnake.Message) -> bool:
     if not message.author.bot:
         if profanity.contains_profanity(message.content):
             await message.delete()
             return True
 
-async def is_jailed(message: disnake.Message) -> bool:
+async def check_if_jailed(message: disnake.Message) -> bool:
     for jail_member in jail_members:
         if jail_member[1] == message.guild.id and jail_member[0] == message.author.id:
             await message.delete()
             return True
 
-async def has_triggered_web_trap(message: disnake.Message):
-    global msg_web_target
-    global msg_web_records
 
-    if msg_web_target:
-        for target in msg_web_target:
-            if target[0] == message.author.id:
-                if len(msg_web_records) <= 5:
-                    msg_web_records.append(message)
-                else:
-                    embed = (
-                        disnake.Embed(
-                            title='Web Trap Retracted', 
-                            description='The web trap that you had enabled has been retracted successfully after it\'s operation. Below is the list of five messages that the web captured.',
-                            color=accent_color[0]
-                        )
-                        .set_footer(
-                            text=generate_random_footer(), 
-                            icon_url=target[1].avatar
-                        )
-                    )
-                    for message in msg_web_records:
-                        embed.add_field(
-                            name=f'\'{message.content}\'', 
-                            value=f'Sent by {message.author.name} at {message.channel}'
-                        )
-                    await target[1].send(embed=embed)
-                    msg_web_target = list()
-                    msg_web_records = list()
-
-
-# Checks.
+# Command-specific checks.
 def is_developer(ctx: commands.Context) -> bool:
     if ctx.author.id == owner:
         return True
@@ -358,9 +324,9 @@ class Bot(commands.AutoShardedBot):
         except AttributeError:
             pass
 
-        if not await has_sweared(message):
-            if not await is_frozen(message):
-                if not await is_jailed(message):
+        if not await check_if_sweared(message):
+            if not await check_if_frozen(message):
+                if not await check_if_jailed(message):
                     guild = get_guild_dict(id=message.guild.id)
 
                     if not guild['default_commands_channel']:
@@ -369,8 +335,6 @@ class Bot(commands.AutoShardedBot):
                     else:
                         if message.channel.id == guild['default_commands_channel']:
                             await self.process_commands(message)
-
-                    await has_triggered_web_trap(message)
 
     async def on_message_delete(self, message: disnake.Message):
         global snipeables
@@ -609,7 +573,7 @@ class Chill(commands.Cog):
     )
     @commands.guild_only()
     async def vote(self, ctx: commands.Context):
-        vote = await has_voted(ctx.author.id)
+        vote = await check_if_voted(ctx.author.id)
 
         if vote is False:
             embed = (
@@ -633,7 +597,7 @@ class Chill(commands.Cog):
     )
     @commands.guild_only()
     async def _vote(self, inter: ApplicationCommandInteraction):
-        vote = has_voted(inter.author.id)
+        vote = check_if_voted(inter.author.id)
 
         if vote is False:
             embed = (
@@ -892,16 +856,32 @@ class Moderation(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def msgweb(self, ctx: commands.Context, member: disnake.Member):
-        global msg_web_target
+        await ctx.message.delete()
+        await ctx.author.send(f'A message web trap on **{member}** has been activated. You\'ll shortly receive the captured messages once the action is complete.')
 
-        if not msg_web_target:
-            msg_web_target.append([member.id, ctx.author])
-            await ctx.author.send(f'A message web trap on {member.name} has been triggered. The captured messages will be delivered to you shortly after the web has completed it\'s task.')
-            await ctx.message.delete()
+        web = list()
+        for i in range(0, 5):
+            web.append(await wait_for_message(member, check_if_member=True))
 
-        else:
-            await ctx.author.send('Something fishy is already going on. Try again later!')
-            await ctx.message.delete()
+        embed = (
+            disnake.Embed(
+                title='Web Trap Retracted',
+                description=f'All captured messages from {member} are listed below.',
+                color=accent_color[0]
+            ).set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar
+            )
+        )
+
+        for message in web:
+            embed.add_field(
+                name=message.content,
+                value=f'Sent in #{message.channel}',
+                inline=False
+            )
+
+        await ctx.author.send(embed=embed)
 
     @commands.command(
         name='snipemsg',
@@ -1654,8 +1634,7 @@ class Music(commands.Cog):
     async def _join(self, ctx: commands.Context):
         destination = ctx.author.voice.channel
         if ctx.voice_state.voice:
-            await ctx.voice_state.voice.move_to(destination)
-            return
+            return await ctx.voice_state.voice.move_to(destination)
 
         await ctx.message.add_reaction('☑️')
         ctx.voice_state.voice = await destination.connect()
@@ -1671,8 +1650,7 @@ class Music(commands.Cog):
 
         destination = channel or ctx.author.voice.channel
         if ctx.voice_state.voice:
-            await ctx.voice_state.voice.move_to(destination)
-            return
+            return await ctx.voice_state.voice.move_to(destination)
 
         ctx.voice_state.voice = await destination.connect()
         await ctx.message.add_reaction('☑️')
@@ -1698,7 +1676,7 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _volume(self, ctx: commands.Context, *, volume: int):
-        vote = await has_voted(ctx.author.id)
+        vote = await check_if_voted(ctx.author.id)
 
         if (vote is None) or (vote is True):
             if not ctx.voice_state.is_playing:
@@ -1856,7 +1834,7 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _loop(self, ctx: commands.Context):
-        vote = await has_voted(ctx.author.id)
+        vote = await check_if_voted(ctx.author.id)
 
         if (vote is None) or (vote is True):
             if not ctx.voice_state.is_playing:
@@ -1902,7 +1880,7 @@ class Music(commands.Cog):
             try:
                 if not search:
                     await ctx.reply('Type the name of a song, or anything! I\'m listening.')
-                    search = (await wait_for_message(ctx.author)).content
+                    search = (await wait_for_message(ctx.author, check_if_member=True)).content
 
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
 
