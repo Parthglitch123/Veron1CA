@@ -88,7 +88,7 @@ def get_prefix(bot: commands.AutoShardedBot, message: disnake.Message):
 
 
 # Standard Functions.
-def get_guild_dict(id: int):
+def get_guild_dict(id: int) -> dict:
     guild = db.search(Guild.id == id)
     return guild[0] if guild else None
 
@@ -130,7 +130,7 @@ def generate_error_embed(title: str, description: str, footer_avatar) -> disnake
     )
     return embed
 
-async def check_if_voted(id: int):
+async def check_if_voted(id: int) -> bool:
     try:
         if await bot.topggpy.get_user_vote(id):
             return True
@@ -1919,6 +1919,24 @@ class Music(commands.Cog):
 class Developer(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
+
+    @commands.command(
+        name='dbsize',
+        help='Returns the total amount of used memory space by the guild database in bytes.'
+    )
+    @commands.check(is_developer)
+    async def dbsize(self, ctx: commands.Context):
+        db_all = db.all()
+        embed = (
+            disnake.Embed(
+                title=f'Used Space: {sys.getsizeof(db_all)} byte(s)',
+                color=accent_color[0],
+            ).set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar
+            )
+        )
+        await ctx.reply(embed=embed)
 
     @commands.command(
         name='restart', 
