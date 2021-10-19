@@ -1879,12 +1879,12 @@ class Music(commands.Cog):
         if not ctx.voice_state.voice:
             await ctx.invoke(self._join)
 
+        if not search:
+            await ctx.reply('Type the name of a song, or anything! I\'m listening.')
+            search = (await wait_for_message(ctx.author, check_if_member=True)).content
+
         async with ctx.typing():
             try:
-                if not search:
-                    await ctx.reply('Type the name of a song, or anything! I\'m listening.')
-                    search = (await wait_for_message(ctx.author, check_if_member=True)).content
-
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
 
             except YTDLError as e:
