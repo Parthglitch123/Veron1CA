@@ -1987,6 +1987,7 @@ if keep_alive_toggle:
         return """
             <div class="container">
                 <h1>Veron1CA is now live!</h1>
+                <p>Use the <code>/ping</code> endpoint to get the latest info on latency and uptime.</p>
             </div>
 
             <style>
@@ -1999,12 +2000,12 @@ if keep_alive_toggle:
                 }
 
                 .container {
+                    font-family: 'Raleway', sans-serif;
                     height: 15em;
                     position: relative;
                 }
 
                 .container h1 {
-                    font-family: 'Raleway', sans-serif;
                     font-weight: 700;
                     color: #ffffff;
                     position: absolute;
@@ -2013,6 +2014,23 @@ if keep_alive_toggle:
                     margin-right: -50%;
                     transform: translate(-50%, -50%);
                 }
+
+                .container p {
+                    color: #ffffff90;
+                    position: absolute;
+                    top: 70%;
+                    left: 50%;
+                    margin-right: -50%;
+                    transform: translate(-50%, -50%);
+                }
+
+                .container p code {
+                    color: #283048;
+                    background: #ffffff90;
+                    border-width: 10px;
+                    border-height: 5px;
+                    border-radius: .2rem;
+                }
             </style>
         """
 
@@ -2020,7 +2038,8 @@ if keep_alive_toggle:
     def ping():
         ping_dict = {
             'latency': round(bot.latency * 1000),
-            'uptime': int(round(time.time() - last_restarted_obj))
+            'uptime': int(round(time.time() - last_restarted_obj)),
+            'last_restart': last_restarted_str
         }
         return jsonify(ping_dict)
 
