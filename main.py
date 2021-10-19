@@ -24,7 +24,7 @@ import git
 import topgg
 import qrcode
 import youtube_dl
-from flask import Flask
+from flask import Flask, json, jsonify
 from tinydb import TinyDB, Query
 from async_timeout import timeout
 from better_profanity import profanity
@@ -1980,9 +1980,9 @@ keep_alive_toggle = True
 
 # Change the value of `keep_alive_toggle` to True if the module needs to be used.
 if keep_alive_toggle:
-    app = Flask('')
-    @app.route('/')
+    app = Flask(__name__)
 
+    @app.route('/')
     def home():
         return """
             <div class="container">
@@ -2015,6 +2015,14 @@ if keep_alive_toggle:
                 }
             </style>
         """
+
+    @app.route('/ping')
+    def ping():
+        ping_dict = {
+            'latency': round(bot.latency * 1000),
+            'uptime': int(round(time.time() - last_restarted_obj))
+        }
+        return jsonify(ping_dict)
 
     def run():
         app.run(host='0.0.0.0', port=8080)
