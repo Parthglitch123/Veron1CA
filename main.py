@@ -24,7 +24,7 @@ import git
 import topgg
 import qrcode
 import youtube_dl
-from flask import Flask, json, jsonify
+from flask import Flask, jsonify
 from tinydb import TinyDB, Query
 from async_timeout import timeout
 from better_profanity import profanity
