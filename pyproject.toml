@@ -18,6 +18,7 @@ better-profanity = "^0.7.0"
 tinydb = "^4.5.1"
 uvloop = "^0.16.0"
 disnake = "^2.1.2"
+qrcode = "^7.3.1"
 
 [tool.poetry.dev-dependencies]
 
