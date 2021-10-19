@@ -11,3 +11,4 @@ qrcode[pil]
 python-decouple
 better_profanity
 disnake[voice]
+ffmpeg-python
