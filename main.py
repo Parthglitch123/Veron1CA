@@ -16,13 +16,15 @@ import datetime
 import functools
 import itertools
 import traceback
+from typing import Union
 from threading import Thread
 
 # Import third-party libraries.
 import git
 import topgg
+import qrcode
 import youtube_dl
-from flask import Flask
+from flask import Flask, jsonify
 from tinydb import TinyDB, Query
 from async_timeout import timeout
 from better_profanity import profanity
@@ -66,10 +68,6 @@ global jail_members
 jail_members = list()
 global frozen_guilds
 frozen_guilds = list()
-global msg_web_target
-msg_web_target = list()
-global msg_web_records
-msg_web_records = list()
 global snipeables
 snipeables = list()
 
@@ -90,11 +88,11 @@ def get_prefix(bot: commands.AutoShardedBot, message: disnake.Message):
 
 
 # Standard Functions.
-def get_guild_dict(guild_id: int):
-    guild = db.search(Guild.id == guild_id)
+def get_guild_dict(id: int) -> dict:
+    guild = db.search(Guild.id == id)
     return guild[0] if guild else None
 
-def generate_random_footer():
+def generate_random_footer() -> str:
     footers_list = [
         'Hey there pal :D',
         'Hey! Want some pants?',
@@ -110,7 +108,16 @@ def generate_random_footer():
     ]
     return random.choice(footers_list)
 
-def generate_error_embed(title: str, description: str, footer_avatar):
+def generate_qr_code(id: str, text_to_embed: str):
+    img = qrcode.make(text_to_embed)
+
+    file_name = f'{id}.png'
+    img.save(file_name)
+    file = disnake.File(file_name, filename=file_name)
+
+    return file_name, file
+
+def generate_error_embed(title: str, description: str, footer_avatar) -> disnake.Embed:
     embed = (
         disnake.Embed(
             title=f'Whoops! {title}',
@@ -123,71 +130,48 @@ def generate_error_embed(title: str, description: str, footer_avatar):
     )
     return embed
 
-async def has_voted(user_id: int):
+async def check_if_voted(id: int) -> bool:
     try:
-        if await bot.topggpy.get_user_vote(user_id):
+        if await bot.topggpy.get_user_vote(id):
             return True
         else:
             return False
     except topgg.errors.Unauthorized:
         return None
 
-async def is_frozen(message: disnake.Message):
+async def wait_for_message(member: disnake.Member, check_if_member: bool) -> disnake.Message:
+    def is_author(message):
+        return (message.author == member) if check_if_member else (message.author != member)
+
+    message = await bot.wait_for('message', check=is_author, timeout=30)
+    return message
+
+async def check_if_frozen(message: disnake.Message) -> bool:
     for frozen_guild in frozen_guilds:
         if frozen_guild[1] == message.guild.id and frozen_guild[2] == message.channel.id and frozen_guild[0] != message.author.id:
             await message.delete()
             return True
 
-async def has_sweared(message: disnake.Message):
+async def check_if_sweared(message: disnake.Message) -> bool:
     if not message.author.bot:
         if profanity.contains_profanity(message.content):
             await message.delete()
             return True
 
-async def is_jailed(message: disnake.Message):
+async def check_if_jailed(message: disnake.Message) -> bool:
     for jail_member in jail_members:
         if jail_member[1] == message.guild.id and jail_member[0] == message.author.id:
             await message.delete()
             return True
 
-async def has_triggered_web_trap(message: disnake.Message):
-    global msg_web_target
-    global msg_web_records
 
-    if msg_web_target:
-        for target in msg_web_target:
-            if target[0] == message.author.id:
-                if len(msg_web_records) <= 5:
-                    msg_web_records.append(message)
-                else:
-                    embed = (
-                        disnake.Embed(
-                            title='Web Trap Retracted', 
-                            description='The web trap that you had enabled has been retracted successfully after it\'s operation. Below is the list of five messages that the web captured.',
-                            color=accent_color[0]
-                        )
-                        .set_footer(
-                            text=generate_random_footer(), 
-                            icon_url=target[1].avatar
-                        )
-                    )
-                    for message in msg_web_records:
-                        embed.add_field(
-                            name=f'\'{message.content}\'', 
-                            value=f'Sent by {message.author.name} at {message.channel}'
-                        )
-                    await target[1].send(embed=embed)
-                    msg_web_target = list()
-                    msg_web_records = list()
-
-
-# Checks.
-def is_developer(ctx: commands.Context):
+# Command-specific checks.
+def is_developer(ctx: commands.Context) -> bool:
     if ctx.author.id == owner:
         return True
 
 
-# Views.
+# Views (static).
 class VoteCommandView(disnake.ui.View):
     def __init__(self, *, timeout: float=30):
         super().__init__(timeout=timeout)
@@ -202,14 +186,6 @@ class HelpCommandView(disnake.ui.View):
         self.add_item(disnake.ui.Button(label='Invite Me', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1039658487&scope=bot%20applications.commands'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
         self.add_item(disnake.ui.Button(label='Discord Server', url='https://discord.gg/6GNgcu7hjn'))
-
-class NowCommandView(disnake.ui.View):
-    def __init__(self, *, url=str, views=str, likes=str, timeout: float=30):
-        super().__init__(timeout=timeout)
-
-        self.add_item(disnake.ui.Button(label='Redirect', url=url))
-        self.add_item(disnake.ui.Button(label=f'{int(views):,} Views', style=disnake.ButtonStyle.grey))
-        self.add_item(disnake.ui.Button(label=f'{int(likes):,} Likes', style=disnake.ButtonStyle.grey))
 
 
 # Custom help command.
@@ -273,7 +249,7 @@ class HelpCommand(commands.HelpCommand):
                 icon_url=ctx.author.avatar
             )
         )
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     async def send_command_help(self, command: commands.Command):
         ctx = self.context
@@ -300,12 +276,10 @@ class HelpCommand(commands.HelpCommand):
             inline=False
         )
 
-        aliases = str()
         if command.aliases == []:
             aliases = "No aliases are available."
         else:
-            aliases = str(command.aliases).replace(
-                '[', '').replace(']', '').replace('\'', '')
+            aliases = ', '.join(command.aliases)
 
         embed.add_field(
             name='Aliases', 
@@ -316,7 +290,7 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_error_message(self, error):
         ctx = self.context
-        await ctx.send(embed=generate_error_embed(title='This isn\'t a command.', description=error, footer_avatar=ctx.author.avatar))
+        await ctx.reply(embed=generate_error_embed(title='This isn\'t a command.', description=error, footer_avatar=ctx.author.avatar))
 
 
 # The main Bot class for root operations and events.
@@ -326,15 +300,14 @@ class Bot(commands.AutoShardedBot):
 
     async def on_connect(self):
         os.system('clear')
-        print(f'{bot.user.name} | Read-only Terminal\n\n')
-        print(f'Log: Connected to Discord, warming up...')
+        print(f'{self.user.name} | Read-only Terminal\n\nLog: Connected to Discord, warming up...')
 
     async def on_ready(self):
-        print(f'Log: {bot.user.name} has been deployed in {len(bot.guilds)} server(s) with {bot.shard_count} shard(s) active.')
-        await bot.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(bot.guilds)} server(s)!'))
+        print(f'Log: {self.user.name} has been deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
+        await self.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(self.guilds)} server(s)!'))
 
     async def on_message(self, message: disnake.Message):
-        if message.author == bot.user:
+        if message.author == self.user:
             return
 
         try:
@@ -343,17 +316,25 @@ class Bot(commands.AutoShardedBot):
                     {
                         'id': message.guild.id, 
                         'prefix': None, 
-                        'greet_members': False
+                        'greet_members': False,
+                        'greet_message': None,
+                        'default_commands_channel': None
                     }
                 )
         except AttributeError:
             pass
 
-        if not await has_sweared(message):
-            if not await is_frozen(message):
-                if not await is_jailed(message):
-                    await bot.process_commands(message)
-                    await has_triggered_web_trap(message)
+        if not await check_if_sweared(message):
+            if not await check_if_frozen(message):
+                if not await check_if_jailed(message):
+                    guild = get_guild_dict(id=message.guild.id)
+
+                    if not guild['default_commands_channel']:
+                        await self.process_commands(message)
+
+                    else:
+                        if message.channel.id == guild['default_commands_channel']:
+                            await self.process_commands(message)
 
     async def on_message_delete(self, message: disnake.Message):
         global snipeables
@@ -362,9 +343,9 @@ class Bot(commands.AutoShardedBot):
         snipeables.remove(message)
 
     async def on_member_join(self, member: disnake.Member):
-        guild = db.search(Guild.id == member.guild.id)
-        if guild and guild[0]['greet_members']:
-            await member.send(f'Welcome to {member.guild}, {member.mention}! Hope you enjoy your stay here.')
+        guild = get_guild_dict(id=member.guild.id)
+        if guild and guild['greet_members']:
+            await member.send(guild['greet_message'])
 
 
 # Setting up the fundamentals.
@@ -383,8 +364,7 @@ class YTDLError(Exception):
 
 # Global exception handler cog.
 class ExceptionHandler(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -430,6 +410,9 @@ class ExceptionHandler(commands.Cog):
         elif isinstance(error, commands.errors.MissingRequiredArgument):
             await ctx.reply(embed=generate_error_embed(title='You\'re missing a required argument.', description=f'{error} Try typing `{ctx.prefix}help {ctx.command}` for more information on how to use this command.', footer_avatar=ctx.author.avatar))
 
+        elif isinstance(error, commands.errors.CommandError):
+            await ctx.reply(embed=generate_error_embed(title='A problem occured!', description=error, footer_avatar=ctx.author.avatar))
+
         elif isinstance(error, commands.errors.CheckFailure):
             pass
 
@@ -440,7 +423,17 @@ class ExceptionHandler(commands.Cog):
             pass
 
         else:
-            await ctx.reply(embed=generate_error_embed(title='An internal error occured.', description='If you think that it shouldn\'t happen, then try opening a ticket in our [support server]() and describe the issue. We\'ll try our best to demolish the bug for you (if it\'s there).', footer_avatar=ctx.author.avatar))
+            embed = (
+                generate_error_embed(
+                    title='An internal error occured.', 
+                    description='If you think that it shouldn\'t happen, then try opening a ticket in our [support server]() and describe the issue. We\'ll try our best to demolish the bug for you (if it\'s there).', 
+                    footer_avatar=ctx.author.avatar
+                ).add_field(
+                    name='Raised Error:',
+                    value=f'```{error}```'
+                )
+            )
+            await ctx.reply(embed=embed)
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
@@ -452,13 +445,12 @@ class ExceptionHandler(commands.Cog):
 
 # Chill category commands.
 class Chill(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.command(
         name='avatar', 
-        help='Shows a member\'s Discord avatar.',
+        help='Shows a member\'s Discord avatar.'
     )
     @commands.guild_only()
     async def avatar(self, ctx: commands.Context, member: disnake.Member=None):
@@ -581,7 +573,7 @@ class Chill(commands.Cog):
     )
     @commands.guild_only()
     async def vote(self, ctx: commands.Context):
-        vote = await has_voted(ctx.author.id)
+        vote = await check_if_voted(ctx.author.id)
 
         if vote is False:
             embed = (
@@ -599,16 +591,13 @@ class Chill(commands.Cog):
         elif vote is True:
             await ctx.reply('You have already voted for me today, yay!')
 
-        else:
-            pass
-
     @commands.slash_command(
         name='vote',
         description='Vote for me on Top.gg!'
     )
     @commands.guild_only()
     async def _vote(self, inter: ApplicationCommandInteraction):
-        vote = has_voted(inter.author.id)
+        vote = check_if_voted(inter.author.id)
 
         if vote is False:
             embed = (
@@ -632,8 +621,7 @@ class Chill(commands.Cog):
 
 # Casual category commands.
 class Inspection(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.command(
@@ -670,10 +658,10 @@ class Inspection(commands.Cog):
         if not user:
             user = ctx.author
 
+        qr_file_name, qr_file = generate_qr_code(id=ctx.author.id, text_to_embed=f'https://discordapp.com/users/{ctx.author.id}/')
+
         embed = (
             disnake.Embed(
-                title=f'{user.name}\'s Bio',
-                description=user.activities[0],
                 color=accent_color[0]
             )
         ).add_field(
@@ -683,8 +671,8 @@ class Inspection(commands.Cog):
             name='Status', 
             value=user.status
         ).add_field(
-            name='User ID', 
-            value=user.id
+            name='Joining Date', 
+            value=user.created_at.strftime("%b %d, %Y")
         ).add_field(
             name='Discriminator', 
             value=user.discriminator
@@ -695,16 +683,28 @@ class Inspection(commands.Cog):
             name='Roles', 
             value=len(user.roles)
         ).add_field(
-            name='Discord Joining Date',
-            value=user.created_at.strftime("%b %d, %Y"), 
+            name='Identifier',
+            value=user.id, 
             inline=False
         ).set_thumbnail(
-            url=user.avatar
-        ).set_footer(
-            text=generate_random_footer(),
-            icon_url=ctx.author.avatar
+            url=f'attachment://{qr_file_name}'
         )
-        await ctx.reply(embed=embed)
+        
+        try:
+            embed.set_footer(
+                text=user.activities[0],
+                icon_url=ctx.author.avatar
+            )
+        except:
+            embed.set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar
+            )
+
+        await ctx.reply(file=qr_file, embed=embed)
+        
+        if os.path.exists(qr_file_name):
+            os.remove(qr_file_name)
 
     @commands.command(
         name='guildinfo', 
@@ -713,11 +713,9 @@ class Inspection(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def guildinfo(self, ctx: commands.Context):
-        guild = get_guild_dict(ctx.guild.id)
+        guild = get_guild_dict(id=ctx.guild.id)
         embed = (
             disnake.Embed(
-                title=ctx.guild.name,
-                description=f'Showing all necessary information related to this guild. Scroll to find out more about {ctx.guild.name}!', 
                 color=accent_color[0]
             )
         ).add_field(
@@ -726,9 +724,6 @@ class Inspection(commands.Cog):
         ).add_field(
             name='Region', 
             value=ctx.guild.region
-        ).add_field(
-            name='Server ID', 
-            value=ctx.guild.id
         ).add_field(
             name='Members', 
             value=ctx.guild.member_count
@@ -739,8 +734,12 @@ class Inspection(commands.Cog):
             name='Channels', 
             value=len(ctx.guild.channels)
         ).add_field(
-            name='Command Prefix',
+            name='Prefix',
             value=prefix if not guild['prefix'] else guild['prefix']
+        ).add_field(
+            name='Identifier', 
+            value=ctx.guild.id,
+            inline=False
         ).set_thumbnail(
             url=ctx.guild.icon
         ).set_footer(
@@ -777,7 +776,7 @@ class Inspection(commands.Cog):
             name='Role Position', 
             value=role.position
         ).add_field(
-            name='Role ID', 
+            name='Identifier', 
             value=f'`{role.id}`'
         ).set_footer(
             text=generate_random_footer(),
@@ -817,8 +816,7 @@ class Inspection(commands.Cog):
 
 # Moderation category commands.
 class Moderation(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.command(
@@ -844,7 +842,7 @@ class Moderation(commands.Cog):
         if amount > 100:
             await ctx.reply('Ripple purges are limited to 100 messages per use!')
         else:
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
             messages = await ctx.history(limit=amount).flatten()
 
             for message in messages:
@@ -858,16 +856,35 @@ class Moderation(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def msgweb(self, ctx: commands.Context, member: disnake.Member):
-        global msg_web_target
+        await ctx.message.delete()
+        await ctx.author.send(f'A message web trap on **{member}** has been activated. You\'ll shortly receive the captured messages once the action is complete.')
 
-        if not msg_web_target:
-            msg_web_target.append([member.id, ctx.author])
-            await ctx.author.send(f'A message web trap on {member.name} has been triggered. The captured messages will be delivered to you shortly after the web has completed it\'s task.')
-            await ctx.message.delete()
+        if ctx.author == member:
+            return await ctx.author.send('You can\'t trap yourself!')
 
-        else:
-            await ctx.author.send('Something fishy is already going on. Try again later!')
-            await ctx.message.delete()
+        web = list()
+        for i in range(0, 6):
+            web.append(await wait_for_message(member, check_if_member=True))
+
+        embed = (
+            disnake.Embed(
+                title='Web Trap Retracted',
+                description=f'All captured messages from {member} are listed below.',
+                color=accent_color[0]
+            ).set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar
+            )
+        )
+
+        for message in web:
+            embed.add_field(
+                name=message.content,
+                value=f'Sent in #{message.channel}',
+                inline=False
+            )
+
+        await ctx.author.send(embed=embed)
 
     @commands.command(
         name='snipemsg',
@@ -922,6 +939,7 @@ class Moderation(commands.Cog):
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def jailed(self, ctx: commands.Context):
         jail_has_member = False
+        
         embed = (
             disnake.Embed(
                 title='Now viewing the prison!', 
@@ -931,6 +949,7 @@ class Moderation(commands.Cog):
                 text=generate_random_footer()
             )
         )
+
         for jail_member in jail_members:
             if jail_member[1] == ctx.guild.id:
                 embed.add_field(
@@ -957,7 +976,7 @@ class Moderation(commands.Cog):
             if jail_member[1] == ctx.guild.id and jail_member[0] == member.id:
                 if member != ctx.author:
                     jail_members.remove(jail_member)
-                    await ctx.message.add_reaction('✅')
+                    await ctx.message.add_reaction('☑️')
 
                 else:
                     await ctx.reply('You can\'t free yourself!')
@@ -988,7 +1007,7 @@ class Moderation(commands.Cog):
     @commands.has_any_role(lock_roles[0], lock_roles[1])
     async def unblock(self, ctx: commands.Context, member: disnake.Member):
         await ctx.channel.set_permissions(member, overwrite=None)
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='kick', 
@@ -1072,13 +1091,12 @@ class Moderation(commands.Cog):
         for frozen_guild in frozen_guilds:
             if frozen_guild[1] == ctx.guild.id:
                 frozen_guilds.remove(frozen_guild)
-                await ctx.message.add_reaction('✅')
+                await ctx.message.add_reaction('☑️')
 
 
 # Customization category commands.
 class Customization(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
     @commands.command(
@@ -1092,38 +1110,40 @@ class Customization(commands.Cog):
             reason = f'Inviter: {ctx.author.name}'
 
         invite = await ctx.channel.create_invite(max_age=max_age, max_uses=max_uses, reason=reason)
-        embed = (
-            disnake.Embed(
-                color=accent_color[0]
-            ).add_field(
-                name='Link', 
-                value=invite
-            ).add_field(
-                name='ID', 
-                value=f'`{invite.id}`'
-            ).add_field(
-                name='Channel', 
-                value=invite.channel
-            ).set_author(
-                name='An invite was created!', 
-                icon_url=ctx.author.avatar
-            )
-        )
-
+        qr_file_name, qr_file = generate_qr_code(id=ctx.author.id, text_to_embed=invite)
         value = str()
+
         if invite.max_age == 0:
             value = 'Infinity'
         else:
             value = f'{invite.max_age} Seconds'
 
-        embed.add_field(
-            name='Lifetime', 
-            value=value
-        ).add_field(
-            name='Max Uses', 
-            value=invite.max_uses
+        embed = (
+            disnake.Embed(
+                title=f'An invite to #{invite.channel} was created!',
+                color=accent_color[0]
+            ).add_field(
+                name='Link', 
+                value=invite
+            ).add_field(
+                name='Identifier', 
+                value=f'`{invite.id}`'
+            ).add_field(
+                name='Lifetime', 
+                value=f'{value} [{invite.max_uses} use(s)]',
+                inline=False
+            ).set_image(
+                url=f'attachment://{qr_file_name}'
+            ).set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar
+            )
         )
-        await ctx.reply(embed=embed)
+
+        await ctx.reply(file=qr_file, embed=embed)
+
+        if os.path.exists(qr_file_name):
+            os.remove(qr_file_name)
 
     @commands.command(
         name='invites', 
@@ -1163,10 +1183,10 @@ class Customization(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles[1])
-    async def removeinv(self, ctx: commands.Context, invite_id: str):
+    async def removeinv(self, ctx: commands.Context, id: str):
         invites = await ctx.guild.invites()
         for invite in invites:
-            if invite.id == invite_id:
+            if invite.id == id:
                 await invite.delete()
                 await ctx.reply('Invite has been deleted.')
                 
@@ -1178,7 +1198,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles[1])
     async def makerole(self, ctx: commands.Context, *, role):
         await ctx.guild.create_role(name=role)
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='removerole', 
@@ -1192,7 +1212,7 @@ class Customization(commands.Cog):
 
         else:
             await role.delete()
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='assignrole', 
@@ -1212,7 +1232,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles[1])
     async def nick(self, ctx: commands.Context, member: disnake.Member, nick: str):
         await member.edit(nick=nick)
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='makech', 
@@ -1225,7 +1245,17 @@ class Customization(commands.Cog):
         existing_channel = disnake.utils.get(guild.channels, name=channel_name)
         if not existing_channel:
             await guild.create_text_channel(channel_name)
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
+
+    @commands.command(
+        name='clonech',
+        help='Clones a given channel.'
+    )
+    @commands.guild_only()
+    @commands.has_role(lock_roles[1])
+    async def clonech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
+        await channel.clone()
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='removech', 
@@ -1233,15 +1263,14 @@ class Customization(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles[1])
-    async def removech(self, ctx: commands.Context, channel_name: disnake.TextChannel):
-        await channel_name.delete()
-        await ctx.message.add_reaction('✅')
+    async def removech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
+        await channel.delete()
+        await ctx.message.add_reaction('☑️')
 
 
 # Tweaks category commands.
 class Tweaks(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot 
 
     @commands.command(
@@ -1256,15 +1285,60 @@ class Tweaks(commands.Cog):
 
     @commands.command(
         name='greetings',
-        help='Toggles the greeting message which is sent to an incoming Discord user upon joining.'
+        help='Toggles the greeting message which is sent to an incoming Discord user upon joining the server.'
     )
     @commands.guild_only()
     @commands.has_role(lock_roles[1])
-    async def toggle_greeting(self, ctx: commands.Context):
-        greet_members = get_guild_dict(ctx.guild.id)['greet_members']
-        db.update({'greet_members': not greet_members}, Guild.id == ctx.guild.id)
-        greet_members = get_guild_dict(ctx.guild.id)['greet_members']
-        await ctx.reply(f'Greetings have been toggled to `{greet_members}`!')
+    async def greetings(self, ctx: commands.Context, *, greet_message: str=None):
+        if greet_message:
+            embed = (
+                disnake.Embed(
+                    title='Greetings enabled!',
+                    description=f'`{greet_message}` will be sent to anyone who joins this server from now on. You can disable it by using this command without any arguments.',
+                    color=accent_color[0]
+                ).set_footer(
+                    text=generate_random_footer(),
+                    icon_url=ctx.author.avatar
+                )
+            )
+            db.update({'greet_members': True, 'greet_message': greet_message}, Guild.id == ctx.guild.id)
+            await ctx.reply(embed=embed)
+        else:
+            db.update({'greet_members': False, 'greet_message': None}, Guild.id == ctx.guild.id)
+            await ctx.reply('Greetings have been disabled.')
+
+    @commands.command(
+        name='bindch',
+        help='Sets a specific channel as the default for executing commands.'
+    )
+    @commands.guild_only()
+    @commands.has_role(lock_roles[1])
+    async def bindch(self, ctx: commands.Context, *, channel: disnake.TextChannel=None):
+        if channel:
+            embed = (
+                disnake.Embed(
+                    title=f'#{channel.name} has been binded!',
+                    description='Now you won\'t be able to execute commands outside this channel. To unbind, just type this command again without any arguments.',
+                    color=accent_color[0]
+                ).set_footer(
+                    text=generate_random_footer(),
+                    icon_url=ctx.author.avatar
+                )
+            )
+
+            db.update({'default_commands_channel': channel.id}, Guild.id == ctx.guild.id)
+            await ctx.reply(embed=embed)
+        
+        else:
+            guild = get_guild_dict(id=ctx.guild.id)
+            
+            if not guild['default_commands_channel']:
+                await ctx.reply('No channel is binded with me in this server.')
+
+            else:
+                channel = self.bot.get_channel(guild['default_commands_channel'])
+                db.update({'default_commands_channel': None}, Guild.id == ctx.guild.id)
+                await ctx.reply(f'Unbinded **#{channel.name}** successfully!')
 
 
 # Music category commands.
@@ -1321,7 +1395,7 @@ class YTDLSource(disnake.PCMVolumeTransformer):
         return "**{0.title}** by **{0.uploader}**".format(self)
 
     @classmethod
-    async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop = None):
+    async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop):
         loop = loop or asyncio.get_event_loop()
 
         partial = functools.partial(
@@ -1381,6 +1455,22 @@ class YTDLSource(disnake.PCMVolumeTransformer):
             duration.append('{} seconds'.format(seconds))
 
         return ', '.join(duration)
+
+
+# Views (static / dynamic, for music commands).
+class NowCommandView(disnake.ui.View):
+    def __init__(self, *, url: str, views: str, likes: str, timeout: float=30):
+        super().__init__(timeout=timeout)
+
+        self.add_item(disnake.ui.Button(label='Redirect', url=url))
+        self.add_item(disnake.ui.Button(label=f'{int(views):,} Views', style=disnake.ButtonStyle.grey))
+        self.add_item(disnake.ui.Button(label=f'{int(likes):,} Likes', style=disnake.ButtonStyle.grey))
+
+class PlayCommandView(disnake.ui.View):
+    def __init__(self, *, url: str, timeout: float=30):
+        super().__init__(timeout=timeout)
+    
+        self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
 
 class Song:
@@ -1547,10 +1637,9 @@ class Music(commands.Cog):
     async def _join(self, ctx: commands.Context):
         destination = ctx.author.voice.channel
         if ctx.voice_state.voice:
-            await ctx.voice_state.voice.move_to(destination)
-            return
+            return await ctx.voice_state.voice.move_to(destination)
 
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
         ctx.voice_state.voice = await destination.connect()
 
     @commands.command(
@@ -1564,11 +1653,10 @@ class Music(commands.Cog):
 
         destination = channel or ctx.author.voice.channel
         if ctx.voice_state.voice:
-            await ctx.voice_state.voice.move_to(destination)
-            return
+            return await ctx.voice_state.voice.move_to(destination)
 
         ctx.voice_state.voice = await destination.connect()
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='leave', 
@@ -1583,7 +1671,7 @@ class Music(commands.Cog):
  
         await ctx.voice_state.stop()
         del self.voice_states[ctx.guild.id]
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='volume', 
@@ -1591,7 +1679,7 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _volume(self, ctx: commands.Context, *, volume: int):
-        vote = await has_voted(ctx.author.id)
+        vote = await check_if_voted(ctx.author.id)
 
         if (vote is None) or (vote is True):
             if not ctx.voice_state.is_playing:
@@ -1636,7 +1724,7 @@ class Music(commands.Cog):
     async def _pause(self, ctx: commands.Context):
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='resume', 
@@ -1646,7 +1734,7 @@ class Music(commands.Cog):
     async def _resume(self, ctx: commands.Context):
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='stop', 
@@ -1661,7 +1749,7 @@ class Music(commands.Cog):
                 ctx.voice_state.loop = not ctx.voice_state.loop
 
             ctx.voice_state.voice.stop()
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='skip', 
@@ -1674,7 +1762,7 @@ class Music(commands.Cog):
 
         voter = ctx.author
         if voter == ctx.voice_state.current.requester:
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction('☑️')
             ctx.voice_state.skip()
 
         elif voter.id not in ctx.voice_state.skip_votes:
@@ -1682,7 +1770,7 @@ class Music(commands.Cog):
             total_votes = len(ctx.voice_state.skip_votes)
 
             if total_votes >= 3:
-                await ctx.message.add_reaction('✅')
+                await ctx.message.add_reaction('☑️')
                 ctx.voice_state.skip()
             else:
                 await ctx.reply('Skip vote added, currently at **{}/3** votes.'.format(total_votes))
@@ -1729,7 +1817,7 @@ class Music(commands.Cog):
             return await ctx.reply('The queue is empty, play some songs, maybe?')
 
         ctx.voice_state.songs.shuffle()
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='remove',
@@ -1741,7 +1829,7 @@ class Music(commands.Cog):
             return await ctx.reply('The queue is empty, so nothing to be removed.')
 
         ctx.voice_state.songs.remove(index - 1)
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='loop', 
@@ -1749,17 +1837,25 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _loop(self, ctx: commands.Context):
-        vote = await has_voted(ctx.author.id)
+        vote = await check_if_voted(ctx.author.id)
 
         if (vote is None) or (vote is True):
             if not ctx.voice_state.is_playing:
                 return await ctx.reply('There\'s nothing being played at the moment.')
 
             ctx.voice_state.loop = not ctx.voice_state.loop
-            if ctx.voice_state.loop:
-                await ctx.message.add_reaction('✅')
-            else:
-                await ctx.message.add_reaction('❎')
+
+            embed = (
+                disnake.Embed(
+                    title='Looping right now!' if ctx.voice_state.loop else 'Looping stopped.',
+                    color=accent_color[0]
+                ).set_footer(
+                    text=generate_random_footer(),
+                    icon_url=ctx.author.avatar
+                )
+            )
+
+            await ctx.reply(embed=embed)
         
         else:
             embed = (
@@ -1779,20 +1875,34 @@ class Music(commands.Cog):
         help='Plays music for you.'
     )
     @commands.guild_only()
-    async def _play(self, ctx: commands.Context, *, search: str):
+    async def _play(self, ctx: commands.Context, *, search: str=None):
         if not ctx.voice_state.voice:
             await ctx.invoke(self._join)
 
         async with ctx.typing():
             try:
+                if not search:
+                    await ctx.reply('Type the name of a song, or anything! I\'m listening.')
+                    search = (await wait_for_message(ctx.author, check_if_member=True)).content
+
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+
             except YTDLError as e:
                 await ctx.reply('Whoops! An error occurred while processing this request: {}'.format(str(e)))
+
             else:
                 song = Song(source)
-
+                embed = (
+                    disnake.Embed(
+                        title=f'Enqueued {song.source.title} for the jam!',
+                        color=accent_color[0]
+                    ).set_footer(
+                        text=generate_random_footer(),
+                        icon_url=ctx.author.avatar
+                    )
+                )
                 await ctx.voice_state.songs.put(song)
-                await ctx.reply(f'Enqueued {str(source)} for the jam!')
+                await ctx.reply(embed=embed, view=PlayCommandView(url=song.source.url))
 
     @_join.before_invoke
     @_play.before_invoke
@@ -1807,9 +1917,26 @@ class Music(commands.Cog):
 
 # Developer commands/tools.
 class Developer(commands.Cog):
-    def __init__(self, bot: commands.AutoShardedBot) -> None:
-        super().__init__()
+    def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
+
+    @commands.command(
+        name='dbsize',
+        help='Returns the total amount of used memory space by the guild database in bytes.'
+    )
+    @commands.check(is_developer)
+    async def dbsize(self, ctx: commands.Context):
+        db_all = db.all()
+        embed = (
+            disnake.Embed(
+                title=f'Used Space: {sys.getsizeof(db_all)} byte(s)',
+                color=accent_color[0],
+            ).set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar
+            )
+        )
+        await ctx.reply(embed=embed)
 
     @commands.command(
         name='restart', 
@@ -1844,7 +1971,7 @@ class Developer(commands.Cog):
     )
     @commands.check(is_developer)
     async def logout(self, ctx: commands.Context):
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction('☑️')
         await self.bot.close()    
 
 
@@ -1853,11 +1980,67 @@ keep_alive_toggle = True
 
 # Change the value of `keep_alive_toggle` to True if the module needs to be used.
 if keep_alive_toggle:
-    app = Flask('')
-    @app.route('/')
+    app = Flask(__name__)
 
+    @app.route('/')
     def home():
-        return f"<h2>{bot.user.name} is now live!</h2>"
+        return """
+            <div class="container">
+                <h1>""" + bot.user.name + """ is now live!</h1>
+                <p>Use <code>GET (this_url)/ping</code> to interact with its basic API.</p>
+            </div>
+
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@700&display=swap');
+
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background-image: linear-gradient(to bottom right, #859398, #283048);
+                }
+
+                .container {
+                    font-family: 'Raleway', sans-serif;
+                    height: 15em;
+                    position: relative;
+                }
+
+                .container h1 {
+                    font-weight: 700;
+                    color: #ffffff;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    margin-right: -50%;
+                    transform: translate(-50%, -50%);
+                }
+
+                .container p {
+                    color: #ffffff90;
+                    position: absolute;
+                    top: 70%;
+                    left: 50%;
+                    margin-right: -50%;
+                    transform: translate(-50%, -50%);
+                }
+
+                .container p code {
+                    padding: 5px 15px;
+                    color: #283048;
+                    background: #ffffff90;
+                    border-radius: .2rem;
+                }
+            </style>
+        """
+
+    @app.route('/ping')
+    def ping():
+        ping_dict = {
+            'latency': round(bot.latency * 1000),
+            'uptime': int(round(time.time() - last_restarted_obj)),
+            'last_restart': last_restarted_str
+        }
+        return jsonify(ping_dict)
 
     def run():
         app.run(host='0.0.0.0', port=8080)
