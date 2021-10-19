@@ -1986,8 +1986,8 @@ if keep_alive_toggle:
     def home():
         return """
             <div class="container">
-                <h1>Veron1CA is now live!</h1>
-                <p>Use the <code>/ping</code> endpoint to get the latest info on latency and uptime.</p>
+                <h1>""" + bot.user.name + """ is now live!</h1>
+                <p>Use <code>GET (this_url)/ping</code> to interact with its basic API.</p>
             </div>
 
             <style>
@@ -2025,10 +2025,9 @@ if keep_alive_toggle:
                 }
 
                 .container p code {
+                    padding: 5px 15px;
                     color: #283048;
                     background: #ffffff90;
-                    border-width: 10px;
-                    border-height: 5px;
                     border-radius: .2rem;
                 }
             </style>
