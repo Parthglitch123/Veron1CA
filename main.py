@@ -1975,11 +1975,11 @@ class Developer(commands.Cog):
         await self.bot.close()    
 
 
-# Optional support layer for ensuring better uptime on cloud hosting services (e.g. Replit).
-keep_alive_toggle = False
+# A minimalistic API for viewing the system status.
+api_toggle = False
 
-# Change the value of `keep_alive_toggle` to True if the module needs to be used.
-if keep_alive_toggle:
+# Change the value of `api_toggle` to True in order to enable this feature.
+if api_toggle:
     app = Flask(__name__)
 
     @app.route('/')
