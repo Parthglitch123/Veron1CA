@@ -1348,7 +1348,7 @@ class YTDLSource(disnake.PCMVolumeTransformer):
     YTDL_OPTIONS = {
         'format': 'bestaudio/best',
         'extractaudio': True,
-        'audioformat': 'mp3',
+        'audioformat': 'aac',
         'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
         'restrictfilenames': True,
         'noplaylist': True,
@@ -1976,7 +1976,7 @@ class Developer(commands.Cog):
 
 
 # Optional support layer for ensuring better uptime on cloud hosting services (e.g. Replit).
-keep_alive_toggle = True
+keep_alive_toggle = False
 
 # Change the value of `keep_alive_toggle` to True if the module needs to be used.
 if keep_alive_toggle:
