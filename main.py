@@ -1976,7 +1976,7 @@ class Developer(commands.Cog):
 
 
 # A minimalistic API for viewing the system status.
-api_toggle = False
+api_toggle = True
 
 # Change the value of `api_toggle` to True in order to enable this feature.
 if api_toggle:
