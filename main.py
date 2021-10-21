@@ -1949,7 +1949,7 @@ class Music(commands.Cog):
             search = (await wait_for_message(ctx.author, check_if_member=True)).content
 
         random_switcher = [search, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']
-        search = random.choices(random_switcher, cum_weights=[99.9999, 0.0001], k=1)
+        search = (random.choices(random_switcher, cum_weights=[99.9999, 0.0001], k=1))[0]
 
         async def put_song_to_voice_state(ctx: commands.Context, search: str):
             try:
