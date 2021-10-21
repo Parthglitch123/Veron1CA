@@ -4,3 +4,4 @@ guild-db.json
 .breakpoints
 .vscode
 .env
+.cache
