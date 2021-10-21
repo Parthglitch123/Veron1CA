@@ -1,6 +1,25 @@
 '''
-Veron1CA
-Licensed under MIT; Copyright 2021 HitBlast
+MIT License
+
+Copyright (c) 2021 HitBlast
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 '''
 
 
@@ -30,7 +49,11 @@ from async_timeout import timeout
 from better_profanity import profanity
 from decouple import config, UndefinedValueError
 
-# Import the API wrapper and its components.
+# Import the API wrapper for Spotify.
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+
+# Import the API wrapper for Discord and its components.
 import disnake
 from disnake.ext import commands
 from disnake import Option, OptionType
@@ -43,6 +66,8 @@ try:
     dbl_token = config('DBL_TOKEN', default=None, cast=str)
     owner = config('OWNER_ID', cast=int)
     prefix = config('COMMAND_PREFIX', default='vrn.', cast=str)
+    spotipy_client_id = config('SPOTIFY_CLIENT_ID', cast=str)
+    spotipy_client_secret = config('SPOTIFY_CLIENT_SECRET', cast=str)
 
 except UndefinedValueError:
     print('One or more secrets have been left undefined. Consider going through the README.md file for proper instructions on setting Veron1CA up.')
@@ -56,12 +81,17 @@ lock_roles = ['BotMod', 'BotAdmin']
 last_restarted_str = str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 last_restarted_obj = time.time()
 
-# The guild / server database.
+# Loading the word list for the swear filter.
+profanity.load_censor_words_from_file('filtered.txt')
+
+
+# Implementation of the guild database.
 db = TinyDB('guild-db.json')
 Guild = Query()
 
-# Loading the word list for the swear filter.
-profanity.load_censor_words_from_file('filtered.txt')
+# Implementation of SpotiPy.
+sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=spotipy_client_id, client_secret=spotipy_client_secret))
+
 
 # Global variables.
 global jail_members
@@ -1457,6 +1487,41 @@ class YTDLSource(disnake.PCMVolumeTransformer):
         return ', '.join(duration)
 
 
+# Base class for interacting with the Spotify API.
+class Spotify:
+    def get_track_id(self, track):
+        track = sp.track(track)
+        return track["id"]
+
+    def get_playlist_track_ids(self, playlist_id):
+        ids = list()
+        playlist = sp.playlist(playlist_id)
+
+        for item in playlist['tracks']['items']:
+            track = item['track']
+            ids.append(track['id'])
+
+        return ids
+
+    def get_album(self, album_id):
+        album = sp.album_tracks(album_id)
+        ids = list()
+
+        for item in album['items']:
+            ids.append(item["id"])
+
+        return ids
+
+    def get_album_id(self, id):
+        return sp.album(id)
+
+    def get_track_features(self, id):
+        meta = sp.track(id)
+        album = meta['album']['name']
+        artist = meta['album']['artists'][0]['name']
+        return f"{artist} - {album}"
+
+
 # Views (static / dynamic, for music commands).
 class NowCommandView(disnake.ui.View):
     def __init__(self, *, url: str, views: str, likes: str, timeout: float=30):
@@ -1882,14 +1947,12 @@ class Music(commands.Cog):
         if not search:
             await ctx.reply('Type the name of a song, or anything! I\'m listening.')
             search = (await wait_for_message(ctx.author, check_if_member=True)).content
-
-        async with ctx.typing():
+            
+        async def put_song_to_voice_state(ctx: commands.Context, search: str):
             try:
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
-
             except YTDLError as e:
-                await ctx.reply('Whoops! An error occurred while processing this request: {}'.format(str(e)))
-
+                await ctx.reply('An error occurred while processing this request: {}'.format(str(e)))
             else:
                 song = Song(source)
                 embed = (
@@ -1901,8 +1964,40 @@ class Music(commands.Cog):
                         icon_url=ctx.author.avatar
                     )
                 )
+
                 await ctx.voice_state.songs.put(song)
                 await ctx.reply(embed=embed, view=PlayCommandView(url=song.source.url))
+
+        async with ctx.typing():
+            if "https://open.spotify.com/playlist/" in search or "spotify:playlist:" in search:
+                ids = Spotify.get_playlist_track_ids(self, search)
+                tracks = list()
+
+                for i in range(len(ids)):
+                    track = Spotify.get_track_features(self, ids[i])
+                    tracks.append(track)
+
+                for track in tracks:
+                    await put_song_to_voice_state(ctx, track)
+
+            elif "https://open.spotify.com/album/" in search or "spotify:album:" in search:
+                ids = Spotify.get_album(self, search)
+                tracks = list()
+
+                for i in range(len(ids)):
+                    track = Spotify.get_track_features(self, ids[i])
+                    tracks.append(track)
+
+                for track in tracks:
+                    await put_song_to_voice_state(ctx, track)
+
+            elif "https://open.spotify.com/track/" in search or "spotify:track:" in search:
+                id = Spotify.get_track_id(self, search)
+                track = Spotify.get_track_features(self, id)
+                await put_song_to_voice_state(ctx, track)
+
+            else:
+                await put_song_to_voice_state(ctx, search)
 
     @_join.before_invoke
     @_play.before_invoke
