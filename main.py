@@ -2070,78 +2070,74 @@ class Developer(commands.Cog):
         await self.bot.close()    
 
 
-# Optional support layer for ensuring better uptime on cloud hosting services (e.g. Replit).
-keep_alive_toggle = True
+# A minimalistic API for viewing the system status.
+app = Flask(__name__)
 
-# Change the value of `keep_alive_toggle` to True if the module needs to be used.
-if keep_alive_toggle:
-    app = Flask(__name__)
+@app.route('/')
+def home():
+    return """
+        <div class="container">
+            <h1>""" + bot.user.name + """ is now live!</h1>
+            <p>Use <code>GET (this_url)/ping</code> to interact with its basic API.</p>
+        </div>
 
-    @app.route('/')
-    def home():
-        return """
-            <div class="container">
-                <h1>""" + bot.user.name + """ is now live!</h1>
-                <p>Use <code>GET (this_url)/ping</code> to interact with its basic API.</p>
-            </div>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@700&display=swap');
 
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@700&display=swap');
+            body {
+                margin: 0;
+                padding: 0;
+                background-image: linear-gradient(to bottom right, #859398, #283048);
+            }
 
-                body {
-                    margin: 0;
-                    padding: 0;
-                    background-image: linear-gradient(to bottom right, #859398, #283048);
-                }
+            .container {
+                font-family: 'Raleway', sans-serif;
+                height: 15em;
+                position: relative;
+            }
 
-                .container {
-                    font-family: 'Raleway', sans-serif;
-                    height: 15em;
-                    position: relative;
-                }
+            .container h1 {
+                font-weight: 700;
+                color: #ffffff;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                margin-right: -50%;
+                transform: translate(-50%, -50%);
+            }
 
-                .container h1 {
-                    font-weight: 700;
-                    color: #ffffff;
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    margin-right: -50%;
-                    transform: translate(-50%, -50%);
-                }
+            .container p {
+                color: #ffffff90;
+                position: absolute;
+                top: 70%;
+                left: 50%;
+                margin-right: -50%;
+                transform: translate(-50%, -50%);
+            }
 
-                .container p {
-                    color: #ffffff90;
-                    position: absolute;
-                    top: 70%;
-                    left: 50%;
-                    margin-right: -50%;
-                    transform: translate(-50%, -50%);
-                }
+            .container p code {
+                padding: 5px 15px;
+                color: #283048;
+                background: #ffffff90;
+                border-radius: .2rem;
+            }
+        </style>
+    """
 
-                .container p code {
-                    padding: 5px 15px;
-                    color: #283048;
-                    background: #ffffff90;
-                    border-radius: .2rem;
-                }
-            </style>
-        """
+@app.route('/ping')
+def ping():
+    ping_dict = {
+        'latency': round(bot.latency * 1000),
+        'uptime': int(round(time.time() - last_restarted_obj)),
+        'last_restart': last_restarted_str
+    }
+    return jsonify(ping_dict)
 
-    @app.route('/ping')
-    def ping():
-        ping_dict = {
-            'latency': round(bot.latency * 1000),
-            'uptime': int(round(time.time() - last_restarted_obj)),
-            'last_restart': last_restarted_str
-        }
-        return jsonify(ping_dict)
-
-    def run():
-        app.run(host='0.0.0.0', port=8080)
-        
-    t = Thread(target=run)
-    t.start()
+def run():
+    app.run(host='0.0.0.0', port=8080)
+    
+t = Thread(target=run)
+t.start()
 
 
 # Add available cogs.
