@@ -55,8 +55,8 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 # Import the API wrapper for Discord and its components.
 import disnake
-from disnake.ext import commands
 from disnake import Option, OptionType
+from disnake.ext import commands, tasks
 from disnake.interactions.application_command import ApplicationCommandInteraction
 
 
@@ -334,7 +334,10 @@ class Bot(commands.AutoShardedBot):
 
     async def on_ready(self):
         print(f'Log: {self.user.name} has been deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
-        await self.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(self.guilds)} server(s)!'))
+
+        while True:
+            await self.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(self.guilds)} server(s)!'))
+            await asyncio.sleep(200)
 
     async def on_message(self, message: disnake.Message):
         if message.author == self.user:
