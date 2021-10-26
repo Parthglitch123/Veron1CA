@@ -26,8 +26,9 @@ SOFTWARE.
 # Import built-in libraries.
 import os
 import sys
-import time
+import json
 import math
+import time
 import uvloop
 import random
 import asyncio
@@ -327,7 +328,7 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_error_message(self, error):
         ctx = self.context
-        await ctx.reply(embed=generate_error_embed(title='This isn\'t a command.', description=error, footer_avatar=ctx.author.avatar))
+        await ctx.reply(embed=generate_error_embed(title='This isn\'t a command!', description=error, footer_avatar=ctx.author.avatar))
 
 
 # The main Bot class for root operations and events.
@@ -1379,6 +1380,24 @@ class Tweaks(commands.Cog):
                 channel = self.bot.get_channel(guild['default_commands_channel'])
                 db.update({'default_commands_channel': None}, Guild.id == ctx.guild.id)
                 await ctx.reply(f'Unbinded **#{channel.name}** successfully!')
+
+    @commands.command(
+        name='viewconfig',
+        help='Shows the server\'s configuration data in a JSON file format.'
+    )
+    @commands.guild_only()
+    @commands.has_role(lock_roles['admin'])
+    async def viewconfig(self, ctx: commands.Context):
+        guild = get_guild_dict(id=ctx.guild.id)
+        embed = (
+            disnake.Embed(
+                color=accent_color['primary']
+            ).add_field(
+                name='Current Configuration',
+                value=f'```json\n{json.dumps(guild, indent=4)}\n```'
+            )
+        )
+        await ctx.reply(embed=embed)
 
 
 # Music category commands.
