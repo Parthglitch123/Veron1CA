@@ -56,8 +56,8 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 # Import the API wrapper for Discord and its components.
 import disnake
+from disnake.ext import commands
 from disnake import Option, OptionType
-from disnake.ext import commands, tasks
 from disnake.interactions.application_command import ApplicationCommandInteraction
 
 
@@ -314,7 +314,7 @@ class HelpCommand(commands.HelpCommand):
             inline=False
         )
 
-        if command.aliases == []:
+        if not command.aliases:
             aliases = "No aliases are available."
         else:
             aliases = ', '.join(command.aliases)
@@ -703,16 +703,14 @@ class Inspection(commands.Cog):
 
         embed = (
             disnake.Embed(
+                title=f'{user}',
                 color=accent_color['primary']
             )
-        ).add_field(
-            name='Name', 
-            value=user.name
         ).add_field(
             name='Status', 
             value=user.status
         ).add_field(
-            name='Joining Date', 
+            name='Creation Date', 
             value=user.created_at.strftime("%b %d, %Y")
         ).add_field(
             name='Discriminator', 
@@ -723,6 +721,9 @@ class Inspection(commands.Cog):
         ).add_field(
             name='Roles', 
             value=len(user.roles)
+        ).add_field(
+            name='Position',
+            value=user.top_role.mention
         ).add_field(
             name='Identifier',
             value=user.id, 
