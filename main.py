@@ -63,12 +63,16 @@ from disnake.interactions.application_command import ApplicationCommandInteracti
 
 # Environment variables.
 try:
-    token = config('TOKEN', cast=str)
-    dbl_token = config('DBL_TOKEN', default=None, cast=str)
-    owner = config('OWNER_ID', cast=int)
+    tokens = {
+        'discord': config('TOKEN', cast=str),
+        'spotify': config('SPOTIFY_CLIENT_SECRET', cast=str),
+        'topggpy': config('DBL_TOKEN', default=None, cast=str)
+    }
+    owner_ids = {
+        'discord': config('OWNER_ID', cast=int),
+        'spotify': config('SPOTIFY_CLIENT_ID', cast=str)
+    }
     prefix = config('COMMAND_PREFIX', default='vrn.', cast=str)
-    spotipy_client_id = config('SPOTIFY_CLIENT_ID', cast=str)
-    spotipy_client_secret = config('SPOTIFY_CLIENT_SECRET', cast=str)
 
 except UndefinedValueError:
     print('One or more secrets have been left undefined. Consider going through the README.md file for proper instructions on setting Veron1CA up.')
@@ -76,7 +80,7 @@ except UndefinedValueError:
     exit()
 
 
-# System dictonaries and objects.
+# Core dictionaries and variables.
 accent_color = {
     'primary': 11977158, 
     'error': 14573921
@@ -85,19 +89,21 @@ lock_roles = {
     'moderator': 'BotMod', 
     'admin': 'BotAdmin'
 }
-last_restarted_str = str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-last_restarted_obj = time.time()
+restart_data = {
+    'str': str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
+    'obj': time.time()
+}
 
-# Loading the word list for the swear filter.
+
+# Implementation of the profanity filter.
 profanity.load_censor_words_from_file('filtered.txt')
-
 
 # Implementation of the guild database.
 db = TinyDB('guild-db.json')
 Guild = Query()
 
 # Implementation of SpotiPy.
-sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=spotipy_client_id, client_secret=spotipy_client_secret))
+sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=owner_ids['spotify'], client_secret=tokens['spotify']))
 
 
 # Global variables.
@@ -205,7 +211,7 @@ async def check_if_jailed(message: disnake.Message) -> bool:
 
 # Command-specific checks.
 def is_developer(ctx: commands.Context) -> bool:
-    if ctx.author.id == owner:
+    if ctx.author.id == owner_ids['discord']:
         return True
 
 
@@ -334,7 +340,7 @@ class HelpCommand(commands.HelpCommand):
 # The main Bot class for root operations and events.
 class Bot(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=get_prefix, intents=disnake.Intents.all(), help_command=HelpCommand())
+        super().__init__(command_prefix=get_prefix, intents=disnake.Intents.all(), help_command=HelpCommand(), strip_after_prefix=True, case_insensitive=True)
 
     async def on_connect(self):
         os.system('clear')
@@ -392,7 +398,7 @@ class Bot(commands.AutoShardedBot):
 # Setting up the fundamentals.
 uvloop.install()
 bot = Bot()
-bot.topggpy = topgg.DBLClient(bot, dbl_token)
+bot.topggpy = topgg.DBLClient(bot, tokens['topggpy'])
 
 
 # Custom exceptions.
@@ -550,7 +556,7 @@ class Chill(commands.Cog):
         api_latency = round((end_time - start_time) * 1000)
 
         uptime = str(datetime.timedelta(seconds=int(
-            round(time.time() - last_restarted_obj))))
+            round(time.time() - restart_data['obj']))))
 
         embed = (
             disnake.Embed(
@@ -564,7 +570,7 @@ class Chill(commands.Cog):
                 value=f'{api_latency}ms'
             ).add_field(
                 name='Startup Time', 
-                value=last_restarted_str, 
+                value=restart_data['str'], 
                 inline=False
             ).add_field(
                 name='Uptime', 
@@ -584,7 +590,7 @@ class Chill(commands.Cog):
     @commands.guild_only()
     async def _ping(self, inter: ApplicationCommandInteraction):
         ping = round(self.bot.latency * 1000)
-        uptime = str(datetime.timedelta(seconds=int(round(time.time() - last_restarted_obj))))
+        uptime = str(datetime.timedelta(seconds=int(round(time.time() - restart_data['obj']))))
         embed = (
             disnake.Embed(
                 title='System Status', 
@@ -595,7 +601,7 @@ class Chill(commands.Cog):
                 inline=False
             ).add_field(
                 name='Startup Time', 
-                value=last_restarted_str, 
+                value=restart_data['str'], 
                 inline=False
             ).add_field(
                 name='Uptime', 
@@ -2158,14 +2164,17 @@ def home():
 def ping():
     ping_dict = {
         'latency': round(bot.latency * 1000),
-        'uptime': int(round(time.time() - last_restarted_obj)),
-        'last_restart': last_restarted_str
+        'uptime': int(round(time.time() - restart_data['obj'])),
+        'last_restart': restart_data['str']
     }
     return jsonify(ping_dict)
 
 def run():
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080, debug=False)
     
+cli = sys.modules['flask.cli']
+cli.show_server_banner = lambda *x: None
+
 t = Thread(target=run)
 t.start()
 
@@ -2182,4 +2191,4 @@ bot.add_cog(Developer(bot))
 
 
 # Run the bot.
-bot.run(token)
+bot.run(tokens['discord'])
