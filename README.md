@@ -1,5 +1,4 @@
 # Veron1CA
-<img src="https://i.imgur.com/oSyJaep.jpg"><br><br>
 An open source Discord moderation bot with all-in-one server moderation and beat handling capabilties.
 
 ![GitHub](https://img.shields.io/github/license/hitblast/Veron1CA?color=blue&style=for-the-badge)
