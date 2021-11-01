@@ -4,6 +4,7 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 ![GitHub](https://img.shields.io/github/license/hitblast/Veron1CA?color=blue&style=for-the-badge)
 ![GitHub Repo stars](https://img.shields.io/github/stars/hitblast/Veron1CA?color=blue&style=for-the-badge)
 ![GitHub watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue&style=for-the-badge)
+<br><br>
 
 ## Features
 Veron1CA is designed to be the collab of a Discord moderation bot and a chill music bot. It mainly focuses on next level server moderation, which can make customizing and controlling Discord servers a breeze! Here are a few things that come with it under the hood:
