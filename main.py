@@ -82,7 +82,7 @@ except UndefinedValueError:
 
 # Core dictionaries and variables.
 accent_color = {
-    'primary': 11977158, 
+    'primary': 0, 
     'error': 14573921
 }
 lock_roles = {
