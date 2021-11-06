@@ -71,5 +71,5 @@ python3 main.py
 As mentioned in an earlier statement, Veron1CA is open source, and if you feel like submitting your own ideas and improving the codebase, you can do that in the form of a pull request! We will check what you've done and maybe it will get added if it's good enough.
 <br><br>
 
-## License
-View the full license by [clicking here](LICENSE) (licensed under MIT).
+## Licensed under MIT
+[Click here](LICENSE) to view the full document.
