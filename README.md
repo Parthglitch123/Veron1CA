@@ -1,9 +1,10 @@
 # Veron1CA
 An open source Discord moderation bot with all-in-one server moderation and beat handling capabilties.
 
-![GitHub](https://img.shields.io/github/license/hitblast/Veron1CA?color=blue&style=for-the-badge)
-![GitHub Repo stars](https://img.shields.io/github/stars/hitblast/Veron1CA?color=blue&style=for-the-badge)
-![GitHub watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue&style=for-the-badge)
+![GitHub](https://img.shields.io/github/license/hitblast/Veron1CA?color=blue)
+![GitHub Repo stars](https://img.shields.io/github/stars/hitblast/Veron1CA?color=blue)
+![GitHub watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue)
+![Discord Bots](https://top.gg/api/widget/upvotes/867998923250352189.svg)
 <br><br>
 
 ## Features
@@ -20,7 +21,7 @@ Learn more / invite Veron1CA from [the official website here!](https://hitblast.
 Now that you've successfully added Veron1CA to your server, it's time for some key things to note down. The **default prefix** for accessing Veron1CA is `vrn.` in this case. Here's a bunch of stuff that you can do with it:
 * Use `vrn.<command>` to run your desired command. As an example, you can use `vrn.ping` to get Veron1CA's latency.
 * Use `vrn.help` to get into the help section.
-* Use `vrn.help <category>` to get an entire list of commands depending on which category you choose.
+* Use `vrn.help <category>` to get an entire list of commands depending on which you choose.
 * Use `vrn.help <command>` to get help regarding a specific command. For example, you can use `vrn.help ping` in order to get help for the ping command.
 
 There's also another thing to consider in this case, and that's **role locking**. By default, Veron1CA's moderation and customization-based features are locked to specific roles. We have two unlockable ones to create here:
@@ -30,7 +31,7 @@ There's also another thing to consider in this case, and that's **role locking**
 Keep in mind that being careless with any of these can cause chaotic results. Hope you will be able to do it and will have a good time playing with Veron1CA. 
 <br><br>
 
-## Self-hosting
+## Self Hosting
 * Clone the project. You can easily do this using:
 ```bash
 git clone https://github.com/hitblast/Veron1CA.git
@@ -68,7 +69,7 @@ python3 main.py
 <br>
 
 ## Contribution
-As mentioned in an earlier statement, Veron1CA is open source, and if you feel like submitting your own ideas and improving the codebase, you can do that in the form of a pull request! We will check what you've done and maybe it will get added if it's good enough.
+Due to Veron1CA's open source nature, you can contribute to the code base pretty easily. Start off by [forking this repository](https://github.com/hitblast/Veron1CA) and creating a [pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests). We'll be happy to review it!
 <br><br>
 
 ## Licensed under MIT
