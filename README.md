@@ -4,7 +4,7 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 ![GitHub](https://img.shields.io/github/license/hitblast/Veron1CA?color=blue)
 ![GitHub Repo stars](https://img.shields.io/github/stars/hitblast/Veron1CA?color=blue)
 ![GitHub watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue)
-![Discord Bots](https://top.gg/api/widget/upvotes/867998923250352189.svg)
+[![Discord Bots](https://top.gg/api/widget/upvotes/867998923250352189.svg)](https://top.gg/bot/867998923250352189)
 <br><br>
 
 ## Features
