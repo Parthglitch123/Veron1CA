@@ -10,7 +10,7 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 ## Features
 Veron1CA is designed to be the collab of a Discord moderation bot and a chill music bot. It mainly focuses on next level server moderation, which can make customizing and controlling Discord servers a breeze! Here are a few things that come with it under the hood:
 
-- Almost every necessary moderation command with some creative ones as well.
+- Almost every necessary moderation command with some alien ones as well.
 - Continuously updating codebase with regular maintenance.
 - Built with modern, organized Python syntax.
 
@@ -37,19 +37,9 @@ Keep in mind that being careless with any of these can cause chaotic results. Ho
 git clone https://github.com/hitblast/Veron1CA.git
 ```
 
-* Install [Poetry](https://python-poetry.org/) using Python's built-in package manager, [Pip](https://pypi.org/project/pip/).
+* Open a terminal window in the folder, then you can use the `requirements.txt` file to install the dependencies with [Pip](https://pypi.org/project/pip/).
 ```bash
-python3 -m pip install -U poetry
-```
-
-* Navigate to the cloned directory and run the following command to install Veron1CA's dependencies.
-```bash
-python3 -m poetry install
-```
-
-* Alternatively, you can use the `requirements.txt` file to install the dependencies with [Pip](https://pypi.org/project/pip/) if you don't have [Poetry](https://python-poetry.org/).
-```bash
-python3 -m pip install -r requirements.txt
+python3 -m pip install -U -r requirements.txt
 ```
 
 * Once it's done, create a `.env` file in the same directory and assign the values accordingly.

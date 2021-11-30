@@ -23,6 +23,7 @@ SOFTWARE.
 '''
 
 
+
 # Import built-in libraries.
 import os
 import sys
@@ -108,11 +109,11 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=owner_ids['
 
 # Global variables.
 global jail_members
-jail_members = list()
+jail_members = []
 global frozen_guilds
-frozen_guilds = list()
+frozen_guilds = []
 global snipeables
-snipeables = list()
+snipeables = []
 
 
 # Get prefix by guild ID.
@@ -121,9 +122,8 @@ def get_prefix(bot: commands.AutoShardedBot, message: disnake.Message):
 
     try:
         for guild in db.all():
-            if guild['id'] == message.guild.id: 
-                if guild['prefix']:
-                    guild_prefix = guild['prefix']
+            if guild['id'] == message.guild.id and guild['prefix']:
+                guild_prefix = guild['prefix']
     except AttributeError:
         pass
 
@@ -161,7 +161,7 @@ def generate_qr_code(id: str, text_to_embed: str):
     return file_name, file
 
 def generate_error_embed(title: str, description: str, footer_avatar) -> disnake.Embed:
-    embed = (
+    return (
         disnake.Embed(
             title=f'Whoops! {title}',
             description=description,
@@ -171,14 +171,10 @@ def generate_error_embed(title: str, description: str, footer_avatar) -> disnake
             icon_url=footer_avatar
         )
     )
-    return embed
 
 async def check_if_voted(id: int) -> bool:
     try:
-        if await bot.topggpy.get_user_vote(id):
-            return True
-        else:
-            return False
+        return bool(await bot.topggpy.get_user_vote(id))
     except topgg.errors.Unauthorized:
         return None
 
@@ -196,11 +192,13 @@ async def check_if_frozen(message: disnake.Message) -> bool:
             return True
 
 async def check_if_sweared(message: disnake.Message) -> bool:
-    if not message.author.bot:
-        if not message.channel.is_nsfw():
-            if profanity.contains_profanity(message.content):
-                await message.delete()
-                return True
+    if (
+        not message.author.bot
+        and not message.channel.is_nsfw()
+        and profanity.contains_profanity(message.content)
+    ):
+        await message.delete()
+        return True
 
 async def check_if_jailed(message: disnake.Message) -> bool:
     for jail_member in jail_members:
@@ -211,8 +209,7 @@ async def check_if_jailed(message: disnake.Message) -> bool:
 
 # Command-specific checks.
 def is_developer(ctx: commands.Context) -> bool:
-    if ctx.author.id == owner_ids['discord']:
-        return True
+    return ctx.author.id == owner_ids['discord']
 
 
 # Views (static).
@@ -239,11 +236,9 @@ class HelpCommand(commands.HelpCommand):
         cogs_str = str()
 
         for cog in bot.cogs:
-            if (cog == 'Developer') or (cog == 'ExceptionHandler'):
-                pass
-            else:
+            if cog not in ['Developer', 'ExceptionHandler']:
                 cogs_str += f'> {cog}\n'
-        
+
         embed = (
             disnake.Embed(
                 title=f'It\'s {bot.user.name} onboard!', 
@@ -298,9 +293,8 @@ class HelpCommand(commands.HelpCommand):
     async def send_command_help(self, command: commands.Command):
         ctx = self.context
 
-        if command.cog_name == 'Developer':
-            if not is_developer(ctx):
-                return
+        if command.cog_name == 'Developer' and not is_developer(ctx):
+            return
 
         embed = (
             disnake.Embed(
@@ -371,17 +365,19 @@ class Bot(commands.AutoShardedBot):
         except AttributeError:
             pass
 
-        if not await check_if_sweared(message):
-            if not await check_if_frozen(message):
-                if not await check_if_jailed(message):
-                    guild = get_guild_dict(id=message.guild.id)
+        if (
+            not await check_if_sweared(message)
+            and not await check_if_frozen(message)
+            and not await check_if_jailed(message)
+        ):
+            guild = get_guild_dict(id=message.guild.id)
 
-                    if not guild['default_commands_channel']:
-                        await self.process_commands(message)
-
-                    else:
-                        if message.channel.id == guild['default_commands_channel']:
-                            await self.process_commands(message)
+            if (
+                guild['default_commands_channel']
+                and message.channel.id == guild['default_commands_channel']
+                or not guild['default_commands_channel']
+            ):
+                await self.process_commands(message)
 
     async def on_message_delete(self, message: disnake.Message):
         global snipeables
@@ -420,9 +416,8 @@ class ExceptionHandler(commands.Cog):
             return
 
         cog = ctx.cog
-        if cog:
-            if cog._get_overridden_method(cog.cog_command_error) is not None:
-                return
+        if cog and cog._get_overridden_method(cog.cog_command_error) is not None:
+            return
 
         ignored = (commands.CommandNotFound, )
         error = getattr(error, 'original', error)
@@ -466,10 +461,7 @@ class ExceptionHandler(commands.Cog):
         elif isinstance(error, disnake.errors.Forbidden):
             await ctx.reply(embed=generate_error_embed(title='The command couldn\'t be processed.', description='Either I\'m missing the required permissions or I just need to be at a higher position in the role hierarchy.', footer_avatar=ctx.author.avatar))
 
-        elif isinstance(error, disnake.errors.NotFound):
-            pass
-
-        else:
+        elif not isinstance(error, disnake.errors.NotFound):
             embed = (
                 generate_error_embed(
                     title='An internal error occured.', 
@@ -490,7 +482,7 @@ class ExceptionHandler(commands.Cog):
             await inter.response.send_message(embed=generate_error_embed(title='This command can\'t be used in DMs.', description=f'The command `{inter.data.name}` has been configured to only be executed in servers, not DM channels.', footer_avatar=inter.author.avatar))
 
 
-# Chill category commands.
+# Chill commands.
 class Chill(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
@@ -637,36 +629,9 @@ class Chill(commands.Cog):
             
         elif vote is True:
             await ctx.reply('You have already voted for me today, yay!')
-
-    @commands.slash_command(
-        name='vote',
-        description='Vote for me on Top.gg!'
-    )
-    @commands.guild_only()
-    async def _vote(self, inter: ApplicationCommandInteraction):
-        vote = check_if_voted(inter.author.id)
-
-        if vote is False:
-            embed = (
-                disnake.Embed(
-                    title=':military_medal: Voting Section', 
-                    description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourages him to launch more updates.',
-                    color=accent_color['primary']
-                ).set_footer(
-                    text=generate_random_footer(),
-                    icon_url=inter.author.avatar
-                )
-            )
-            await inter.response.send_message(embed=embed, view=VoteCommandView())
-            
-        elif vote is True:
-            await inter.response.send_message('You have already voted for me today, yay!')
-
-        else:
-            await inter.response.send_message('Voting isn\'t a thing, by the way.')
             
 
-# Casual category commands.
+# Casual commands.
 class Inspection(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
@@ -719,8 +684,8 @@ class Inspection(commands.Cog):
             name='Creation Date', 
             value=user.created_at.strftime("%b %d, %Y")
         ).add_field(
-            name='Discriminator', 
-            value=user.discriminator
+            name='On Mobile', 
+            value=user.is_on_mobile()
         ).add_field(
             name='Race', 
             value='Bots, execute em!' if user.bot else 'Human'
@@ -805,31 +770,19 @@ class Inspection(commands.Cog):
     async def roleinfo(self, ctx: commands.Context, role: disnake.Role):
         embed = (
             disnake.Embed(
-                title=f'Role Information: {str(role)}', 
-                color=accent_color['primary']
+                title=f'Role Information: {role}', color=accent_color['primary']
             )
-        ).add_field(
-            name='Creation Date:', 
-            value=role.created_at.strftime("%b %d, %Y")
-        ).add_field(
-            name='Mentionable', 
-            value=role.mentionable
-        ).add_field(
-            name='Managed By Integration', 
-            value=role.is_integration()
-        ).add_field(
-            name='Managed By Bot', 
-            value=role.is_bot_managed()
-        ).add_field(
-            name='Role Position', 
-            value=role.position
-        ).add_field(
-            name='Identifier', 
-            value=f'`{role.id}`'
-        ).set_footer(
-            text=generate_random_footer(),
-            icon_url=ctx.author.avatar
+            .add_field(
+                name='Creation Date:', value=role.created_at.strftime("%b %d, %Y")
+            )
+            .add_field(name='Mentionable', value=role.mentionable)
+            .add_field(name='Managed By Integration', value=role.is_integration())
+            .add_field(name='Managed By Bot', value=role.is_bot_managed())
+            .add_field(name='Role Position', value=role.position)
+            .add_field(name='Identifier', value=f'`{role.id}`')
+            .set_footer(text=generate_random_footer(), icon_url=ctx.author.avatar)
         )
+
         await ctx.reply(embed=embed)
 
     @commands.command(
@@ -862,8 +815,8 @@ class Inspection(commands.Cog):
             await ctx.reply(embed=embed)
 
 
-# Moderation category commands.
-class Moderation(commands.Cog):
+# General moderation commands.
+class GeneralMod(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
 
@@ -879,6 +832,18 @@ class Moderation(commands.Cog):
         else:
             amount += 1
             await ctx.channel.purge(limit=amount)
+
+    @commands.command(
+        name='purgeone',
+        help='Purges a message by its identifier.'
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def purgeone(self, ctx: commands.Context, message_id: int):
+        message = await ctx.channel.fetch_message(message_id)
+        print(message)
+        await message.delete()
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='ripplepurge', 
@@ -910,8 +875,8 @@ class Moderation(commands.Cog):
         if ctx.author == member:
             return await ctx.author.send('You can\'t trap yourself!')
 
-        web = list()
-        for i in range(0, 6):
+        web = []
+        for _ in range(6):
             web.append(await wait_for_message(member, check_if_member=True))
 
         embed = (
@@ -952,7 +917,7 @@ class Moderation(commands.Cog):
             await ctx.reply('No messages were found in my list.')
 
     @commands.command(
-        name='jail', 
+        name='jail',
         help='Temporarily prevents a member from chatting in server.'
     )
     @commands.guild_only()
@@ -960,19 +925,21 @@ class Moderation(commands.Cog):
     async def jail(self, ctx: commands.Context, member: disnake.Member, *, reason: str='No reason provided.'):
         do_jail = False
 
-        if member != self.bot.user:
-            if member != ctx.author:
-                if member.guild_permissions.administrator:
-                    if ctx.author.guild_permissions.administrator:
-                        do_jail = True
-                    else:
-                        await ctx.reply('You can\'t jail an admin!')
-                else:
-                    do_jail = True
-            else:
-                await ctx.reply('You can\'t jail yourself!')
-        else:
+        if member == self.bot.user:
             await ctx.reply('Why are you even trying to jail me?')
+
+        elif member == ctx.author:
+            await ctx.reply('You can\'t jail yourself!')
+
+        elif (
+            member.guild_permissions.administrator
+            and ctx.author.guild_permissions.administrator
+            or not member.guild_permissions.administrator
+        ):
+            do_jail = True
+
+        else:
+            await ctx.reply('You can\'t jail an admin!')
 
         if do_jail:
             jail_members.append([member.id, ctx.guild.id, reason, ctx.author.id])
@@ -987,7 +954,7 @@ class Moderation(commands.Cog):
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def jailed(self, ctx: commands.Context):
         jail_has_member = False
-        
+
         embed = (
             disnake.Embed(
                 title='Now viewing the prison!', 
@@ -1007,7 +974,7 @@ class Moderation(commands.Cog):
                 )
                 jail_has_member = True
 
-        if jail_has_member is False:
+        if not jail_has_member:
             await ctx.reply('No members are inside the jail.')
 
         else:
@@ -1036,16 +1003,16 @@ class Moderation(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def block(self, ctx: commands.Context, member: disnake.Member, *, reason: str='No reason provided.'):
-        if member != self.bot.user:
-            if member != ctx.author:
-                await ctx.channel.set_permissions(member, send_messages=False)
-                await ctx.send(f'You\'re now blocked from chatting, {member.mention} | Reason: {reason}')
-                await ctx.message.delete()
+        if member == self.bot.user:
+            await ctx.reply('Why are you even trying to block me?')
 
-            else:
-                await ctx.reply(f'You can\'t block yourself!')
+        elif member != ctx.author:
+            await ctx.channel.set_permissions(member, send_messages=False)
+            await ctx.send(f'You\'re now blocked from chatting, {member.mention} | Reason: {reason}')
+            await ctx.message.delete()
+
         else:
-            await ctx.reply(f'Why are you even trying to block me?')
+            await ctx.reply("You can't block yourself!")
 
     @commands.command(
         name='unblock', 
@@ -1142,7 +1109,43 @@ class Moderation(commands.Cog):
                 await ctx.message.add_reaction('☑️')
 
 
-# Customization category commands.
+# Voice moderation commands.
+class VoiceMod(commands.Cog):
+    def __init__(self, bot: commands.AutoShardedBot):
+        self.bot = bot
+
+    @commands.command(
+        name='move',
+        help='Moves a member from-to specific a voice channel.'
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def move(self, ctx: commands.Context, member: disnake.Member, *, channel: Union[disnake.VoiceChannel, disnake.StageChannel]):
+        await member.move_to(channel)
+        await ctx.message.add_reaction('☑️')
+
+    @commands.command(
+        name='mute',
+        help='Server-mutes a member.'
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def mute(self, ctx: commands.Context, member: disnake.Member):
+        await member.edit(mute=True)
+        await ctx.message.add_reaction('☑️')
+
+    @commands.command(
+        name='deafen',
+        help='Server-deafens a member.'
+    )    
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def deafen(self, ctx: commands.Context, member: disnake.Member):
+        await member.edit(deafen=True)
+        await ctx.message.add_reaction('☑️')
+
+
+# Customization commands.
 class Customization(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
@@ -1159,12 +1162,7 @@ class Customization(commands.Cog):
 
         invite = await ctx.channel.create_invite(max_age=max_age, max_uses=max_uses, reason=reason)
         qr_file_name, qr_file = generate_qr_code(id=ctx.author.id, text_to_embed=invite)
-        value = str()
-
-        if invite.max_age == 0:
-            value = 'Infinity'
-        else:
-            value = f'{invite.max_age} Seconds'
+        value = 'Infinity' if invite.max_age == 0 else f'{invite.max_age} Seconds'
 
         embed = (
             disnake.Embed(
@@ -1215,11 +1213,9 @@ class Customization(commands.Cog):
             await ctx.reply('No invite codes have been generated.')
 
         else:
-            invcount = 0
-            for invite in invites:
-                invcount += 1
+            for invcount, invite in enumerate(invites):
                 embed.add_field(
-                    name=invite, 
+                    name=f'[{invcount}] {invite}', 
                     value=f'Uses: {invite.uses} | Inviter: {invite.inviter.name} | ID: `{invite.id}`', 
                     inline=False
                 )
@@ -1316,7 +1312,7 @@ class Customization(commands.Cog):
         await ctx.message.add_reaction('☑️')
 
 
-# Tweaks category commands.
+# Tweaks commands.
 class Tweaks(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot 
@@ -1407,8 +1403,8 @@ class Tweaks(commands.Cog):
         await ctx.reply(embed=embed)
 
 
-# Music category commands.
-youtube_dl.utils.bug_reports_message = lambda: ''
+# Music commands.
+youtube_dl.utils.bug_reports_message = lambda: str()
 
 class YTDLSource(disnake.PCMVolumeTransformer):
     YTDL_OPTIONS = {
@@ -1530,7 +1526,7 @@ class Spotify:
         return track["id"]
 
     def get_playlist_track_ids(self, playlist_id):
-        ids = list()
+        ids = []
         playlist = sp.playlist(playlist_id)
 
         for item in playlist['tracks']['items']:
@@ -1541,12 +1537,7 @@ class Spotify:
 
     def get_album(self, album_id):
         album = sp.album_tracks(album_id)
-        ids = list()
-
-        for item in album['items']:
-            ids.append(item["id"])
-
-        return ids
+        return [item["id"] for item in album['items']]
 
     def get_album_id(self, id):
         return sp.album(id)
@@ -1708,11 +1699,11 @@ class VoiceState:
             self.voice = None
 
 
-# Music category commands.
+# Music commands.
 class Music(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
-        self.voice_states = dict()
+        self.voice_states = {}
 
     def get_voice_state(self, ctx: commands.Context):
         state = self.voice_states.get(ctx.guild.id)
@@ -1740,8 +1731,8 @@ class Music(commands.Cog):
         if ctx.voice_state.voice:
             return await ctx.voice_state.voice.move_to(destination)
 
-        await ctx.message.add_reaction('☑️')
         ctx.voice_state.voice = await destination.connect()
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='summon', 
@@ -1861,7 +1852,11 @@ class Music(commands.Cog):
         if not ctx.voice_state.is_playing:
             return await ctx.reply('Not playing any music right now, so no skipping for you.')
 
+        if ctx.voice_state.loop:
+            return await ctx.reply(f'Unable to skip as looping is enabled. Try using `{prefix}loop` to turn it off.')
+
         voter = ctx.author
+
         if voter == ctx.voice_state.current.requester:
             await ctx.message.add_reaction('☑️')
             ctx.voice_state.skip()
@@ -1894,10 +1889,10 @@ class Music(commands.Cog):
         start = (page - 1) * items_per_page
         end = start + items_per_page
 
-        queue = ''
-        for i, song in enumerate(ctx.voice_state.songs[start:end], start=start):
-            queue += '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(
-                i + 1, song)
+        queue = ''.join(
+            '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(i + 1, song)
+            for i, song in enumerate(ctx.voice_state.songs[start:end], start=start)
+        )
 
         embed = (
             disnake.Embed(
@@ -1977,6 +1972,16 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _play(self, ctx: commands.Context, *, search: str=None):
+        enqueueing_embed = (
+            disnake.Embed(
+                title='Enqueueing...',
+                color=accent_color['primary']
+            ).set_footer(
+                text=generate_random_footer(),
+                icon_url=ctx.author.avatar
+            )
+        )
+
         if not ctx.voice_state.voice:
             await ctx.invoke(self._join)
 
@@ -1984,7 +1989,7 @@ class Music(commands.Cog):
             await ctx.reply('Type the name of a song, or anything! I\'m listening.')
             search = (await wait_for_message(ctx.author, check_if_member=True)).content
             
-        async def put_song_to_voice_state(ctx: commands.Context, search: str):
+        async def put_song_to_voice_state(ctx: commands.Context, search: str, send_embed: bool=True):
             try:
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
             except YTDLError as e:
@@ -2000,32 +2005,62 @@ class Music(commands.Cog):
                         icon_url=ctx.author.avatar
                     )
                 )
-
                 await ctx.voice_state.songs.put(song)
-                await ctx.reply(embed=embed, view=PlayCommandView(url=song.source.url))
+
+                if send_embed:
+                    await ctx.reply(embed=embed, view=PlayCommandView(url=song.source.url))
 
         async with ctx.typing():
             if "https://open.spotify.com/playlist/" in search or "spotify:playlist:" in search:
                 ids = Spotify.get_playlist_track_ids(self, search)
-                tracks = list()
+                tracks = []
 
                 for i in range(len(ids)):
                     track = Spotify.get_track_features(self, ids[i])
                     tracks.append(track)
 
+                sent_embed = await ctx.reply(embed=enqueueing_embed)
+
                 for track in tracks:
-                    await put_song_to_voice_state(ctx, track)
+                    await put_song_to_voice_state(ctx, track, send_embed=False)
+
+                embed = (
+                    disnake.Embed(
+                        title=f'{len(tracks)} tracks have been queued!',
+                        description=f'You can view the queue of songs imported from the playlist by using the `{prefix}queue` command.',
+                        color=accent_color['primary']
+                    ).set_footer(
+                        text=generate_random_footer(),
+                        icon_url=ctx.author.avatar
+                    )
+                )
+                await sent_embed.edit(embed=embed)
+
 
             elif "https://open.spotify.com/album/" in search or "spotify:album:" in search:
                 ids = Spotify.get_album(self, search)
-                tracks = list()
+                tracks = []
 
                 for i in range(len(ids)):
                     track = Spotify.get_track_features(self, ids[i])
                     tracks.append(track)
 
+                sent_embed = await ctx.reply(embed=enqueueing_embed)
+
                 for track in tracks:
-                    await put_song_to_voice_state(ctx, track)
+                    await put_song_to_voice_state(ctx, track, send_embed=False)
+
+                embed = (
+                    disnake.Embed(
+                        title=f'{len(tracks)} tracks have been queued!',
+                        description=f'You can view the queue of song imported from the album by using the `{prefix}queue` command.',
+                        color=accent_color['primary']
+                    ).set_footer(
+                        text=generate_random_footer(),
+                        icon_url=ctx.author.avatar
+                    )
+                )
+                await sent_embed.edit(embed=embed)
 
             elif "https://open.spotify.com/track/" in search or "spotify:track:" in search:
                 id = Spotify.get_track_id(self, search)
@@ -2041,9 +2076,11 @@ class Music(commands.Cog):
         if not ctx.author.voice or not ctx.author.voice.channel:
             raise commands.CommandError('You are not connected to any voice channel.')
 
-        if ctx.voice_client:
-            if ctx.voice_client.channel != ctx.author.voice.channel:
-                raise commands.CommandError('I\'m already in a voice channel.')
+        if (
+            ctx.voice_client
+            and ctx.voice_client.channel != ctx.author.voice.channel
+        ):
+            raise commands.CommandError('I\'m already in a voice channel.')
 
 
 # Developer commands/tools.
@@ -2079,8 +2116,7 @@ class Developer(commands.Cog):
             _ = git.Repo(os.getcwd()).git_dir
             embed = (
                 disnake.Embed(
-                    title=f'Fetching latest code for me...', 
-                    description='I will automatically restart when the possible updates are done setting up! Please be patient.',
+                    title='Fetching and restarting...',
                     color=accent_color['primary']
                 ).set_footer(
                     text=generate_random_footer(), 
@@ -2091,7 +2127,16 @@ class Developer(commands.Cog):
             os.system('git pull origin master')
 
         except git.exc.InvalidGitRepositoryError:
-            await ctx.reply('I am not connected with a Git repository, so I can\'t retrieve the latest code. Restarting anyway...')
+            embed = (
+                disnake.Embed(
+                    title='Restarting...',
+                    color=accent_color['primary']
+                ).set_footer(
+                    text=generate_random_footer(), 
+                    icon_url=ctx.author.avatar
+                )
+            )
+            await ctx.reply(embed=embed)
 
         finally:
             os.execv(sys.executable, ['python'] + sys.argv)
@@ -2183,7 +2228,8 @@ t.start()
 bot.add_cog(ExceptionHandler(bot))
 bot.add_cog(Chill(bot))
 bot.add_cog(Inspection(bot))
-bot.add_cog(Moderation(bot))
+bot.add_cog(GeneralMod(bot))
+bot.add_cog(VoiceMod(bot))
 bot.add_cog(Customization(bot))
 bot.add_cog(Tweaks(bot))
 bot.add_cog(Music(bot))
