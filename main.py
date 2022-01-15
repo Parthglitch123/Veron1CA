@@ -1890,7 +1890,7 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _leave(self, ctx: commands.Context):
-        await check_if_voice() 
+        await check_if_voice(ctx) 
 
         await ctx.voice_state.stop()
         del self.voice_states[ctx.guild.id]
@@ -1969,7 +1969,7 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _stop(self, ctx: commands.Context):
-        await check_if_voice()
+        await check_if_voice(ctx)
         ctx.voice_state.songs.clear()
 
         if ctx.voice_state.is_playing:
@@ -2057,7 +2057,7 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _remove(self, ctx: commands.Context, index: int):
-        await check_if_voice()
+        await check_if_voice(ctx)
 
         if len(ctx.voice_state.songs) == 0:
             return await ctx.reply('The queue is empty, so nothing to be removed.')
