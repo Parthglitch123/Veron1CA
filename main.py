@@ -2149,11 +2149,11 @@ class Music(commands.Cog):
 
         async with ctx.typing():
             if "https://open.spotify.com/playlist/" in search or "spotify:playlist:" in search:
-                ids = Spotify.get_playlist_track_ids(self, search)
+                ids = Spotify.get_playlist_track_ids(search)
                 tracks = []
 
                 for i in range(len(ids)):
-                    track = Spotify.get_track_features(self, ids[i])
+                    track = Spotify.get_track_features(ids[i])
                     tracks.append(track)
 
                 sent_embed = await ctx.reply(embed=enqueueing_embed)
@@ -2175,11 +2175,11 @@ class Music(commands.Cog):
 
 
             elif "https://open.spotify.com/album/" in search or "spotify:album:" in search:
-                ids = Spotify.get_album(self, search)
+                ids = Spotify.get_album(search)
                 tracks = []
 
                 for i in range(len(ids)):
-                    track = Spotify.get_track_features(self, ids[i])
+                    track = Spotify.get_track_features(ids[i])
                     tracks.append(track)
 
                 sent_embed = await ctx.reply(embed=enqueueing_embed)
@@ -2200,8 +2200,8 @@ class Music(commands.Cog):
                 await sent_embed.edit(embed=embed)
 
             elif "https://open.spotify.com/track/" in search or "spotify:track:" in search:
-                id = Spotify.get_track_id(self, search)
-                track = Spotify.get_track_features(self, id)
+                id = Spotify.get_track_id(search)
+                track = Spotify.get_track_features(id)
                 await put_song_to_voice_state(ctx, track)
 
             else:

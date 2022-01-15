@@ -63,4 +63,4 @@ Due to Veron1CA's open source nature, you can contribute to the code base pretty
 <br><br>
 
 ## Licensed under MIT
-[Click here](LICENSE) to view the full document.
+[Click here](LICENSE) to view the full license document.
