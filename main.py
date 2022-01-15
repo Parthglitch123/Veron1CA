@@ -2214,7 +2214,7 @@ class Music(commands.Cog):
     async def _playrich(self, ctx: commands.Context):
         for activity in ctx.author.activities:
             if isinstance(activity, disnake.Spotify):
-                track = Spotify.get_track_features(self, activity.track_id)
+                track = Spotify.get_track_features(activity.track_id)
 
                 if not ctx.voice_state.voice:
                     await ctx.invoke(self._join)
