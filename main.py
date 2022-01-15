@@ -82,6 +82,8 @@ except UndefinedValueError:
 
 
 # Core dictionaries and variables.
+datetime_format_str = "%d/%m/%Y %H:%M:%S"
+
 accent_color = {
     'primary': 0, 
     'error': 14573921
@@ -91,7 +93,7 @@ lock_roles = {
     'admin': 'BotAdmin'
 }
 restart_data = {
-    'str': str(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
+    'str': str(datetime.datetime.now().strftime(datetime_format_str)),
     'obj': time.time()
 }
 
@@ -178,8 +180,15 @@ async def check_if_voted(id: int) -> bool:
     except topgg.errors.Unauthorized:
         return None
 
+async def check_if_voice(ctx: commands.Context):
+    if not ctx.author.voice:
+        return await ctx.reply('You are not in the same voice channel as mine.')
+
+    if not ctx.voice_state.voice:
+        return await ctx.reply('I am not connected to any voice channel.')
+
 async def wait_for_message(member: disnake.Member, check_if_member: bool) -> disnake.Message:
-    def is_author(message):
+    def is_author(message: disnake.Message):
         return (message.author == member) if check_if_member else (message.author != member)
 
     message = await bot.wait_for('message', check=is_author, timeout=30)
@@ -191,7 +200,7 @@ async def check_if_frozen(message: disnake.Message) -> bool:
             await message.delete()
             return True
 
-async def check_if_sweared(message: disnake.Message) -> bool:
+async def check_if_swore(message: disnake.Message) -> bool:
     if (
         not message.author.bot
         and not message.channel.is_nsfw()
@@ -212,6 +221,61 @@ def is_developer(ctx: commands.Context) -> bool:
     return ctx.author.id == owner_ids['discord']
 
 
+# Dropdowns (dynamic).
+class HelpCommandDropdown(disnake.ui.Select):
+    def __init__(self):
+        options = [
+            disnake.SelectOption(
+                label="Chill", description="Casual commands for everyone."
+            ),
+            disnake.SelectOption(
+                label="Inspection", description="Commands to spectate stuff."
+            ),
+            disnake.SelectOption(
+                label="GeneralMod", description="Commands to use in moderation."
+            ),
+            disnake.SelectOption(
+                label="VoiceMod", description="Moderation, but for voice."
+            ),
+            disnake.SelectOption(
+                label="Customization", description="Commands to customize your server."
+            ),
+            disnake.SelectOption(
+                label="Tweaks", description="Tweak your experience with this category of commands."
+            ),
+            disnake.SelectOption(
+                label="Music", description="The vibe is real!"
+            )
+        ]
+
+        super().__init__(
+            placeholder="Choose your category of commands.",
+            options=options,
+        )
+
+    async def callback(self, inter: disnake.MessageInteraction):
+        cog = bot.get_cog(self.values[0])
+        commands_str = ''
+
+        for command in cog.get_commands():
+            commands_str += f'> {command.name}\n'
+
+        embed = (
+            disnake.Embed(
+                title=f'{cog.qualified_name} Commands',
+                description=f'Below is an entire list of commands originating from the {cog.qualified_name} category. Type the `help` command followed by your command (choose from below) to learn more about it.',
+                color=accent_color['primary']
+            ).add_field(
+                name='Usable commands:',
+                value=commands_str
+            ).set_footer(
+                text=f'Cog help requested by {inter.author.name}',
+                icon_url=inter.author.avatar
+            )
+        )
+        await inter.send(embed=embed)
+
+
 # Views (static).
 class VoteCommandView(disnake.ui.View):
     def __init__(self, *, timeout: float=30):
@@ -224,6 +288,7 @@ class HelpCommandView(disnake.ui.View):
     def __init__(self, *, timeout: float=30):
         super().__init__(timeout=timeout)
 
+        self.add_item(HelpCommandDropdown())
         self.add_item(disnake.ui.Button(label='Invite Me', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1039658487&scope=bot%20applications.commands'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
         self.add_item(disnake.ui.Button(label='Discord Server', url='https://discord.gg/6GNgcu7hjn'))
@@ -233,7 +298,7 @@ class HelpCommandView(disnake.ui.View):
 class HelpCommand(commands.HelpCommand):
     async def send_bot_help(self, mapping):
         ctx = self.context
-        cogs_str = str()
+        cogs_str = ''
 
         for cog in bot.cogs:
             if cog not in ['Developer', 'ExceptionHandler']:
@@ -252,43 +317,11 @@ class HelpCommand(commands.HelpCommand):
             value='I\'m an open source Discord music & moderation bot, and I can help you make customizing and modding your server easy as a feather! From blowing up scammers to freezing the entire crowded chat, there\'s a ton of stuff that I can do. Peace!'
         ).add_field(
             name='How to access me?',
-            value=f'My command prefix is set to `{ctx.prefix}` and you can type `{ctx.prefix}help <category>` to get an entire list of usable commands depending on the category, or even type `{ctx.prefix}help <command>` to get information on a particular command.', 
-            inline=False
-        ).add_field(
-            name='A bunch of categories',
-            value=cogs_str,
+            value=f'My command prefix is set to `{ctx.prefix}` and you can select the category from the dropdown below to get a list of usable commands, or even type `{ctx.prefix}help <command>` to get information on a particular command.', 
             inline=False
         )
 
         await ctx.reply(embed=embed, view=HelpCommandView())
-
-    async def send_cog_help(self, cog: commands.Cog):
-        ctx = self.context
-        commands_str = str()
-
-        if cog.qualified_name == 'Developer':
-            if not is_developer(ctx):
-                return
-        elif cog.qualified_name == 'ExceptionHandler':
-            return
-
-        for command in cog.get_commands():
-            commands_str += f'> {command.name}\n'
-
-        embed = (
-            disnake.Embed(
-                title=f'{cog.qualified_name} Commands',
-                description=f'Below is an entire list of commands originating from the {cog.qualified_name} category. Type `{ctx.prefix}help <command>` to get help regarding a specific command.',
-                color=accent_color['primary']
-            ).add_field(
-                name='Usable commands:',
-                value=commands_str
-            ).set_footer(
-                text=f'Cog help requested by {ctx.author.name}',
-                icon_url=ctx.author.avatar
-            )
-        )
-        await ctx.reply(embed=embed)
 
     async def send_command_help(self, command: commands.Command):
         ctx = self.context
@@ -344,7 +377,7 @@ class Bot(commands.AutoShardedBot):
         print(f'Log: {self.user.name} has been deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
 
         while True:
-            await self.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help and I\'m injected in {len(self.guilds)} server(s)!'))
+            await self.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help | Injected in {len(self.guilds)} server(s)!'))
             await asyncio.sleep(200)
 
     async def on_message(self, message: disnake.Message):
@@ -366,7 +399,7 @@ class Bot(commands.AutoShardedBot):
             pass
 
         if (
-            not await check_if_sweared(message)
+            not await check_if_swore(message)
             and not await check_if_frozen(message)
             and not await check_if_jailed(message)
         ):
@@ -453,7 +486,7 @@ class ExceptionHandler(commands.Cog):
             await ctx.reply(embed=generate_error_embed(title='You\'re missing a required argument.', description=f'{error} Try typing `{ctx.prefix}help {ctx.command}` for more information on how to use this command.', footer_avatar=ctx.author.avatar))
 
         elif isinstance(error, commands.errors.CommandError):
-            await ctx.reply(embed=generate_error_embed(title='A problem occured!', description=error, footer_avatar=ctx.author.avatar))
+            await ctx.reply(embed=generate_error_embed(title='A command error occured!', description=error, footer_avatar=ctx.author.avatar))
 
         elif isinstance(error, commands.errors.CheckFailure):
             pass
@@ -532,7 +565,7 @@ class Chill(commands.Cog):
                 icon_url=inter.author.avatar
             )
         )
-        await inter.response.send_message(embed=embed)
+        await inter.send(embed=embed)
 
     @commands.command(
         name='ping', 
@@ -545,8 +578,8 @@ class Chill(commands.Cog):
         start_time = time.time()
         message = await ctx.reply('Testing overall speed...')
         end_time = time.time()
-        api_latency = round((end_time - start_time) * 1000)
 
+        api_latency = round((end_time - start_time) * 1000)
         uptime = str(datetime.timedelta(seconds=int(
             round(time.time() - restart_data['obj']))))
 
@@ -581,16 +614,26 @@ class Chill(commands.Cog):
     )
     @commands.guild_only()
     async def _ping(self, inter: ApplicationCommandInteraction):
-        ping = round(self.bot.latency * 1000)
-        uptime = str(datetime.timedelta(seconds=int(round(time.time() - restart_data['obj']))))
+        system_latency = round(self.bot.latency * 1000)
+
+        start_time = time.time()
+        await inter.send('Testing overall speed...')
+        end_time = time.time()
+
+        api_latency = round((end_time - start_time) * 1000)
+        uptime = str(datetime.timedelta(seconds=int(
+            round(time.time() - restart_data['obj']))))
+
         embed = (
             disnake.Embed(
-                title='System Status', 
                 color=accent_color['primary']
             ).add_field(
-                name='Latency', 
-                value=f'{ping}ms [{self.bot.shard_count} shard(s)]', 
+                name='System Latency', 
+                value=f'{system_latency}ms [{self.bot.shard_count} shard(s)]', 
                 inline=False
+            ).add_field(
+                name='API Latency',
+                value=f'{api_latency}ms'
             ).add_field(
                 name='Startup Time', 
                 value=restart_data['str'], 
@@ -604,7 +647,7 @@ class Chill(commands.Cog):
                 icon_url=inter.author.avatar
             )
         )
-        await inter.response.send_message(embed=embed)
+        await inter.edit_original_message(content=None, embed=embed)
 
     @commands.command(
         name='vote', 
@@ -629,7 +672,30 @@ class Chill(commands.Cog):
             
         elif vote is True:
             await ctx.reply('You have already voted for me today, yay!')
+
+    @commands.slash_command(
+        name='vote',
+        description='Vote for me on Top.gg!'
+    )
+    @commands.guild_only()
+    async def _vote(self, inter: disnake.ApplicationCommandInteraction):
+        vote = await check_if_voted(inter.author.id)
+        
+        if vote is False:
+            embed = (
+                disnake.Embed(
+                    title=':military_medal: Voting Section', 
+                    description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourages him to launch more updates.',
+                    color=accent_color['primary']
+                ).set_footer(
+                    text=generate_random_footer(),
+                    icon_url=inter.author.avatar
+                )
+            )
+            await inter.send(embed=embed, view=VoteCommandView())
             
+        elif vote is True:
+            await inter.send('You have already voted for me today, yay!')
 
 # Casual commands.
 class Inspection(commands.Cog):
@@ -643,22 +709,57 @@ class Inspection(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def senddm(self, ctx: commands.Context, user: disnake.User, *, message: str):
-        embed = (
-            disnake.Embed(
-                title=f'{ctx.author.name} has something up for you!', 
-                color=accent_color['primary']
-            ).add_field(
-                name='Message:', 
-                value=message
-            ).set_thumbnail(
-                url=ctx.author.avatar
-            ).set_footer(
-                text='Delivered with <3 by Veron1CA!'
+        if not user == ctx.author:
+            embed = (
+                disnake.Embed(
+                    title=f'{ctx.author.name} has something up for you!', 
+                    color=accent_color['primary']
+                ).add_field(
+                    name='Message:', 
+                    value=message
+                ).set_thumbnail(
+                    url=ctx.author.avatar
+                ).set_footer(
+                    text=generate_random_footer()
+                )
             )
-        )
-        await user.send(embed=embed)
-        await ctx.send(f'{ctx.author.mention} your message has been sent!')
-        await ctx.message.delete()
+            await user.send(embed=embed)
+            await ctx.send(f'{ctx.author.mention} your message has been sent!')
+            await ctx.message.delete()
+
+        else:
+            await ctx.send('You can\'t message yourself!')
+
+    @commands.slash_command(
+        name='senddm',
+        description='Helps to send DMs to specific users.',
+        options=[
+            Option("user", "Mention the user.", OptionType.user),
+            Option("message", "Type the message that you wanna send to the given user.", OptionType.string)
+        ]
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def _senddm(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, *, message: str):
+        if not user == inter.author:
+            embed = (
+                disnake.Embed(
+                    title=f'{inter.author.name} has something up for you!', 
+                    color=accent_color['primary']
+                ).add_field(
+                    name='Message:', 
+                    value=message
+                ).set_thumbnail(
+                    url=inter.author.avatar
+                ).set_footer(
+                    text=generate_random_footer()
+                )
+            )
+            await user.send(embed=embed)
+            await inter.send(f'Your message has been sent!')
+
+        else:
+            await inter.send('You can\'t message yourself!')
 
     @commands.command(
         name='userinfo', 
@@ -681,7 +782,7 @@ class Inspection(commands.Cog):
             name='Status', 
             value=user.status
         ).add_field(
-            name='Creation Date', 
+            name='Birth', 
             value=user.created_at.strftime("%b %d, %Y")
         ).add_field(
             name='On Mobile', 
@@ -732,8 +833,11 @@ class Inspection(commands.Cog):
                 color=accent_color['primary']
             )
         ).add_field(
-            name='Creation Date',
+            name='Birth',
             value=ctx.guild.created_at.strftime("%b %d, %Y")
+        ).add_field(
+            name='Owner',
+            value=ctx.guild.owner.mention
         ).add_field(
             name='Region', 
             value=ctx.guild.region
@@ -752,7 +856,6 @@ class Inspection(commands.Cog):
         ).add_field(
             name='Identifier', 
             value=ctx.guild.id,
-            inline=False
         ).set_thumbnail(
             url=ctx.guild.icon
         ).set_footer(
@@ -773,7 +876,7 @@ class Inspection(commands.Cog):
                 title=f'Role Information: {role}', color=accent_color['primary']
             )
             .add_field(
-                name='Creation Date:', value=role.created_at.strftime("%b %d, %Y")
+                name='Birth', value=role.created_at.strftime("%b %d, %Y")
             )
             .add_field(name='Mentionable', value=role.mentionable)
             .add_field(name='Managed By Integration', value=role.is_integration())
@@ -922,7 +1025,7 @@ class GeneralMod(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def jail(self, ctx: commands.Context, member: disnake.Member, *, reason: str='No reason provided.'):
+    async def jail(self, ctx: commands.Context, member: disnake.Member, *, reason: str='None.'):
         do_jail = False
 
         if member == self.bot.user:
@@ -1144,6 +1247,21 @@ class VoiceMod(commands.Cog):
         await member.edit(deafen=True)
         await ctx.message.add_reaction('☑️')
 
+    @commands.command(
+        name='stopstage',
+        help='Stops any unning stage instance in a given stage channel.'
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def stopstage(self, ctx: commands.Context, *, channel: disnake.StageChannel):
+        try:
+            instance = await channel.fetch_instance()
+            await instance.delete()
+            await ctx.message.add_reaction('☑️')
+
+        except:
+            await ctx.reply(f'This stage channel doesn\'t have any instances running.')
+
 
 # Customization commands.
 class Customization(commands.Cog):
@@ -1151,7 +1269,7 @@ class Customization(commands.Cog):
         self.bot = bot
 
     @commands.command(
-        name='makeinv', 
+        name='mkinv', 
         help='Creates an invite code or link.'
     )
     @commands.guild_only()
@@ -1192,7 +1310,7 @@ class Customization(commands.Cog):
             os.remove(qr_file_name)
 
     @commands.command(
-        name='invites', 
+        name='invs', 
         help='Shows all active server invite codes.'
     )
     @commands.guild_only()
@@ -1222,7 +1340,7 @@ class Customization(commands.Cog):
             await ctx.reply(embed=embed)
 
     @commands.command(
-        name='removeinv', 
+        name='rminv', 
         help='Removes a previously generated invite code or link.'
     )
     @commands.guild_only()
@@ -1235,28 +1353,24 @@ class Customization(commands.Cog):
                 await ctx.reply('Invite has been deleted.')
                 
     @commands.command(
-        name='makerole', 
+        name='mkrole', 
         help='Creates a role.'
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
-    async def makerole(self, ctx: commands.Context, *, role):
-        await ctx.guild.create_role(name=role)
+    async def makerole(self, ctx: commands.Context, *, name: str):
+        await ctx.guild.create_role(name=name)
         await ctx.message.add_reaction('☑️')
 
     @commands.command(
-        name='removerole', 
+        name='rmrole', 
         help='Removes an existing role.'
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
     async def removerole(self, ctx: commands.Context, *, role: disnake.Role):
-        if role is None:
-            await ctx.reply('That\'s not a role, I guess?')
-
-        else:
-            await role.delete()
-            await ctx.message.add_reaction('☑️')
+        await role.delete()
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='assignrole', 
@@ -1274,22 +1388,29 @@ class Customization(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
-    async def nick(self, ctx: commands.Context, member: disnake.Member, nick: str):
-        await member.edit(nick=nick)
+    async def nick(self, ctx: commands.Context, member: disnake.Member, new_nick: str):
+        await member.edit(nick=new_nick)
         await ctx.message.add_reaction('☑️')
 
     @commands.command(
-        name='makech', 
-        help='Creates a server channel.'
+        name='mktextch', 
+        help='Creates a text channel.'
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
-    async def makech(self, ctx: commands.Context, *, channel_name: str):
-        guild = ctx.guild
-        existing_channel = disnake.utils.get(guild.channels, name=channel_name)
-        if not existing_channel:
-            await guild.create_text_channel(channel_name)
-            await ctx.message.add_reaction('☑️')
+    async def mktextch(self, ctx: commands.Context, *, name: str):
+        await ctx.guild.create_text_channel(name)
+        await ctx.message.add_reaction('☑️')
+
+    @commands.command(
+        name='mkvoicech',
+        help='Creates a voice channel.'
+    )
+    @commands.guild_only()
+    @commands.has_role(lock_roles['admin'])
+    async def mkvoicech(self, ctx: commands.Context, *, name: str):
+        await ctx.guild.create_voice_channel(name)
+        await ctx.message.add_reaction('☑️')
 
     @commands.command(
         name='clonech',
@@ -1309,6 +1430,16 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def removech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
         await channel.delete()
+        await ctx.message.add_reaction('☑️')
+
+    @commands.command(
+        name='mkcategory',
+        help='Creates a category channel.'
+    )
+    @commands.guild_only()
+    @commands.has_role(lock_roles['admin'])
+    async def mkcategory(self, ctx: commands.Context, *, name: str):
+        await ctx.guild.create_category(name)
         await ctx.message.add_reaction('☑️')
 
 
@@ -1385,7 +1516,7 @@ class Tweaks(commands.Cog):
                 await ctx.reply(f'Unbinded **#{channel.name}** successfully!')
 
     @commands.command(
-        name='viewconfig',
+        name='config',
         help='Shows the server\'s configuration data in a JSON file format.'
     )
     @commands.guild_only()
@@ -1404,7 +1535,7 @@ class Tweaks(commands.Cog):
 
 
 # Music commands.
-youtube_dl.utils.bug_reports_message = lambda: str()
+youtube_dl.utils.bug_reports_message = lambda: ''
 
 class YTDLSource(disnake.PCMVolumeTransformer):
     YTDL_OPTIONS = {
@@ -1460,8 +1591,7 @@ class YTDLSource(disnake.PCMVolumeTransformer):
     async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop):
         loop = loop or asyncio.get_event_loop()
 
-        partial = functools.partial(
-            cls.ytdl.extract_info, search, download=False, process=False)
+        partial = functools.partial(cls.ytdl.extract_info, search, download=False, process=False)
         data = await loop.run_in_executor(None, partial)
 
         if data is None:
@@ -1481,8 +1611,7 @@ class YTDLSource(disnake.PCMVolumeTransformer):
                 raise YTDLError('Couldn\'t find anything that matches **{}**'.format(search))
 
         webpage_url = process_info['webpage_url']
-        partial = functools.partial(
-            cls.ytdl.extract_info, webpage_url, download=False)
+        partial = functools.partial(cls.ytdl.extract_info, webpage_url, download=False)
         processed_info = await loop.run_in_executor(None, partial)
 
         if processed_info is None:
@@ -1521,10 +1650,12 @@ class YTDLSource(disnake.PCMVolumeTransformer):
 
 # Base class for interacting with the Spotify API.
 class Spotify:
+    @classmethod
     def get_track_id(self, track):
         track = sp.track(track)
         return track["id"]
 
+    @classmethod
     def get_playlist_track_ids(self, playlist_id):
         ids = []
         playlist = sp.playlist(playlist_id)
@@ -1535,13 +1666,16 @@ class Spotify:
 
         return ids
 
+    @classmethod
     def get_album(self, album_id):
         album = sp.album_tracks(album_id)
         return [item["id"] for item in album['items']]
 
+    @classmethod
     def get_album_id(self, id):
         return sp.album(id)
 
+    @classmethod
     def get_track_features(self, id):
         meta = sp.track(id)
         album = meta['album']['name']
@@ -1728,8 +1862,10 @@ class Music(commands.Cog):
     @commands.guild_only()
     async def _join(self, ctx: commands.Context):
         destination = ctx.author.voice.channel
+
         if ctx.voice_state.voice:
-            return await ctx.voice_state.voice.move_to(destination)
+            await ctx.voice_state.voice.move_to(destination)
+            return await ctx.author.request_to_speak()
 
         ctx.voice_state.voice = await destination.connect()
         await ctx.message.add_reaction('☑️')
@@ -1740,12 +1876,10 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _summon(self, ctx: commands.Context, *, channel: disnake.VoiceChannel=None):
-        if not channel and not ctx.author.voice:
-            raise VoiceError('You are neither connected to a voice channel nor specified a channel to join.')
-
         destination = channel or ctx.author.voice.channel
+        
         if ctx.voice_state.voice:
-            return await ctx.voice_state.voice.move_to(destination)
+            await ctx.voice_state.voice.move_to(destination)
 
         ctx.voice_state.voice = await destination.connect()
         await ctx.message.add_reaction('☑️')
@@ -1756,11 +1890,8 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _leave(self, ctx: commands.Context):
-        if not ctx.voice_state.voice:
-            return await ctx.reply('I am not connected to any voice channel.')
-        elif not ctx.author.voice:
-            return await ctx.reply('You are not in the same voice channel as mine.')
- 
+        await check_if_voice() 
+
         await ctx.voice_state.stop()
         del self.voice_states[ctx.guild.id]
         await ctx.message.add_reaction('☑️')
@@ -1814,6 +1945,8 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _pause(self, ctx: commands.Context):
+        await check_if_voice(ctx)
+        
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
             await ctx.message.add_reaction('☑️')
@@ -1824,6 +1957,8 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _resume(self, ctx: commands.Context):
+        await check_if_voice(ctx)
+
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
             await ctx.message.add_reaction('☑️')
@@ -1834,6 +1969,7 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _stop(self, ctx: commands.Context):
+        await check_if_voice()
         ctx.voice_state.songs.clear()
 
         if ctx.voice_state.is_playing:
@@ -1921,6 +2057,8 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _remove(self, ctx: commands.Context, index: int):
+        await check_if_voice()
+
         if len(ctx.voice_state.songs) == 0:
             return await ctx.reply('The queue is empty, so nothing to be removed.')
 
@@ -1940,7 +2078,6 @@ class Music(commands.Cog):
                 return await ctx.reply('There\'s nothing being played at the moment.')
 
             ctx.voice_state.loop = not ctx.voice_state.loop
-
             embed = (
                 disnake.Embed(
                     title='Looping right now!' if ctx.voice_state.loop else 'Looping stopped.',
@@ -1998,7 +2135,7 @@ class Music(commands.Cog):
                 song = Song(source)
                 embed = (
                     disnake.Embed(
-                        title=f'Enqueued {song.source.title} for the jam!',
+                        title=f'Enqueued {song.source.title} from YouTube.',
                         color=accent_color['primary']
                     ).set_footer(
                         text=generate_random_footer(),
@@ -2070,11 +2207,46 @@ class Music(commands.Cog):
             else:
                 await put_song_to_voice_state(ctx, search)
 
+    @commands.command(
+        name='playrich',
+        help='Fetches your Spotify rich presence data and enqueues the song that you\'re currently listening to.'
+    )
+    async def _playrich(self, ctx: commands.Context):
+        for activity in ctx.author.activities:
+            if isinstance(activity, disnake.Spotify):
+                track = Spotify.get_track_features(self, activity.track_id)
+
+                if not ctx.voice_state.voice:
+                    await ctx.invoke(self._join)
+
+                async with ctx.typing():
+                    try:
+                        source = await YTDLSource.create_source(ctx, track, loop=self.bot.loop)
+                    except YTDLError as e:
+                        await ctx.reply('An error occurred while processing this request: {}'.format(str(e)))
+                    else:
+                        song = Song(source)
+                        embed = (
+                            disnake.Embed(
+                                title=f'Enqueued {song.source.title} from YouTube.',
+                                color=activity.color
+                            ).set_image(
+                                url=activity.album_cover_url
+                            ).set_footer(
+                                text=f'Cover of the {activity.album} album by {activity.artist} on Spotify.',
+                                icon_url=ctx.author.avatar
+                            )
+                        )
+                        await ctx.voice_state.songs.put(song)
+                        await ctx.reply(embed=embed, view=PlayCommandView(url=song.source.url))
+
+
     @_join.before_invoke
     @_play.before_invoke
+    @_playrich.before_invoke
     async def ensure_voice_state(self, ctx: commands.Context):
         if not ctx.author.voice or not ctx.author.voice.channel:
-            raise commands.CommandError('You are not connected to any voice channel.')
+            raise commands.CommandError('You are not connected to my voice channel.')
 
         if (
             ctx.voice_client
