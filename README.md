@@ -1,3 +1,5 @@
+<center>
+
 # Veron1CA
 An open source Discord moderation bot with all-in-one server moderation and beat handling capabilties.
 
@@ -5,6 +7,8 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 ![GitHub Repo stars](https://img.shields.io/github/stars/hitblast/Veron1CA?color=blue)
 ![GitHub watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue)
 [![Discord Bots](https://top.gg/api/widget/upvotes/867998923250352189.svg)](https://top.gg/bot/867998923250352189)
+
+</center>
 <br><br>
 
 ## Features
@@ -21,7 +25,6 @@ Learn more / invite Veron1CA from [the official website here!](https://hitblast.
 Now that you've successfully added Veron1CA to your server, it's time for some key things to note down. The **default prefix** for accessing Veron1CA is `vrn.` in this case. Here's a bunch of stuff that you can do with it:
 * Use `vrn.<command>` to run your desired command. As an example, you can use `vrn.ping` to get Veron1CA's latency.
 * Use `vrn.help` to get into the help section.
-* Use `vrn.help <category>` to get an entire list of commands depending on which you choose.
 * Use `vrn.help <command>` to get help regarding a specific command. For example, you can use `vrn.help ping` in order to get help for the ping command.
 
 There's also another thing to consider in this case, and that's **role locking**. By default, Veron1CA's moderation and customization-based features are locked to specific roles. We have two unlockable ones to create here:
