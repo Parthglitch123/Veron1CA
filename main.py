@@ -83,6 +83,7 @@ except UndefinedValueError:
 
 # Core dictionaries and variables.
 datetime_format_str = "%d/%m/%Y %H:%M:%S"
+reaction_emoji = '☑️'
 
 accent_color = {
     'primary': 0, 
@@ -314,7 +315,7 @@ class HelpCommand(commands.HelpCommand):
             )
         ).add_field(
             name='Some quick, basic stuff...',
-            value='I\'m an open source Discord music & moderation bot, and I can help you make customizing and modding your server easy as a feather! From blowing up scammers to freezing the entire crowded chat, there\'s a ton of stuff that I can do. Peace!'
+            value='I\'m an open source Discord music & moderation bot, and I can help you make customizing and modding your server easy as a feather! From blowing up scammers to freezing the entire crowded chat, there\'s a ton of stuff that I can do.'
         ).add_field(
             name='How to access me?',
             value=f'My command prefix is set to `{ctx.prefix}` and you can select the category from the dropdown below to get a list of usable commands, or even type `{ctx.prefix}help <command>` to get information on a particular command.', 
@@ -360,8 +361,7 @@ class HelpCommand(commands.HelpCommand):
         await ctx.reply(embed=embed)
 
     async def send_error_message(self, error):
-        ctx = self.context
-        await ctx.reply(embed=generate_error_embed(title='This isn\'t a command!', description=error, footer_avatar=ctx.author.avatar))
+        await self.context.reply(embed=generate_error_embed(title='This isn\'t a command!', description=error, footer_avatar=self.context.author.avatar))
 
 
 # The main Bot class for root operations and events.
@@ -372,10 +372,10 @@ class Bot(commands.AutoShardedBot):
 
     async def on_connect(self):
         os.system('clear')
-        print(f'{self.user.name} | Read-only Terminal\n\nLog: Connected to Discord, warming up...')
+        print(f'{self.user.name} | Connected to Discord\n')
 
     async def on_ready(self):
-        print(f'Log: {self.user.name} has been deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
+        print(f'I\'ve been deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
 
     @tasks.loop(seconds=200)
     async def task_update_presence(self):
@@ -742,7 +742,7 @@ class Inspection(commands.Cog):
         name='senddm',
         description='Helps to send DMs to specific users.',
         options=[
-            Option("user", "Mention the user.", OptionType.user),
+            Option("user", "Mention your desired user.", OptionType.user),
             Option("message", "Type the message that you wanna send to the given user.", OptionType.string)
         ]
     )
@@ -779,7 +779,7 @@ class Inspection(commands.Cog):
         if not user:
             user = ctx.author
 
-        qr_file_name, qr_file = generate_qr_code(id=ctx.author.id, text_to_embed=f'https://discordapp.com/users/{ctx.author.id}/')
+        qr_file_name, qr_file = generate_qr_code(id=user.id, text_to_embed=f'https://discordapp.com/users/{user.id}/')
 
         embed = (
             disnake.Embed(
@@ -828,6 +828,68 @@ class Inspection(commands.Cog):
         if os.path.exists(qr_file_name):
             os.remove(qr_file_name)
 
+    @commands.slash_command(
+        name='userinfo', 
+        description='Shows all important information on a user.',
+        options=[
+            Option("user", "Mention your desired user.", OptionType.user)
+        ]
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def _userinfo(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member=None):
+        if not user:
+            user = inter.author
+
+        qr_file_name, qr_file = generate_qr_code(id=user.id, text_to_embed=f'https://discordapp.com/users/{user.id}/')
+
+        embed = (
+            disnake.Embed(
+                title=f'{user}',
+                color=accent_color['primary']
+            )
+        ).add_field(
+            name='Status', 
+            value=user.status
+        ).add_field(
+            name='Birth', 
+            value=user.created_at.strftime("%b %d, %Y")
+        ).add_field(
+            name='On Mobile', 
+            value=user.is_on_mobile()
+        ).add_field(
+            name='Race', 
+            value='Bots, execute em!' if user.bot else 'Human'
+        ).add_field(
+            name='Roles', 
+            value=len(user.roles)
+        ).add_field(
+            name='Position',
+            value=user.top_role.mention
+        ).add_field(
+            name='Identifier',
+            value=user.id, 
+            inline=False
+        ).set_thumbnail(
+            url=f'attachment://{qr_file_name}'
+        )
+        
+        try:
+            embed.set_footer(
+                text=user.activities[0],
+                icon_url=inter.author.avatar
+            )
+        except:
+            embed.set_footer(
+                text=generate_random_footer(),
+                icon_url=inter.author.avatar
+            )
+
+        await inter.send(file=qr_file, embed=embed)
+        
+        if os.path.exists(qr_file_name):
+            os.remove(qr_file_name)
+
     @commands.command(
         name='guildinfo', 
         help='Shows all important information on the current guild / server.'
@@ -872,6 +934,50 @@ class Inspection(commands.Cog):
         )
         await ctx.reply(embed=embed)
 
+    @commands.slash_command(
+        name='guildinfo', 
+        description='Shows all important information on the current guild / server.'
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def _guildinfo(self, inter: disnake.ApplicationCommandInteraction):
+        guild = get_guild_dict(id=inter.guild.id)
+        embed = (
+            disnake.Embed(
+                color=accent_color['primary']
+            )
+        ).add_field(
+            name='Birth',
+            value=inter.guild.created_at.strftime("%b %d, %Y")
+        ).add_field(
+            name='Owner',
+            value=inter.guild.owner.mention
+        ).add_field(
+            name='Region', 
+            value=inter.guild.region
+        ).add_field(
+            name='Members', 
+            value=inter.guild.member_count
+        ).add_field(
+            name='Roles', 
+            value=len(inter.guild.roles)
+        ).add_field(
+            name='Channels', 
+            value=len(inter.guild.channels)
+        ).add_field(
+            name='Prefix',
+            value=prefix if not guild['prefix'] else guild['prefix']
+        ).add_field(
+            name='Identifier', 
+            value=inter.guild.id,
+        ).set_thumbnail(
+            url=inter.guild.icon
+        ).set_footer(
+            text=generate_random_footer(),
+            icon_url=inter.author.avatar
+        )
+        await inter.send(embed=embed)
+
     @commands.command(
         name='roleinfo', 
         help='Shows all important information related to a specific role.'
@@ -882,19 +988,68 @@ class Inspection(commands.Cog):
         embed = (
             disnake.Embed(
                 title=f'Role Information: {role}', color=accent_color['primary']
+            ).add_field(
+                name='Birth', 
+                value=role.created_at.strftime("%b %d, %Y")
+            ).add_field(
+                name='Mentionable', 
+                value=role.mentionable
+            ).add_field(
+                name='Managed By Integration', 
+                value=role.is_integration()
+            ).add_field(
+                name='Managed By Bot', 
+                value=role.is_bot_managed()
+            ).add_field(
+                name='Role Position', 
+                value=role.position
+            ).add_field(
+                name='Identifier', 
+                value=f'`{role.id}`'
+            ).set_footer(
+                text=generate_random_footer(), 
+                icon_url=ctx.author.avatar
             )
-            .add_field(
-                name='Birth', value=role.created_at.strftime("%b %d, %Y")
-            )
-            .add_field(name='Mentionable', value=role.mentionable)
-            .add_field(name='Managed By Integration', value=role.is_integration())
-            .add_field(name='Managed By Bot', value=role.is_bot_managed())
-            .add_field(name='Role Position', value=role.position)
-            .add_field(name='Identifier', value=f'`{role.id}`')
-            .set_footer(text=generate_random_footer(), icon_url=ctx.author.avatar)
         )
-
         await ctx.reply(embed=embed)
+
+    @commands.slash_command(
+        name='roleinfo', 
+        description='Shows all important information related to a specific role.',
+        options=[
+            Option("role", "Mention your desired role.", OptionType.role)
+        ]
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def _roleinfo(self, inter: disnake.ApplicationCommandInteraction, role: disnake.Role):
+        embed = (
+            disnake.Embed(
+                title=f'Role Information: {role}', color=accent_color['primary']
+            ).add_field(
+                name='Birth', 
+                value=role.created_at.strftime("%b %d, %Y")
+            ).add_field(
+                name='Mentionable', 
+                value=role.mentionable
+            ).add_field(
+                name='Managed By Integration', 
+                value=role.is_integration()
+            ).add_field(
+                name='Managed By Bot', 
+                value=role.is_bot_managed()
+            ).add_field(
+                name='Role Position', 
+                value=role.position
+            ).add_field(
+                name='Identifier', 
+                value=f'`{role.id}`'
+            ).set_footer(
+                text=generate_random_footer(), 
+                icon_url=inter.author.avatar
+            )
+        )
+        await inter.send(embed=embed)
 
     @commands.command(
         name='audit', 
@@ -902,28 +1057,60 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def audit(self, ctx: commands.Context, audit_limit: int):
-        if int(audit_limit) > 100:
-            await ctx.reply('Cannot send audit log entries more than 100 at a time!')
+    async def audit(self, ctx: commands.Context, limit: int):
+        if int(limit) > 70:
+            await ctx.reply('Log limit has to be within 1 and 70.')
 
         else:
             embed = (
                 disnake.Embed(
                     title='Audit Log', 
-                    description=f'Showing the latest {audit_limit} entries that were made in the audit log of {ctx.guild.name}.', 
+                    description=f'Showing the latest {limit} entries that were made in the audit log of {ctx.guild.name}.', 
                     color=accent_color['primary']
                 ).set_footer(
                     text=generate_random_footer(), 
                     icon_url=ctx.author.avatar
                 )
             )
-            async for audit_entry in ctx.guild.audit_logs(limit=audit_limit):
+            async for audit_entry in ctx.guild.audit_logs(limit=limit):
                 embed.add_field(
                     name=f'- {audit_entry.action}', 
                     value=f'User: {audit_entry.user} | Target: {audit_entry.target}', 
                     inline=False
                 )
             await ctx.reply(embed=embed)
+
+    @commands.slash_command(
+        name='audit', 
+        description='Views the latest entries of the audit log in detail (limited to 100 entries).',
+        options=[
+            Option("limit", "The number of logs you wanna go through.", OptionType.integer)
+        ]
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def _audit(self, inter: disnake.ApplicationCommandInteraction, limit: int):
+        if int(limit) > 70:
+            await inter.send('Log limit has to be within 1 and 70.')
+
+        else:
+            embed = (
+                disnake.Embed(
+                    title='Audit Log', 
+                    description=f'Showing the latest {limit} entries that were made in the audit log of {inter.guild.name}.', 
+                    color=accent_color['primary']
+                ).set_footer(
+                    text=generate_random_footer(), 
+                    icon_url=inter.author.avatar
+                )
+            )
+            async for audit_entry in inter.guild.audit_logs(limit=limit):
+                embed.add_field(
+                    name=f'- {audit_entry.action}', 
+                    value=f'User: {audit_entry.user} | Target: {audit_entry.target}', 
+                    inline=False
+                )
+            await inter.send(embed=embed)
 
 
 # General moderation commands.
@@ -954,7 +1141,7 @@ class GeneralMod(commands.Cog):
         message = await ctx.channel.fetch_message(message_id)
         print(message)
         await message.delete()
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='ripplepurge', 
@@ -966,7 +1153,7 @@ class GeneralMod(commands.Cog):
         if amount > 100:
             await ctx.reply('Ripple purges are limited to 100 messages per use!')
         else:
-            await ctx.message.add_reaction('☑️')
+            await ctx.message.add_reaction(reaction_emoji)
             messages = await ctx.history(limit=amount).flatten()
 
             for message in messages:
@@ -1102,7 +1289,7 @@ class GeneralMod(commands.Cog):
             if jail_member[1] == ctx.guild.id and jail_member[0] == member.id:
                 if member != ctx.author:
                     jail_members.remove(jail_member)
-                    await ctx.message.add_reaction('☑️')
+                    await ctx.message.add_reaction(reaction_emoji)
 
                 else:
                     await ctx.reply('You can\'t free yourself!')
@@ -1133,7 +1320,7 @@ class GeneralMod(commands.Cog):
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def unblock(self, ctx: commands.Context, member: disnake.Member):
         await ctx.channel.set_permissions(member, overwrite=None)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='kick', 
@@ -1217,7 +1404,7 @@ class GeneralMod(commands.Cog):
         for frozen_guild in frozen_guilds:
             if frozen_guild[1] == ctx.guild.id:
                 frozen_guilds.remove(frozen_guild)
-                await ctx.message.add_reaction('☑️')
+                await ctx.message.add_reaction(reaction_emoji)
 
 
 # Voice moderation commands.
@@ -1233,7 +1420,7 @@ class VoiceMod(commands.Cog):
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def move(self, ctx: commands.Context, member: disnake.Member, *, channel: Union[disnake.VoiceChannel, disnake.StageChannel]):
         await member.move_to(channel)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='mute',
@@ -1243,7 +1430,7 @@ class VoiceMod(commands.Cog):
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def mute(self, ctx: commands.Context, member: disnake.Member):
         await member.edit(mute=True)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='deafen',
@@ -1253,7 +1440,7 @@ class VoiceMod(commands.Cog):
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def deafen(self, ctx: commands.Context, member: disnake.Member):
         await member.edit(deafen=True)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='stopstage',
@@ -1265,7 +1452,7 @@ class VoiceMod(commands.Cog):
         try:
             instance = await channel.fetch_instance()
             await instance.delete()
-            await ctx.message.add_reaction('☑️')
+            await ctx.message.add_reaction(reaction_emoji)
 
         except:
             await ctx.reply(f'This stage channel doesn\'t have any instances running.')
@@ -1368,7 +1555,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def makerole(self, ctx: commands.Context, *, name: str):
         await ctx.guild.create_role(name=name)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='rmrole', 
@@ -1378,7 +1565,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def removerole(self, ctx: commands.Context, *, role: disnake.Role):
         await role.delete()
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='assignrole', 
@@ -1398,7 +1585,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def nick(self, ctx: commands.Context, member: disnake.Member, new_nick: str):
         await member.edit(nick=new_nick)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='mktextch', 
@@ -1408,7 +1595,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def mktextch(self, ctx: commands.Context, *, name: str):
         await ctx.guild.create_text_channel(name)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='mkvoicech',
@@ -1418,7 +1605,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def mkvoicech(self, ctx: commands.Context, *, name: str):
         await ctx.guild.create_voice_channel(name)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='clonech',
@@ -1428,7 +1615,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def clonech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
         await channel.clone()
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='removech', 
@@ -1438,7 +1625,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def removech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
         await channel.delete()
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='mkcategory',
@@ -1448,7 +1635,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def mkcategory(self, ctx: commands.Context, *, name: str):
         await ctx.guild.create_category(name)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
 
 # Tweaks commands.
@@ -1876,7 +2063,7 @@ class Music(commands.Cog):
             return await ctx.author.request_to_speak()
 
         ctx.voice_state.voice = await destination.connect()
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='summon', 
@@ -1890,7 +2077,7 @@ class Music(commands.Cog):
             await ctx.voice_state.voice.move_to(destination)
 
         ctx.voice_state.voice = await destination.connect()
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='leave', 
@@ -1902,7 +2089,7 @@ class Music(commands.Cog):
 
         await ctx.voice_state.stop()
         del self.voice_states[ctx.guild.id]
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='volume', 
@@ -1957,7 +2144,7 @@ class Music(commands.Cog):
         
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
-            await ctx.message.add_reaction('☑️')
+            await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='resume', 
@@ -1969,7 +2156,7 @@ class Music(commands.Cog):
 
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
-            await ctx.message.add_reaction('☑️')
+            await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='stop', 
@@ -1985,7 +2172,7 @@ class Music(commands.Cog):
                 ctx.voice_state.loop = not ctx.voice_state.loop
 
             ctx.voice_state.voice.stop()
-            await ctx.message.add_reaction('☑️')
+            await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='skip', 
@@ -2002,7 +2189,7 @@ class Music(commands.Cog):
         voter = ctx.author
 
         if voter == ctx.voice_state.current.requester:
-            await ctx.message.add_reaction('☑️')
+            await ctx.message.add_reaction(reaction_emoji)
             ctx.voice_state.skip()
 
         elif voter.id not in ctx.voice_state.skip_votes:
@@ -2010,7 +2197,7 @@ class Music(commands.Cog):
             total_votes = len(ctx.voice_state.skip_votes)
 
             if total_votes >= 3:
-                await ctx.message.add_reaction('☑️')
+                await ctx.message.add_reaction(reaction_emoji)
                 ctx.voice_state.skip()
             else:
                 await ctx.reply('Skip vote added, currently at **{}/3** votes.'.format(total_votes))
@@ -2057,7 +2244,7 @@ class Music(commands.Cog):
             return await ctx.reply('The queue is empty, play some songs, maybe?')
 
         ctx.voice_state.songs.shuffle()
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='remove',
@@ -2071,7 +2258,7 @@ class Music(commands.Cog):
             return await ctx.reply('The queue is empty, so nothing to be removed.')
 
         ctx.voice_state.songs.remove(index - 1)
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='loop', 
@@ -2327,7 +2514,7 @@ class Developer(commands.Cog):
     )
     @commands.check(is_developer)
     async def logout(self, ctx: commands.Context):
-        await ctx.message.add_reaction('☑️')
+        await ctx.message.add_reaction(reaction_emoji)
         await self.bot.close()    
 
 
