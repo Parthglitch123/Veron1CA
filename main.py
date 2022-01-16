@@ -273,7 +273,7 @@ class HelpCommandDropdown(disnake.ui.Select):
                 icon_url=inter.author.avatar
             )
         )
-        await inter.send(embed=embed)
+        await inter.response.edit_message(embed=embed)
 
 
 # Views (static).
