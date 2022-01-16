@@ -1,4 +1,4 @@
-<center>
+<div align="center">
 
 # Veron1CA
 An open source Discord moderation bot with all-in-one server moderation and beat handling capabilties.
@@ -8,7 +8,7 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 ![GitHub watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue)
 [![Discord Bots](https://top.gg/api/widget/upvotes/867998923250352189.svg)](https://top.gg/bot/867998923250352189)
 
-</center>
+</div>
 <br><br>
 
 ## Features
