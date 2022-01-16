@@ -57,8 +57,8 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 # Import the API wrapper for Discord and its components.
 import disnake
-from disnake.ext import commands
 from disnake import Option, OptionType
+from disnake.ext import commands, tasks
 from disnake.interactions.application_command import ApplicationCommandInteraction
 
 
@@ -368,6 +368,7 @@ class HelpCommand(commands.HelpCommand):
 class Bot(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(command_prefix=get_prefix, intents=disnake.Intents.all(), help_command=HelpCommand(), strip_after_prefix=True, case_insensitive=True)
+        self.update_presence.start()
 
     async def on_connect(self):
         os.system('clear')
@@ -376,9 +377,13 @@ class Bot(commands.AutoShardedBot):
     async def on_ready(self):
         print(f'Log: {self.user.name} has been deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
 
-        while True:
-            await self.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help | Injected in {len(self.guilds)} server(s)!'))
-            await asyncio.sleep(200)
+    @tasks.loop(seconds=200)
+    async def task_update_presence(self):
+        await self.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help | Injected in {len(self.guilds)} server(s)!'))
+
+    @task_update_presence.before_loop
+    async def task_before_updating_presence(self):
+        await self.wait_until_ready()
 
     async def on_message(self, message: disnake.Message):
         if message.author == self.user:
@@ -491,10 +496,13 @@ class ExceptionHandler(commands.Cog):
         elif isinstance(error, commands.errors.CheckFailure):
             pass
 
+        elif isinstance(error, disnake.errors.NotFound):
+            pass
+
         elif isinstance(error, disnake.errors.Forbidden):
             await ctx.reply(embed=generate_error_embed(title='The command couldn\'t be processed.', description='Either I\'m missing the required permissions or I just need to be at a higher position in the role hierarchy.', footer_avatar=ctx.author.avatar))
 
-        elif not isinstance(error, disnake.errors.NotFound):
+        else:
             embed = (
                 generate_error_embed(
                     title='An internal error occured.', 
