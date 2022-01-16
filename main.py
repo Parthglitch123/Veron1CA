@@ -368,7 +368,7 @@ class HelpCommand(commands.HelpCommand):
 class Bot(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(command_prefix=get_prefix, intents=disnake.Intents.all(), help_command=HelpCommand(), strip_after_prefix=True, case_insensitive=True)
-        self.update_presence.start()
+        self.task_update_presence.start()
 
     async def on_connect(self):
         os.system('clear')
