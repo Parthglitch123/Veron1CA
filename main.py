@@ -742,8 +742,8 @@ class Inspection(commands.Cog):
         name='senddm',
         description='Helps to send DMs to specific users.',
         options=[
-            Option("user", "Mention your desired user.", OptionType.user),
-            Option("message", "Type the message that you wanna send to the given user.", OptionType.string)
+            Option("user", "Mention your desired user.", OptionType.user, required=True),
+            Option("message", "Type the message that you wanna send to the given user.", OptionType.string, required=True)
         ]
     )
     @commands.guild_only()
@@ -1017,7 +1017,7 @@ class Inspection(commands.Cog):
         name='roleinfo', 
         description='Shows all important information related to a specific role.',
         options=[
-            Option("role", "Mention your desired role.", OptionType.role)
+            Option("role", "Mention your desired role.", OptionType.role, required=True)
         ]
     )
     @commands.guild_only()
@@ -1057,7 +1057,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def audit(self, ctx: commands.Context, limit: int):
+    async def audit(self, ctx: commands.Context, limit: int=5):
         if int(limit) > 70:
             await ctx.reply('Log limit has to be within 1 and 70.')
 
@@ -1089,7 +1089,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def _audit(self, inter: disnake.ApplicationCommandInteraction, limit: int):
+    async def _audit(self, inter: disnake.ApplicationCommandInteraction, limit: int=5):
         if int(limit) > 70:
             await inter.send('Log limit has to be within 1 and 70.')
 
