@@ -37,8 +37,8 @@ import datetime
 import functools
 import itertools
 import traceback
-from typing import Union
 from threading import Thread
+from typing import Union, Any
 
 # Import third-party libraries.
 import git
@@ -59,7 +59,6 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import disnake
 from disnake import Option, OptionType
 from disnake.ext import commands, tasks
-from disnake.interactions.application_command import ApplicationCommandInteraction
 
 
 # Environment variables.
@@ -297,7 +296,7 @@ class HelpCommandView(disnake.ui.View):
 
 # Custom help command.
 class HelpCommand(commands.HelpCommand):
-    async def send_bot_help(self, mapping):
+    async def send_bot_help(self, mapping: Any):
         ctx = self.context
         cogs_str = ''
 
@@ -367,7 +366,13 @@ class HelpCommand(commands.HelpCommand):
 # The main Bot class for root operations and events.
 class Bot(commands.AutoShardedBot):
     def __init__(self):
-        super().__init__(command_prefix=get_prefix, intents=disnake.Intents.all(), help_command=HelpCommand(), strip_after_prefix=True, case_insensitive=True)
+        super().__init__(
+            command_prefix=get_prefix, 
+            intents=disnake.Intents.all(), 
+            help_command=HelpCommand(), 
+            strip_after_prefix=True, 
+            case_insensitive=True
+        )
         self.task_update_presence.start()
 
     async def on_connect(self):
@@ -379,7 +384,13 @@ class Bot(commands.AutoShardedBot):
 
     @tasks.loop(seconds=200)
     async def task_update_presence(self):
-        await self.change_presence(status=disnake.Status.dnd, activity=disnake.Activity(type=disnake.ActivityType.listening, name=f'{prefix}help | Injected in {len(self.guilds)} server(s)!'))
+        await self.change_presence(
+            status=disnake.Status.dnd, 
+            activity=disnake.Activity(
+                type=disnake.ActivityType.listening, 
+                name=f'{prefix}help | Injected in {len(self.guilds)} server(s)!'
+            )
+        )
 
     @task_update_presence.before_loop
     async def task_before_updating_presence(self):
@@ -408,7 +419,7 @@ class Bot(commands.AutoShardedBot):
             and not await check_if_frozen(message)
             and not await check_if_jailed(message)
         ):
-            guild = get_guild_dict(id=message.guild.id)
+            guild = get_guild_dict(message.guild.id)
 
             if (
                 guild['default_commands_channel']
@@ -424,7 +435,7 @@ class Bot(commands.AutoShardedBot):
         snipeables.remove(message)
 
     async def on_member_join(self, member: disnake.Member):
-        guild = get_guild_dict(id=member.guild.id)
+        guild = get_guild_dict(member.guild.id)
         if guild and guild['greet_members']:
             await member.send(guild['greet_message'])
 
@@ -449,7 +460,7 @@ class ExceptionHandler(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, error):
+    async def on_command_error(self, ctx: commands.Context, error: Any):
         if hasattr(ctx.command, 'on_error'):
             return
 
@@ -518,7 +529,7 @@ class ExceptionHandler(commands.Cog):
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     @commands.Cog.listener()
-    async def on_slash_command_error(self, inter: ApplicationCommandInteraction, error):
+    async def on_slash_command_error(self, inter: disnake.ApplicationCommandInteraction, error):
         if isinstance(error, commands.NoPrivateMessage):
             await inter.response.send_message(embed=generate_error_embed(title='This command can\'t be used in DMs.', description=f'The command `{inter.data.name}` has been configured to only be executed in servers, not DM channels.', footer_avatar=inter.author.avatar))
 
@@ -558,7 +569,7 @@ class Chill(commands.Cog):
         ]
     )
     @commands.guild_only()
-    async def _avatar(self, inter: ApplicationCommandInteraction, member: disnake.Member=None):
+    async def _avatar(self, inter: disnake.ApplicationCommandInteraction, member: disnake.Member=None):
         if not member:
             member = inter.author
 
@@ -621,7 +632,7 @@ class Chill(commands.Cog):
         description='Shows my current response time.'
     )
     @commands.guild_only()
-    async def _ping(self, inter: ApplicationCommandInteraction):
+    async def _ping(self, inter: disnake.ApplicationCommandInteraction):
         system_latency = round(self.bot.latency * 1000)
 
         start_time = time.time()
@@ -897,7 +908,7 @@ class Inspection(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def guildinfo(self, ctx: commands.Context):
-        guild = get_guild_dict(id=ctx.guild.id)
+        guild = get_guild_dict(ctx.guild.id)
         embed = (
             disnake.Embed(
                 color=accent_color['primary']
@@ -941,7 +952,7 @@ class Inspection(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def _guildinfo(self, inter: disnake.ApplicationCommandInteraction):
-        guild = get_guild_dict(id=inter.guild.id)
+        guild = get_guild_dict(inter.guild.id)
         embed = (
             disnake.Embed(
                 color=accent_color['primary']
@@ -1469,7 +1480,7 @@ class Customization(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def makeinv(self, ctx: commands.Context, max_age=60, max_uses=1, *, reason: str='No reason provided.'):
+    async def makeinv(self, ctx: commands.Context, max_age: int=60, max_uses: int=1, *, reason: str='No reason provided.'):
         if not reason:
             reason = f'Inviter: {ctx.author.name}'
 
@@ -1700,7 +1711,7 @@ class Tweaks(commands.Cog):
             await ctx.reply(embed=embed)
         
         else:
-            guild = get_guild_dict(id=ctx.guild.id)
+            guild = get_guild_dict(ctx.guild.id)
             
             if not guild['default_commands_channel']:
                 await ctx.reply('No channel is binded with me in this server.')
@@ -1717,7 +1728,7 @@ class Tweaks(commands.Cog):
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
     async def viewconfig(self, ctx: commands.Context):
-        guild = get_guild_dict(id=ctx.guild.id)
+        guild = get_guild_dict(ctx.guild.id)
         embed = (
             disnake.Embed(
                 color=accent_color['primary']
@@ -1846,12 +1857,12 @@ class YTDLSource(disnake.PCMVolumeTransformer):
 # Base class for interacting with the Spotify API.
 class Spotify:
     @classmethod
-    def get_track_id(self, track):
+    def get_track_id(self, track: Any):
         track = sp.track(track)
         return track["id"]
 
     @classmethod
-    def get_playlist_track_ids(self, playlist_id):
+    def get_playlist_track_ids(self, playlist_id: Any):
         ids = []
         playlist = sp.playlist(playlist_id)
 
@@ -1862,16 +1873,16 @@ class Spotify:
         return ids
 
     @classmethod
-    def get_album(self, album_id):
+    def get_album(self, album_id: Any):
         album = sp.album_tracks(album_id)
         return [item["id"] for item in album['items']]
 
     @classmethod
-    def get_album_id(self, id):
+    def get_album_id(self, id: Any):
         return sp.album(id)
 
     @classmethod
-    def get_track_features(self, id):
+    def get_track_features(self, id: Any):
         meta = sp.track(id)
         album = meta['album']['name']
         artist = meta['album']['artists'][0]['name']
@@ -1923,7 +1934,7 @@ class Song:
 
 
 class SongQueue(asyncio.Queue):
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any):
         if isinstance(item, slice):
             return list(itertools.islice(self._queue, item.start, item.stop, item.step))
         else:
