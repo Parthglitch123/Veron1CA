@@ -51,14 +51,14 @@ from async_timeout import timeout
 from better_profanity import profanity
 from decouple import config, UndefinedValueError
 
-# Import the API wrapper for Spotify.
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-
 # Import the API wrapper for Discord and its components.
 import disnake
 from disnake import Option, OptionType
 from disnake.ext import commands, tasks
+
+# Import the API wrapper for Spotify.
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 
 
 # Environment variables.
@@ -250,7 +250,7 @@ class HelpCommandDropdown(disnake.ui.Select):
 
         super().__init__(
             placeholder="Choose your category of commands.",
-            options=options,
+            options=options
         )
 
     async def callback(self, inter: disnake.MessageInteraction):
@@ -289,7 +289,7 @@ class HelpCommandView(disnake.ui.View):
         super().__init__(timeout=timeout)
 
         self.add_item(HelpCommandDropdown())
-        self.add_item(disnake.ui.Button(label='Invite Me', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1039658487&scope=bot%20applications.commands'))
+        self.add_item(disnake.ui.Button(label='Invite Me', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1506458988023&scope=bot%20applications.commands'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
         self.add_item(disnake.ui.Button(label='Discord Server', url='https://discord.gg/6GNgcu7hjn'))
 
@@ -517,7 +517,7 @@ class ExceptionHandler(commands.Cog):
             embed = (
                 generate_error_embed(
                     title='An internal error occured.', 
-                    description='If you think that it shouldn\'t happen, then try opening a ticket in our [support server]() and describe the issue. We\'ll try our best to demolish the bug for you (if it\'s there).', 
+                    description='If you think that it shouldn\'t happen, then try opening a ticket in our [support server](https://discord.gg/6GNgcu7hjn) and describe the issue. We\'ll try our best to demolish the bug for you (if it\'s there).', 
                     footer_avatar=ctx.author.avatar
                 ).add_field(
                     name='Raised Error:',
