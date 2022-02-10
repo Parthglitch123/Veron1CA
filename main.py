@@ -37,8 +37,8 @@ import datetime
 import functools
 import itertools
 import traceback
+from typing import Any
 from threading import Thread
-from typing import Union, Any
 
 # Import third-party libraries.
 import git
@@ -179,13 +179,6 @@ async def check_if_voted(id: int) -> bool:
         return bool(await bot.topggpy.get_user_vote(id))
     except topgg.errors.Unauthorized:
         return None
-
-async def check_if_voice(ctx: commands.Context):
-    if not ctx.author.voice:
-        return await ctx.reply('You are not in the same voice channel as mine.')
-
-    if not ctx.voice_state.voice:
-        return await ctx.reply('I am not connected to any voice channel.')
 
 async def wait_for_message(member: disnake.Member, check_if_member: bool) -> disnake.Message:
     def is_author(message: disnake.Message):
@@ -1179,10 +1172,11 @@ class GeneralMod(commands.Cog):
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def msgweb(self, ctx: commands.Context, member: disnake.Member):
         await ctx.message.delete()
-        await ctx.author.send(f'A message web trap on **{member}** has been activated. You\'ll shortly receive the captured messages once the action is complete.')
 
         if ctx.author == member:
             return await ctx.author.send('You can\'t trap yourself!')
+            
+        await ctx.author.send(f'A message web trap on **{member}** has been activated. You\'ll shortly receive the captured messages once the action is complete.')
 
         web = []
         for _ in range(6):
@@ -1395,6 +1389,16 @@ class GeneralMod(commands.Cog):
         await ctx.reply(f'Member **{member.name}** has been unbanned!')
 
     @commands.command(
+        name='timeout',
+        help='Timeouts a member.'
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def deafen(self, ctx: commands.Context, member: disnake.Member, duration: int=30, *, reason: str='No reason provided.'):
+        await member.timeout(duration=duration, reason=reason)
+        await ctx.message.add_reaction(reaction_emoji)
+
+    @commands.command(
         name='freeze', 
         help='Calms down chat.'
     )
@@ -1429,7 +1433,7 @@ class VoiceMod(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def move(self, ctx: commands.Context, member: disnake.Member, *, channel: Union[disnake.VoiceChannel, disnake.StageChannel]):
+    async def move(self, ctx: commands.Context, member: disnake.Member, *, channel: disnake.VoiceChannel | disnake.StageChannel):
         await member.move_to(channel)
         await ctx.message.add_reaction(reaction_emoji)
 
@@ -1624,7 +1628,7 @@ class Customization(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
-    async def clonech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
+    async def clonech(self, ctx: commands.Context, *, channel: disnake.TextChannel | disnake.VoiceChannel | disnake.StageChannel):
         await channel.clone()
         await ctx.message.add_reaction(reaction_emoji)
 
@@ -1634,8 +1638,28 @@ class Customization(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
-    async def removech(self, ctx: commands.Context, *, channel: Union[disnake.TextChannel, disnake.VoiceChannel, disnake.StageChannel]):
+    async def removech(self, ctx: commands.Context, *, channel: disnake.TextChannel | disnake.VoiceChannel | disnake.StageChannel):
         await channel.delete()
+        await ctx.message.add_reaction(reaction_emoji)
+
+    @commands.command(
+        name='mkthread',
+        help='Creates a new thread in the current channel.'
+    )
+    @commands.guild_only()
+    @commands.has_role(lock_roles['admin'])
+    async def mkthread(self, ctx: commands.Context, *, name: str):
+        message = await ctx.send(f'Created thread **{name}**.')
+        await ctx.channel.create_thread(name=name, message=message)
+
+    @commands.command(
+        name='rmthread',
+        help='Removes an existing thread in the current channel.'
+    )
+    @commands.guild_only()
+    @commands.has_role(lock_roles['admin'])
+    async def rmthread(self, ctx: commands.Context, *, thread: disnake.Thread):
+        await thread.delete()
         await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
@@ -2096,7 +2120,11 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _leave(self, ctx: commands.Context):
-        await check_if_voice(ctx) 
+        if not ctx.voice_state.voice:
+            return await ctx.reply('I am not connected to any voice channel.')
+
+        if not ctx.author.voice:
+            return await ctx.reply('You are not in the same voice channel as mine.')
 
         await ctx.voice_state.stop()
         del self.voice_states[ctx.guild.id]
@@ -2107,12 +2135,24 @@ class Music(commands.Cog):
         help='Sets the volume of the player.'
     )
     @commands.guild_only()
-    async def _volume(self, ctx: commands.Context, *, volume: int):
+    async def _volume(self, ctx: commands.Context, *, volume: int=None):
         vote = await check_if_voted(ctx.author.id)
 
         if (vote is None) or (vote is True):
             if not ctx.voice_state.is_playing:
                 return await ctx.reply('There\'s nothing being played at the moment.')
+
+            if not volume:
+                embed = (
+                    disnake.Embed(
+                        title=f'Current Volume: {ctx.voice_state.current.source.volume * 100}%',
+                        color=accent_color['primary']
+                    ).set_footer(
+                        text=generate_random_footer(),
+                        icon_url=ctx.author.avatar
+                    )
+                )
+                return await ctx.reply(embed=embed)
 
             if 0 >= volume >= 100:
                 return await ctx.reply('Volume must be between 0 and 100 to execute the command.')
@@ -2151,7 +2191,11 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _pause(self, ctx: commands.Context):
-        await check_if_voice(ctx)
+        if not ctx.voice_state.voice:
+            return await ctx.reply('I am not connected to any voice channel.')
+
+        if not ctx.author.voice:
+            return await ctx.reply('You are not in the same voice channel as mine.')
         
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
@@ -2163,7 +2207,11 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _resume(self, ctx: commands.Context):
-        await check_if_voice(ctx)
+        if not ctx.voice_state.voice:
+            return await ctx.reply('I am not connected to any voice channel.')
+
+        if not ctx.author.voice:
+            return await ctx.reply('You are not in the same voice channel as mine.')
 
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
@@ -2175,7 +2223,12 @@ class Music(commands.Cog):
     )
     @commands.guild_only()
     async def _stop(self, ctx: commands.Context):
-        await check_if_voice(ctx)
+        if not ctx.voice_state.voice:
+            return await ctx.reply('I am not connected to any voice channel.')
+
+        if not ctx.author.voice:
+            return await ctx.reply('You are not in the same voice channel as mine.')
+
         ctx.voice_state.songs.clear()
 
         if ctx.voice_state.is_playing:
@@ -2258,12 +2311,16 @@ class Music(commands.Cog):
         await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
-        name='remove',
+        name='rmqueue',
         help='Removes a song from the queue at a given index.'
     )
     @commands.guild_only()
-    async def _remove(self, ctx: commands.Context, index: int):
-        await check_if_voice(ctx)
+    async def _rmqueue(self, ctx: commands.Context, index: int):
+        if not ctx.voice_state.voice:
+            return await ctx.reply('I am not connected to any voice channel.')
+
+        if not ctx.author.voice:
+            return await ctx.reply('You are not in the same voice channel as mine.')
 
         if len(ctx.voice_state.songs) == 0:
             return await ctx.reply('The queue is empty, so nothing to be removed.')
@@ -2492,6 +2549,12 @@ class Developer(commands.Cog):
     async def restart(self, ctx: commands.Context):
         try:
             _ = git.Repo(os.getcwd()).git_dir
+            os.system('git pull origin master')
+
+        except git.exc.InvalidGitRepositoryError:
+            pass
+
+        finally:
             embed = (
                 disnake.Embed(
                     title='Fetching and restarting...',
@@ -2502,21 +2565,6 @@ class Developer(commands.Cog):
                 )
             )
             await ctx.reply(embed=embed)
-            os.system('git pull origin master')
-
-        except git.exc.InvalidGitRepositoryError:
-            embed = (
-                disnake.Embed(
-                    title='Restarting...',
-                    color=accent_color['primary']
-                ).set_footer(
-                    text=generate_random_footer(), 
-                    icon_url=ctx.author.avatar
-                )
-            )
-            await ctx.reply(embed=embed)
-
-        finally:
             os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.command(
@@ -2537,7 +2585,7 @@ def home():
     return """
         <div class="container">
             <h1>""" + bot.user.name + """ is now live!</h1>
-            <p>Use <code>GET (this_url)/ping</code> to interact with its basic API.</p>
+            <p>Perform a <code>GET (this_url)/ping</code> request to interact with its basic API.</p>
         </div>
 
         <style>

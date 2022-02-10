@@ -12,3 +12,4 @@ better-profanity
 python-decouple
 spotipy
 disnake[voice]
+discord.py

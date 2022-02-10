@@ -1,11 +1,11 @@
 <div align="center">
 
 # Veron1CA
-An open source Discord moderation bot with all-in-one server moderation and beat handling capabilties.
+An open source Discord moderation bot with all-in-one server moderation and beat handling capabilities.
 
 ![GitHub](https://img.shields.io/github/license/hitblast/Veron1CA?color=blue)
-![GitHub Repo stars](https://img.shields.io/github/stars/hitblast/Veron1CA?color=blue)
-![GitHub watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue)
+![GitHub Repo Stars](https://img.shields.io/github/stars/hitblast/Veron1CA?color=blue)
+![GitHub Watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue)
 [![Discord Bots](https://top.gg/api/widget/upvotes/867998923250352189.svg)](https://top.gg/bot/867998923250352189)
 
 </div>
@@ -18,7 +18,7 @@ Veron1CA is designed to be the collab of a Discord moderation bot and a chill mu
 - Continuously updating codebase with regular maintenance.
 - Built with modern, organized Python syntax.
 
-Learn more / invite Veron1CA from [the official website here!](https://hitblast.github.io/Veron1CA)
+Invite Veron1CA from [its official website here!](https://hitblast.github.io/Veron1CA)
 <br><br>
 
 ## Notable Stuff
