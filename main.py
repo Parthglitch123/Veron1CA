@@ -1598,7 +1598,7 @@ class Customization(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
-    async def nick(self, ctx: commands.Context, member: disnake.Member, new_nick: str):
+    async def nick(self, ctx: commands.Context, member: disnake.Member, *, new_nick: str):
         await member.edit(nick=new_nick)
         await ctx.message.add_reaction(reaction_emoji)
 
