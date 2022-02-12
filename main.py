@@ -524,7 +524,7 @@ class ExceptionHandler(commands.Cog):
     @commands.Cog.listener()
     async def on_slash_command_error(self, inter: disnake.ApplicationCommandInteraction, error):
         if isinstance(error, commands.NoPrivateMessage):
-            await inter.response.send_message(embed=generate_error_embed(title='This command can\'t be used in DMs.', description=f'The command `{inter.data.name}` has been configured to only be executed in servers, not DM channels.', footer_avatar=inter.author.avatar))
+            await inter.response.send_message(embed=generate_error_embed(title='This command can\'t be used in DMs.', description=f'The command `{inter.data.name}` has been configured to only be executed in servers, not DM channels.', footer_avatar=inter.author.avatar), ephemeral=True)
 
 
 # Chill commands.
@@ -707,7 +707,7 @@ class Chill(commands.Cog):
             await inter.send(embed=embed, view=VoteCommandView())
             
         elif vote is True:
-            await inter.send('You have already voted for me today, yay!')
+            await inter.send('You have already voted for me today, yay!', ephemeral=True)
 
 # Casual commands.
 class Inspection(commands.Cog):
@@ -768,10 +768,10 @@ class Inspection(commands.Cog):
                 )
             )
             await user.send(embed=embed)
-            await inter.send(f'Your message has been sent!')
+            await inter.send(f'Your message has been sent!', ephemeral=True)
 
         else:
-            await inter.send('You can\'t message yourself!')
+            await inter.send('You can\'t message yourself!', ephemeral=True)
 
     @commands.command(
         name='userinfo', 
