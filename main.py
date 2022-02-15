@@ -1584,7 +1584,7 @@ class Customization(commands.Cog):
 
     @commands.command(
         name='nick',
-        value='Changes the nickname of a member.'
+        help='Changes the nickname of a member.'
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
