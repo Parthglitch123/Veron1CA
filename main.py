@@ -142,18 +142,22 @@ def generate_random_footer() -> str:
         'Hey there pal :D',
         'Hey! Want some pants?',
         'When pigs fly.',
+        'When you\'re not looking...',
         'Cheesecakes!',
         'Hey! This looks sketchy, not gonna lie.',
-        'Have a good day...... or good night whatever.',
+        'Have a good day... or good night, whatever.',
         'This has to be the matrix!',
         'Noob is you.',
         'Back to the future!',
         'We need a hashmap.',
+        'I\'m not a robot.',
+        'I\'m not a fan of you.',
+        'Steven, use failure!',
         'Json, Jason, Jason, Jayson!'
     ]
     return random.choice(footers_list)
 
-def generate_qr_code(id: str, text_to_embed: str):
+def generate_qr_code(id: int, text_to_embed: str):
     img = qrcode.make(text_to_embed)
 
     file_name = f'{id}.png'
@@ -721,26 +725,17 @@ class Inspection(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def senddm(self, ctx: commands.Context, user: disnake.User, *, message: str):
-        if not user == ctx.author:
             embed = (
                 disnake.Embed(
-                    title=f'{ctx.author.name} has something up for you!', 
                     color=accent_color['primary']
-                ).add_field(
-                    name='Message:', 
-                    value=message
-                ).set_thumbnail(
-                    url=ctx.author.avatar
-                ).set_footer(
-                    text=generate_random_footer()
+                ).set_author(
+                    name=f'{ctx.author.display_name} > {message}',
+                    icon_url=ctx.author.avatar
                 )
             )
             await user.send(embed=embed)
             await ctx.send(f'{ctx.author.mention} your message has been sent!')
             await ctx.message.delete()
-
-        else:
-            await ctx.send('You can\'t message yourself!')
 
     @commands.slash_command(
         name='senddm',
@@ -756,15 +751,10 @@ class Inspection(commands.Cog):
         if not user == inter.author:
             embed = (
                 disnake.Embed(
-                    title=f'{inter.author.name} has something up for you!', 
                     color=accent_color['primary']
-                ).add_field(
-                    name='Message:', 
-                    value=message
-                ).set_thumbnail(
-                    url=inter.author.avatar
-                ).set_footer(
-                    text=generate_random_footer()
+                ).set_author(
+                    name=f'{inter.author.display_name} > {message}',
+                    icon_url=inter.author.avatar
                 )
             )
             await user.send(embed=embed)
