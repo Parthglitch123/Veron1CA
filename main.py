@@ -37,8 +37,8 @@ import datetime
 import functools
 import itertools
 import traceback
-from typing import Any
 from threading import Thread
+from typing import Any, List, Dict
 
 # Import third-party libraries.
 import git
@@ -63,12 +63,12 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 # Environment variables.
 try:
-    tokens = {
+    tokens: Dict[str, str] = {
         'discord': config('TOKEN', cast=str),
         'spotify': config('SPOTIFY_CLIENT_SECRET', cast=str),
         'topggpy': config('DBL_TOKEN', default=None, cast=str)
     }
-    owner_ids = {
+    owner_ids: Dict[str, int | str] = {
         'discord': config('OWNER_ID', cast=int),
         'spotify': config('SPOTIFY_CLIENT_ID', cast=str)
     }
@@ -81,18 +81,21 @@ except UndefinedValueError:
 
 
 # Core dictionaries and variables.
-datetime_format_str = "%d/%m/%Y %H:%M:%S"
+datetime_format_str = "%d/%m/%Y | %H:%M:%S"
 reaction_emoji = '☑️'
 
-accent_color = {
+accent_color: Dict[str, int] = {
     'primary': 0, 
     'error': 14573921
 }
-lock_roles = {
+lock_roles: Dict[str, str] = {
     'moderator': 'BotMod', 
     'admin': 'BotAdmin'
 }
-restart_data = {
+
+
+# Store startup data.
+startup_data = {
     'str': str(datetime.datetime.now().strftime(datetime_format_str)),
     'obj': time.time()
 }
@@ -111,11 +114,11 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=owner_ids['
 
 # Global variables.
 global jail_members
-jail_members = []
+jail_members: List[int, int, str, int] = []
 global frozen_guilds
-frozen_guilds = []
+frozen_guilds: List[int, int, int] = []
 global snipeables
-snipeables = []
+snipeables: List[disnake.Message] = []
 
 
 # Get prefix by guild ID.
@@ -597,7 +600,7 @@ class Chill(commands.Cog):
 
         api_latency = round((end_time - start_time) * 1000)
         uptime = str(datetime.timedelta(seconds=int(
-            round(time.time() - restart_data['obj']))))
+            round(time.time() - startup_data['obj']))))
 
         embed = (
             disnake.Embed(
@@ -611,7 +614,7 @@ class Chill(commands.Cog):
                 value=f'{api_latency}ms'
             ).add_field(
                 name='Startup Time', 
-                value=restart_data['str'], 
+                value=startup_data['str'], 
                 inline=False
             ).add_field(
                 name='Uptime', 
@@ -638,7 +641,7 @@ class Chill(commands.Cog):
 
         api_latency = round((end_time - start_time) * 1000)
         uptime = str(datetime.timedelta(seconds=int(
-            round(time.time() - restart_data['obj']))))
+            round(time.time() - startup_data['obj']))))
 
         embed = (
             disnake.Embed(
@@ -652,7 +655,7 @@ class Chill(commands.Cog):
                 value=f'{api_latency}ms'
             ).add_field(
                 name='Startup Time', 
-                value=restart_data['str'], 
+                value=startup_data['str'], 
                 inline=False
             ).add_field(
                 name='Uptime', 
@@ -2625,8 +2628,8 @@ def home():
 def ping():
     ping_dict = {
         'latency': round(bot.latency * 1000),
-        'uptime': int(round(time.time() - restart_data['obj'])),
-        'last_restart': restart_data['str']
+        'uptime': int(round(time.time() - startup_data['obj'])),
+        'last_restart': startup_data['str']
     }
     return jsonify(ping_dict)
 
