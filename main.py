@@ -114,9 +114,9 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=owner_ids['
 
 # Global variables.
 global jail_members
-jail_members: List[int, int, str, int] = []
+jail_members: List[int | str] = []
 global frozen_guilds
-frozen_guilds: List[int, int, int] = []
+frozen_guilds: List[int] = []
 global snipeables
 snipeables: List[disnake.Message] = []
 
@@ -203,6 +203,7 @@ async def check_if_frozen(message: disnake.Message) -> bool:
 async def check_if_swore(message: disnake.Message) -> bool:
     if (
         not message.author.bot
+        and message.channel != disnake.DMChannel
         and not message.channel.is_nsfw()
         and profanity.contains_profanity(message.content)
     ):
@@ -728,17 +729,19 @@ class Inspection(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
     async def senddm(self, ctx: commands.Context, user: disnake.User, *, message: str):
+        if not user == ctx.author:
             embed = (
                 disnake.Embed(
+                    title=f'{ctx.author.display_name} > {message}',
                     color=accent_color['primary']
-                ).set_author(
-                    name=f'{ctx.author.display_name} > {message}',
-                    icon_url=ctx.author.avatar
                 )
             )
             await user.send(embed=embed)
             await ctx.send(f'{ctx.author.mention} your message has been sent!')
             await ctx.message.delete()
+
+        else:
+            await ctx.send('You can\'t message yourself!')
 
     @commands.slash_command(
         name='senddm',
@@ -754,10 +757,8 @@ class Inspection(commands.Cog):
         if not user == inter.author:
             embed = (
                 disnake.Embed(
+                    title=f'{inter.author.display_name} > {message}',
                     color=accent_color['primary']
-                ).set_author(
-                    name=f'{inter.author.display_name} > {message}',
-                    icon_url=inter.author.avatar
                 )
             )
             await user.send(embed=embed)
