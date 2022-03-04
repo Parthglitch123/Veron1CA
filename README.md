@@ -46,13 +46,13 @@ python3 -m pip install -U -r requirements.txt
 ```
 
 * Once it's done, create a `.env` file in the same directory and assign the values accordingly.
-```
-TOKEN=The token of your Discord bot
-DBL_TOKEN=The token of your Top.gg bot
-OWNER_ID=The ID number of your Discord profile
-COMMAND_PREFIX=The command prefix of the bot
-SPOTIFY_CLIENT_ID=The ID of your Spotify Developers application
-SPOTIFY_CLIENT_SECRET=The secret of your Spotify Developers application
+```python
+DISCORD_TOKEN= # The token of your Discord bot.
+DISCORD_OWNER_ID= # The ID number of your Discord profile.
+DBL_TOKEN= # The token of your Top.gg bot.
+SPOTIFY_CLIENT_ID= # The ID of your Spotify Developers application.
+SPOTIFY_CLIENT_SECRET= # The secret of your Spotify Developers application.
+COMMAND_PREFIX= # The command prefix of the bot. 
 ```
 
 * Finally, install [FFmpeg](https://ffmpeg.org/) for your platform and run Veron1CA simply by using:

@@ -64,12 +64,12 @@ from spotipy.oauth2 import SpotifyClientCredentials
 # Environment variables.
 try:
     tokens: Dict[str, str] = {
-        'discord': config('TOKEN', cast=str),
+        'discord': config('DISCORD_TOKEN', cast=str),
         'spotify': config('SPOTIFY_CLIENT_SECRET', cast=str),
         'topggpy': config('DBL_TOKEN', default=None, cast=str)
     }
     owner_ids: Dict[str, int | str] = {
-        'discord': config('OWNER_ID', cast=int),
+        'discord': config('DISCORD_OWNER_ID', cast=int),
         'spotify': config('SPOTIFY_CLIENT_ID', cast=str)
     }
     prefix = config('COMMAND_PREFIX', default='vrn.', cast=str)
@@ -201,11 +201,13 @@ async def check_if_frozen(message: disnake.Message) -> bool:
             return True
 
 async def check_if_swore(message: disnake.Message) -> bool:
+    guild = get_guild_dict(message.guild.id)
     if (
         not message.author.bot
         and message.channel != disnake.DMChannel
         and not message.channel.is_nsfw()
         and profanity.contains_profanity(message.content)
+        and guild['filter_profanity']
     ):
         await message.delete()
         return True
@@ -407,6 +409,7 @@ class Bot(commands.AutoShardedBot):
                     {
                         'id': message.guild.id, 
                         'prefix': None, 
+                        'filter_profanity': False,
                         'greet_members': False,
                         'greet_message': None,
                         'default_commands_channel': None
@@ -1673,7 +1676,7 @@ class Tweaks(commands.Cog):
         self.bot = bot 
 
     @commands.command(
-        name='prefix',
+        name='setprefix',
         help='Shows / changes the server\'s default command prefix.'
     )
     @commands.guild_only()
@@ -1683,7 +1686,7 @@ class Tweaks(commands.Cog):
         await ctx.reply(f'Changed server prefix to `{prefix}`!')
 
     @commands.command(
-        name='greetings',
+        name='setgreeting',
         help='Toggles the greeting message which is sent to an incoming Discord user upon joining the server.'
     )
     @commands.guild_only()
@@ -1707,7 +1710,7 @@ class Tweaks(commands.Cog):
             await ctx.reply('Greetings have been disabled.')
 
     @commands.command(
-        name='bindch',
+        name='setdefaultch',
         help='Sets a specific channel as the default for executing commands.'
     )
     @commands.guild_only()
@@ -1738,6 +1741,18 @@ class Tweaks(commands.Cog):
                 channel = self.bot.get_channel(guild['default_commands_channel'])
                 db.update({'default_commands_channel': None}, Guild.id == ctx.guild.id)
                 await ctx.reply(f'Unbinded **#{channel.name}** successfully!')
+
+    @commands.command(
+        name='toggleprofanityfilter',
+        help='Toggles the profanity filter.'
+    )
+    @commands.guild_only()
+    @commands.has_role(lock_roles['admin'])
+    async def profanityfilter(self, ctx: commands.Context):
+        guild = get_guild_dict(ctx.guild.id)
+        previous_value = guild['filter_profanity']
+        db.update({'filter_profanity': not previous_value}, Guild.id == ctx.guild.id)
+        await ctx.reply(f'Profanity filter has been toggled `{not previous_value}`.')
 
     @commands.command(
         name='config',
