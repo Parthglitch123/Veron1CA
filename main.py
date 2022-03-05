@@ -1918,7 +1918,7 @@ class Spotify:
 
 
 # Functions / coroutines (for using within music commands and classes only).
-async def get_queue_embed(ctx: commands.Context, page: int=1):
+def get_queue_embed(ctx: commands.Context, page: int=1):
     items_per_page = 10
     pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
 
@@ -1974,8 +1974,8 @@ class QueueView(disnake.ui.View):
 
     @disnake.ui.button(label='Shuffle', style=disnake.ButtonStyle.gray)
     async def shuffle(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        self.ctx.voice_state.songs.shuffle()
         await interaction.response.edit_message(
+            content='The queue has been shuffled!',
             embed=get_queue_embed(self.ctx, page=1),
             view=None
         )
