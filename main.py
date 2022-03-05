@@ -135,7 +135,7 @@ def get_prefix(bot: commands.AutoShardedBot, message: disnake.Message):
     return commands.when_mentioned_or(guild_prefix)(bot, message)
 
 
-# Standard Functions.
+# Functions / coroutines (for using across the source).
 def get_guild_dict(id: int) -> dict:
     guild = db.search(Guild.id == id)
     return guild[0] if guild else None
@@ -281,20 +281,20 @@ class HelpCommandDropdown(disnake.ui.Select):
 
 # Views (static).
 class VoteCommandView(disnake.ui.View):
-    def __init__(self, *, timeout: float=30):
+    def __init__(self, timeout: float=30):
         super().__init__(timeout=timeout)
 
         self.add_item(disnake.ui.Button(label='Vote Now', url='https://top.gg/bot/867998923250352189/vote'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
 
 class HelpCommandView(disnake.ui.View):
-    def __init__(self, *, timeout: float=30):
+    def __init__(self, timeout: float=30):
         super().__init__(timeout=timeout)
 
         self.add_item(HelpCommandDropdown())
         self.add_item(disnake.ui.Button(label='Invite Me', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1506458988023&scope=bot%20applications.commands'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
-        self.add_item(disnake.ui.Button(label='Discord Server', url='https://discord.gg/6GNgcu7hjn'))
+        self.add_item(disnake.ui.Button(label='Support Server', url='https://discord.gg/6GNgcu7hjn'))  
 
 
 # Custom help command.
@@ -1889,12 +1889,10 @@ class YTDLSource(disnake.PCMVolumeTransformer):
 
 # Base class for interacting with the Spotify API.
 class Spotify:
-    @classmethod
     def get_track_id(self, track: Any):
         track = sp.track(track)
         return track["id"]
 
-    @classmethod
     def get_playlist_track_ids(self, playlist_id: Any):
         ids = []
         playlist = sp.playlist(playlist_id)
@@ -1905,21 +1903,41 @@ class Spotify:
 
         return ids
 
-    @classmethod
     def get_album(self, album_id: Any):
         album = sp.album_tracks(album_id)
         return [item["id"] for item in album['items']]
 
-    @classmethod
     def get_album_id(self, id: Any):
         return sp.album(id)
 
-    @classmethod
     def get_track_features(self, id: Any):
         meta = sp.track(id)
         album = meta['album']['name']
         artist = meta['album']['artists'][0]['name']
         return f"{artist} - {album}"
+
+
+# Functions / coroutines (for using within music commands and classes only).
+async def get_queue_embed(ctx: commands.Context, page: int=1):
+    items_per_page = 10
+    pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
+
+    start = (page - 1) * items_per_page
+    end = start + items_per_page
+
+    queue = ''.join(
+        '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(i + 1, song)
+        for i, song in enumerate(ctx.voice_state.songs[start:end], start=start)
+    )
+
+    embed = (
+        disnake.Embed(
+            description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue)
+        ).set_footer(
+            text='Viewing page {}/{}'.format(page, pages)
+        )
+    )
+    return embed
 
 
 # Views (static / dynamic, for music commands).
@@ -1936,6 +1954,31 @@ class PlayCommandView(disnake.ui.View):
         super().__init__(timeout=timeout)
     
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
+
+class QueueView(disnake.ui.View):
+    def __init__(self, ctx: commands.Context, timeout: float=30):
+        super().__init__(timeout=timeout)
+        self.ctx = ctx
+
+    @disnake.ui.button(label='Clear Queue', style=disnake.ButtonStyle.danger)
+    async def clear(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        self.ctx.voice_state.songs.clear()
+        await interaction.response.edit_message(
+            embed=disnake.Embed(
+                title='The queue has been cleared.',
+                color=accent_color['primary']
+            ),
+            view=None
+        )
+        await interaction.response.delete(delay=5)
+
+    @disnake.ui.button(label='Shuffle', style=disnake.ButtonStyle.gray)
+    async def shuffle(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        self.ctx.voice_state.songs.shuffle()
+        await interaction.response.edit_message(
+            embed=get_queue_embed(self.ctx, page=1),
+            view=None
+        )
 
 
 class Song:
@@ -2285,39 +2328,10 @@ class Music(commands.Cog):
     @commands.guild_only()
     async def _queue(self, ctx: commands.Context, *, page: int=1):
         if len(ctx.voice_state.songs) == 0:
-            return await ctx.reply('Empty queue.')
+            return await ctx.reply('The queue is empty.')
 
-        items_per_page = 10
-        pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
-
-        start = (page - 1) * items_per_page
-        end = start + items_per_page
-
-        queue = ''.join(
-            '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(i + 1, song)
-            for i, song in enumerate(ctx.voice_state.songs[start:end], start=start)
-        )
-
-        embed = (
-            disnake.Embed(
-                description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue)
-            ).set_footer(
-                text='Viewing page {}/{}'.format(page, pages)
-            )
-        )
-        await ctx.reply(embed=embed)
-
-    @commands.command(
-        name='shuffle', 
-        help='Shuffles the queue.'
-    )
-    @commands.guild_only()
-    async def _shuffle(self, ctx: commands.Context):
-        if len(ctx.voice_state.songs) == 0:
-            return await ctx.reply('The queue is empty, play some songs, maybe?')
-
-        ctx.voice_state.songs.shuffle()
-        await ctx.message.add_reaction(reaction_emoji)
+        embed = get_queue_embed(ctx, page=page)
+        await ctx.reply(embed=embed, view=QueueView(ctx))
 
     @commands.command(
         name='rmqueue',
