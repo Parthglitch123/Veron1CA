@@ -41,7 +41,6 @@ from threading import Thread
 from typing import Any, List, Dict
 
 # Import third-party libraries.
-import git
 import topgg
 import qrcode
 import youtube_dl
@@ -2545,50 +2544,6 @@ class Music(commands.Cog):
 class Developer(commands.Cog):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
-
-    @commands.command(
-        name='dbsize',
-        help='Returns the total amount of used memory space by the guild database in bytes.'
-    )
-    @commands.check(is_developer)
-    async def dbsize(self, ctx: commands.Context):
-        db_all = db.all()
-        embed = (
-            disnake.Embed(
-                title=f'Used Space: {sys.getsizeof(db_all)} byte(s)',
-                color=accent_color['primary'],
-            ).set_footer(
-                text=generate_random_footer(),
-                icon_url=ctx.author.avatar
-            )
-        )
-        await ctx.reply(embed=embed)
-
-    @commands.command(
-        name='restart', 
-        help='Fetches the latest code from the Git repository of the project and restarts.'
-    )
-    @commands.check(is_developer)
-    async def restart(self, ctx: commands.Context):
-        try:
-            _ = git.Repo(os.getcwd()).git_dir
-            os.system('git pull origin master')
-
-        except git.exc.InvalidGitRepositoryError:
-            pass
-
-        finally:
-            embed = (
-                disnake.Embed(
-                    title='Fetching and restarting...',
-                    color=accent_color['primary']
-                ).set_footer(
-                    text=generate_random_footer(), 
-                    icon_url=ctx.author.avatar
-                )
-            )
-            await ctx.reply(embed=embed)
-            os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.command(
         name='close', 

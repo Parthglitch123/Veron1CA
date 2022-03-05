@@ -1,7 +1,6 @@
 # Go through README.md to know about the installation process.
 
 uvloop
-gitpython
 topggpy
 qrcode
 pillow
