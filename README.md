@@ -8,6 +8,8 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 ![GitHub Watchers](https://img.shields.io/github/watchers/hitblast/Veron1CA?color=blue)
 [![Discord Bots](https://top.gg/api/widget/upvotes/867998923250352189.svg)](https://top.gg/bot/867998923250352189)
 
+<img src="https://i.imgur.com/S5VbqrD.jpg">
+
 </div>
 <br><br>
 
