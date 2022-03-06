@@ -380,11 +380,13 @@ class Bot(commands.AutoShardedBot):
             strip_after_prefix=True, 
             case_insensitive=True
         )
+        
+        self.topggpy = topgg.DBLClient(self, tokens['topggpy'])
         self.task_update_presence.start()
 
     async def on_connect(self):
         os.system('clear')
-        print(f'{self.user.name} | Connected to Discord\n')
+        print(f'{self.user} | Connected to Discord\n')
 
     async def on_ready(self):
         print(f'I\'ve been deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
@@ -451,8 +453,6 @@ class Bot(commands.AutoShardedBot):
 # Setting up the fundamentals.
 uvloop.install()
 bot = Bot()
-bot.topggpy = topgg.DBLClient(bot, tokens['topggpy'])
-
 
 # Custom exceptions.
 class VoiceError(Exception):
