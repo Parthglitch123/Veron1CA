@@ -2560,8 +2560,8 @@ app = Flask(__name__)
 def home():
     return """
         <div class="container">
-            <h1>""" + bot.user.name + """ is now live!</h1>
-            <p>Perform a <code>GET (this_url)/ping</code> request to interact with its basic API.</p>
+            <h1>""" + bot.user.name + """ is now live.</h1>
+            <p>Perform a <code>GET (this_url)/ping</code> request to interact!</p>
         </div>
 
         <style>
@@ -2570,7 +2570,7 @@ def home():
             body {
                 margin: 0;
                 padding: 0;
-                background-image: linear-gradient(to bottom right, #859398, #283048);
+                background-color: #ffffff;
             }
 
             .container {
@@ -2581,7 +2581,7 @@ def home():
 
             .container h1 {
                 font-weight: 700;
-                color: #ffffff;
+                color: #283048;
                 position: absolute;
                 top: 50%;
                 left: 50%;
@@ -2590,7 +2590,7 @@ def home():
             }
 
             .container p {
-                color: #ffffff90;
+                color: #28304890;
                 position: absolute;
                 top: 70%;
                 left: 50%;
@@ -2600,8 +2600,8 @@ def home():
 
             .container p code {
                 padding: 5px 15px;
-                color: #283048;
-                background: #ffffff90;
+                color: #ffffff;
+                background: #28304890;
                 border-radius: .2rem;
             }
         </style>
