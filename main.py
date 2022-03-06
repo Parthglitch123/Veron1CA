@@ -381,7 +381,6 @@ class Bot(commands.AutoShardedBot):
             case_insensitive=True
         )
         
-        self.topggpy = topgg.DBLClient(self, tokens['topggpy'])
         self.task_update_presence.start()
 
     async def on_connect(self):
@@ -453,6 +452,7 @@ class Bot(commands.AutoShardedBot):
 # Setting up the fundamentals.
 uvloop.install()
 bot = Bot()
+bot.topggpy = topgg.DBLClient(bot, tokens['topggpy'])
 
 # Custom exceptions.
 class VoiceError(Exception):
