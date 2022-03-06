@@ -108,7 +108,12 @@ db = TinyDB('guild-db.json')
 Guild = Query()
 
 # Implementation of SpotiPy.
-sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=owner_ids['spotify'], client_secret=tokens['spotify']))
+sp = spotipy.Spotify(
+    auth_manager=SpotifyClientCredentials(
+        client_id=owner_ids['spotify'], 
+        client_secret=tokens['spotify']
+    )
+)
 
 
 # Global variables.
