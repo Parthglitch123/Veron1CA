@@ -1893,10 +1893,12 @@ class YTDLSource(disnake.PCMVolumeTransformer):
 
 # Base class for interacting with the Spotify API.
 class Spotify:
+    @classmethod
     def get_track_id(self, track: Any):
         track = sp.track(track)
         return track["id"]
 
+    @classmethod
     def get_playlist_track_ids(self, playlist_id: Any):
         ids = []
         playlist = sp.playlist(playlist_id)
@@ -1907,13 +1909,16 @@ class Spotify:
 
         return ids
 
+    @classmethod
     def get_album(self, album_id: Any):
         album = sp.album_tracks(album_id)
         return [item["id"] for item in album['items']]
 
+    @classmethod
     def get_album_id(self, id: Any):
         return sp.album(id)
 
+    @classmethod
     def get_track_features(self, id: Any):
         meta = sp.track(id)
         album = meta['album']['name']
