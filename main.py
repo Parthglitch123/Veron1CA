@@ -107,7 +107,7 @@ profanity.load_censor_words_from_file('filtered.txt')
 db = TinyDB('guild-db.json')
 Guild = Query()
 
-# Implementation of SpotiPy.
+# Implementation of Spotipy.
 sp = spotipy.Spotify(
     auth_manager=SpotifyClientCredentials(
         client_id=owner_ids['spotify'], 
