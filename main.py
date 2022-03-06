@@ -1880,13 +1880,13 @@ class YTDLSource(disnake.PCMVolumeTransformer):
 
         duration = []
         if days > 0:
-            duration.append('{} days'.format(days))
+            duration.append(f'{days} days')
         if hours > 0:
-            duration.append('{} hours'.format(hours))
+            duration.append(f'{hours} hours')
         if minutes > 0:
-            duration.append('{} minutes'.format(minutes))
+            duration.append(f'{minutes} minutes')
         if seconds > 0:
-            duration.append('{} seconds'.format(seconds))
+            duration.append(f'{seconds} seconds')
 
         return ', '.join(duration)
 
