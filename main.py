@@ -2214,7 +2214,7 @@ class Music(commands.Cog):
                 )
                 return await ctx.reply(embed=embed)
 
-            if 0 < volume <= 100:
+            if not 0 < volume <= 100:
                 return await ctx.reply('Volume must be between 1 and 100 to execute the command.')
 
             ctx.voice_state.current.source.volume = volume / 100
