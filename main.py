@@ -2214,8 +2214,8 @@ class Music(commands.Cog):
                 )
                 return await ctx.reply(embed=embed)
 
-            if 0 >= volume >= 100:
-                return await ctx.reply('Volume must be between 0 and 100 to execute the command.')
+            if 0 < volume <= 100:
+                return await ctx.reply('Volume must be between 1 and 100 to execute the command.')
 
             ctx.voice_state.current.source.volume = volume / 100
             await ctx.reply(f'Volume of the player is now set to **{volume}%**')
