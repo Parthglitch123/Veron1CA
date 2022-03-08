@@ -1966,7 +1966,7 @@ class NowCommandView(disnake.ui.View):
 
         if (vote is None) or (vote is True):
             self.ctx.voice_state.loop = not self.ctx.voice_state.loop
-            await interaction.send('Loop enabled!' if self.ctx.voice_state.loop else 'Looping disabled.')
+            await interaction.send('Looping enabled!' if self.ctx.voice_state.loop else 'Looping disabled.')
         else:
             await self.ctx.invoke(self.ctx.bot.get_command('vote'))
 
