@@ -1953,12 +1953,22 @@ def get_queue_embed(ctx: commands.Context, page: int=1):
 
 # Views (static / dynamic, for music commands).
 class NowCommandView(disnake.ui.View):
-    def __init__(self, url: str, views: str, likes: str, timeout: float=10):
+    def __init__(self, ctx: commands.Context, url: str, views: str, likes: str, timeout: float=10):
         super().__init__(timeout=timeout)
+        self.ctx = ctx
 
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
         self.add_item(disnake.ui.Button(label=f'{int(views):,} Views', style=disnake.ButtonStyle.grey))
-        self.add_item(disnake.ui.Button(label=f'{int(likes):,} Likes', style=disnake.ButtonStyle.grey))
+
+    @disnake.ui.button(label='Loop', style=disnake.ButtonStyle.green)
+    async def loop(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        vote = await check_if_voted(self.ctx.author.id)
+
+        if (vote is None) or (vote is True):
+            self.ctx.voice_state.loop = not self.ctx.voice_state.loop
+            await interaction.send('Loop enabled!' if self.ctx.voice_state.loop else 'Looping disabled.')
+        else:
+            await self.ctx.invoke(self.ctx.bot.get_command('vote'))
 
 class PlayCommandView(disnake.ui.View):
     def __init__(self, url: str, timeout: float=10):
@@ -1998,7 +2008,7 @@ class Song:
         self.source = source
         self.requester = source.requester
 
-    def create_embed(self):
+    def create_embed(self, ctx: commands.Context):
         duration = 'Live' if not self.source.duration else self.source.duration
 
         embed = (
@@ -2015,7 +2025,7 @@ class Song:
                 url=self.source.thumbnail
             )
         )
-        view = NowCommandView(url=self.source.url, views=self.source.views, likes=self.source.likes)
+        view = NowCommandView(ctx=ctx, url=self.source.url, views=self.source.views, likes=self.source.likes)
         return embed, view
 
 
@@ -2242,7 +2252,7 @@ class Music(commands.Cog):
     @commands.guild_only()
     async def _now(self, ctx: commands.Context):
         try:
-            embed, view = ctx.voice_state.current.create_embed()
+            embed, view = ctx.voice_state.current.create_embed(ctx)
             await ctx.reply(embed=embed, view=view)
         except AttributeError:
             await ctx.reply('There\'s nothing being played at the moment.')
