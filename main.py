@@ -2226,8 +2226,8 @@ class Music(commands.Cog):
                 )
                 return await ctx.reply(embed=embed)
 
-            # if not 0 < volume <= 100:
-                # return await ctx.reply('Volume must be between 1 and 100 to execute the command.')
+            if not 0 < volume <= 200:
+                return await ctx.reply('Volume must be between 1 and 100 to execute the command.')
 
             ctx.voice_state.current.source.volume = volume / 100
             await ctx.reply(f'Volume of the player is now set to **{volume}%**')
@@ -2574,6 +2574,15 @@ class Developer(commands.Cog):
     async def logout(self, ctx: commands.Context):
         await ctx.message.add_reaction(reaction_emoji)
         await self.bot.close()    
+
+    @commands.command(
+        name='votesyscheck',
+        help='Checks the vote system.'
+    )
+    @commands.check(is_developer)
+    async def votesyscheck(self, ctx: commands.Context):
+        vote = await check_if_voted(ctx.author.id)
+        await ctx.reply(f'Your vote status: `s{vote}`')
 
 
 # A minimalistic API for viewing the system status.
