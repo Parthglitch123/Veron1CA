@@ -287,14 +287,14 @@ class HelpCommandDropdown(disnake.ui.Select):
 
 # Views (static).
 class VoteCommandView(disnake.ui.View):
-    def __init__(self, timeout: float=10):
+    def __init__(self, timeout: float=30):
         super().__init__(timeout=timeout)
 
         self.add_item(disnake.ui.Button(label='Vote Now', url='https://top.gg/bot/867998923250352189/vote'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
 
 class HelpCommandView(disnake.ui.View):
-    def __init__(self, timeout: float=10):
+    def __init__(self, timeout: float=30):
         super().__init__(timeout=timeout)
 
         self.add_item(HelpCommandDropdown())
@@ -1953,7 +1953,7 @@ def get_queue_embed(ctx: commands.Context, page: int=1):
 
 # Views (static / dynamic, for music commands).
 class NowCommandView(disnake.ui.View):
-    def __init__(self, ctx: commands.Context, url: str, views: str, likes: str, timeout: float=10):
+    def __init__(self, ctx: commands.Context, url: str, views: str, likes: str, timeout: float=30):
         super().__init__(timeout=timeout)
         self.ctx = ctx
 
@@ -1971,7 +1971,7 @@ class NowCommandView(disnake.ui.View):
             await self.ctx.invoke(self.ctx.bot.get_command('vote'))
 
 class PlayCommandView(disnake.ui.View):
-    def __init__(self, url: str, timeout: float=10):
+    def __init__(self, url: str, timeout: float=30):
         super().__init__(timeout=timeout)
     
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
