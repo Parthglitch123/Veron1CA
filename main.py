@@ -2582,7 +2582,7 @@ class Developer(commands.Cog):
     @commands.check(is_developer)
     async def votesyscheck(self, ctx: commands.Context):
         vote = await check_if_voted(ctx.author.id)
-        await ctx.reply(f'Your vote status: `s{vote}`')
+        await ctx.reply(f'Your vote status: `{vote}`')
 
 
 # A minimalistic API for viewing the system status.
