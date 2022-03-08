@@ -41,7 +41,6 @@ from threading import Thread
 from typing import Any, List, Dict
 
 # Import third-party libraries.
-import topgg
 import qrcode
 import youtube_dl
 from flask import Flask, jsonify
@@ -54,6 +53,9 @@ from decouple import config, UndefinedValueError
 import disnake
 from disnake import Option, OptionType
 from disnake.ext import commands, tasks
+
+# Import the API wrapper for Top.gg.
+import topgg
 
 # Import the API wrapper for Spotify.
 import spotipy
@@ -2195,7 +2197,7 @@ class Music(commands.Cog):
         help='Sets the volume of the player.'
     )
     @commands.guild_only()
-    async def _volume(self, ctx: commands.Context, *, volume: int=None):
+    async def _volume(self, ctx: commands.Context, *, volume: float=None):
         vote = await check_if_voted(ctx.author.id)
 
         if (vote is None) or (vote is True):
