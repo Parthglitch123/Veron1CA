@@ -187,12 +187,6 @@ def generate_error_embed(title: str, description: str, footer_avatar) -> disnake
         )
     )
 
-async def check_if_voted(id: int) -> bool:
-    try:
-        return bool(await bot.topggpy.get_user_vote(id))
-    except topgg.errors.Unauthorized:
-        return None
-
 async def wait_for_message(member: disnake.Member, check_if_member: bool) -> disnake.Message:
     def is_author(message: disnake.Message):
         return (message.author == member) if check_if_member else (message.author != member)
@@ -228,6 +222,14 @@ async def check_if_jailed(message: disnake.Message) -> bool:
 # Command-specific checks.
 def is_developer(ctx: commands.Context) -> bool:
     return ctx.author.id == owner_ids['discord']
+
+
+# Custom exceptions.
+class VoiceError(Exception):
+    pass
+
+class YTDLError(Exception):
+    pass
 
 
 # Dropdowns (dynamic).
@@ -454,14 +456,16 @@ class Bot(commands.AutoShardedBot):
 # Setting up the fundamentals.
 uvloop.install()
 bot = Bot()
+
+
+# Setting up the wrapper for Top.gg and the primary function for checking votes.
 bot.topggpy = topgg.DBLClient(bot, tokens['topggpy'])
 
-# Custom exceptions.
-class VoiceError(Exception):
-    pass
-
-class YTDLError(Exception):
-    pass
+async def check_if_voted(id: int) -> bool:
+    try:
+        return await bot.topggpy.get_user_vote(id)
+    except topgg.errors.Unauthorized:
+        return None
 
 
 # Global exception handler cog.
@@ -2574,15 +2578,6 @@ class Developer(commands.Cog):
     async def logout(self, ctx: commands.Context):
         await ctx.message.add_reaction(reaction_emoji)
         await self.bot.close()    
-
-    @commands.command(
-        name='votesyscheck',
-        help='Checks the vote system.'
-    )
-    @commands.check(is_developer)
-    async def votesyscheck(self, ctx: commands.Context):
-        vote = await check_if_voted(ctx.author.id)
-        await ctx.reply(f'Your vote status: `{vote}`')
 
 
 # A minimalistic API for viewing the system status.
