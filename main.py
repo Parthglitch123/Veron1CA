@@ -1994,7 +1994,12 @@ class NowCommandView(disnake.ui.View):
 
         if voter == self.ctx.voice_state.current.requester:
             self.ctx.voice_state.skip()
-            await interaction.send('Song skipped.')
+            await interaction.response.edit_message(
+                content='Song skipped.',
+                embed=None,
+                view=None
+            )
+            await interaction.response.delete(delay=5)
 
         elif voter.id not in self.ctx.voice_state.skip_votes:
             self.ctx.voice_state.skip_votes.add(voter.id)
@@ -2002,7 +2007,12 @@ class NowCommandView(disnake.ui.View):
 
             if total_votes >= 3:
                 self.ctx.voice_state.skip()
-                await interaction.send('Song skipped through voting.')
+                await interaction.response.edit_message(
+                    content='Song skipped through voting.',
+                    embed=None,
+                    view=None
+                )
+                await interaction.response.delete(delay=5)
             else:
                 await interaction.send(f'Skip vote added, currently at **{total_votes}/3** votes.')
 
@@ -2025,7 +2035,7 @@ class QueueView(disnake.ui.View):
     async def clear(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         self.ctx.voice_state.songs.clear()
         await interaction.response.edit_message(
-            content='The queue has been cleared.',
+            content='Queue cleared.',
             embed=None,
             view=None
         )
@@ -2035,7 +2045,7 @@ class QueueView(disnake.ui.View):
     async def shuffle(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         self.ctx.voice_state.songs.shuffle()
         await interaction.response.edit_message(
-            content='The queue has been shuffled!',
+            content='Queue shuffled!',
             embed=get_queue_embed(self.ctx, page=1),
             view=None
         )
