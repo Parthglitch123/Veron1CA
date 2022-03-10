@@ -419,7 +419,6 @@ class Bot(commands.AutoShardedBot):
                         'id': message.guild.id, 
                         'prefix': None, 
                         'filter_profanity': False,
-                        'greet_members': False,
                         'greet_message': None,
                         'default_commands_channel': None
                     }
@@ -449,7 +448,7 @@ class Bot(commands.AutoShardedBot):
 
     async def on_member_join(self, member: disnake.Member):
         guild = get_guild_dict(member.guild.id)
-        if guild and guild['greet_members']:
+        if guild and guild['greet_message']:
             await member.send(guild['greet_message'])
 
 
@@ -558,7 +557,7 @@ class Chill(commands.Cog):
         help='Shows a member\'s Discord avatar.'
     )
     @commands.guild_only()
-    async def avatar(self, ctx: commands.Context, member: disnake.Member=None):
+    async def avatar(self, ctx: commands.Context, member: disnake.Member | None):
         if not member:
             member = ctx.message.author
 
@@ -583,7 +582,7 @@ class Chill(commands.Cog):
         ]
     )
     @commands.guild_only()
-    async def _avatar(self, inter: disnake.ApplicationCommandInteraction, member: disnake.Member=None):
+    async def _avatar(self, inter: disnake.ApplicationCommandInteraction, member: disnake.Member | None):
         if not member:
             member = inter.author
 
@@ -786,7 +785,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def userinfo(self, ctx: commands.Context, user: disnake.Member=None):
+    async def userinfo(self, ctx: commands.Context, user: disnake.Member | None):
         if not user:
             user = ctx.author
 
@@ -848,7 +847,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def _userinfo(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member=None):
+    async def _userinfo(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member | None):
         if not user:
             user = inter.author
 
@@ -1691,7 +1690,7 @@ class Tweaks(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
-    async def prefix(self, ctx: commands.Context, prefix: str=None):
+    async def prefix(self, ctx: commands.Context, prefix: str | None):
         db.update({'prefix': prefix}, Guild.id == ctx.guild.id)
         await ctx.reply(f'Changed server prefix to `{prefix}`!')
 
@@ -1701,7 +1700,7 @@ class Tweaks(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
-    async def greetings(self, ctx: commands.Context, *, greet_message: str=None):
+    async def greetings(self, ctx: commands.Context, *, greet_message: str | None):
         if greet_message:
             embed = (
                 disnake.Embed(
@@ -1713,10 +1712,10 @@ class Tweaks(commands.Cog):
                     icon_url=ctx.author.avatar
                 )
             )
-            db.update({'greet_members': True, 'greet_message': greet_message}, Guild.id == ctx.guild.id)
+            db.update({'greet_message': greet_message}, Guild.id == ctx.guild.id)
             await ctx.reply(embed=embed)
         else:
-            db.update({'greet_members': False, 'greet_message': None}, Guild.id == ctx.guild.id)
+            db.update({'greet_message': None}, Guild.id == ctx.guild.id)
             await ctx.reply('Greetings have been disabled.')
 
     @commands.command(
@@ -1725,7 +1724,7 @@ class Tweaks(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_role(lock_roles['admin'])
-    async def bindch(self, ctx: commands.Context, *, channel: disnake.TextChannel=None):
+    async def bindch(self, ctx: commands.Context, *, channel: disnake.TextChannel | None):
         if channel:
             embed = (
                 disnake.Embed(
@@ -2227,7 +2226,7 @@ class Music(commands.Cog):
         help='Summons me to a particular voice channel.'
     )
     @commands.guild_only()
-    async def _summon(self, ctx: commands.Context, *, channel: disnake.VoiceChannel=None):
+    async def _summon(self, ctx: commands.Context, *, channel: disnake.VoiceChannel | disnake.StageChannel | None):
         destination = channel or ctx.author.voice.channel
         
         if ctx.voice_state.voice:
@@ -2257,7 +2256,7 @@ class Music(commands.Cog):
         help='Sets the volume of the player.'
     )
     @commands.guild_only()
-    async def _volume(self, ctx: commands.Context, *, volume: float=None):
+    async def _volume(self, ctx: commands.Context, *, volume: float | None):
         vote = await check_if_voted(ctx.author.id)
 
         if (vote is None) or (vote is True):
@@ -2395,7 +2394,7 @@ class Music(commands.Cog):
         help='Plays music for you.'
     )
     @commands.guild_only()
-    async def _play(self, ctx: commands.Context, *, search: str=None):
+    async def _play(self, ctx: commands.Context, *, search: str | None):
         enqueueing_embed = (
             disnake.Embed(
                 title='Enqueueing...',
