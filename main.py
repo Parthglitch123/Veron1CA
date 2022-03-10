@@ -1820,8 +1820,10 @@ class YTDLSource(disnake.PCMVolumeTransformer):
 
         self.uploader = data.get('uploader')
         self.uploader_url = data.get('uploader_url')
+
         date = data.get('upload_date')
         self.upload_date = date[6:8] + '.' + date[4:6] + '.' + date[0:4]
+        
         self.title = data.get('title')
         self.thumbnail = data.get('thumbnail')
         self.description = data.get('description')
@@ -1957,12 +1959,11 @@ def get_queue_embed(ctx: commands.Context, page: int=1):
 
 # Views (static / dynamic, for music commands).
 class NowCommandView(disnake.ui.View):
-    def __init__(self, ctx: commands.Context, url: str, views: str, likes: str, timeout: float=30):
+    def __init__(self, ctx: commands.Context, url: str, timeout: float=30):
         super().__init__(timeout=timeout)
         self.ctx = ctx
 
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
-        self.add_item(disnake.ui.Button(label=f'{int(views):,} Views', style=disnake.ButtonStyle.grey))
 
     @disnake.ui.button(label='Loop', style=disnake.ButtonStyle.green)
     async def loop(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
@@ -1972,7 +1973,42 @@ class NowCommandView(disnake.ui.View):
             self.ctx.voice_state.loop = not self.ctx.voice_state.loop
             await interaction.send('Looping enabled!' if self.ctx.voice_state.loop else 'Looping disabled.')
         else:
-            await self.ctx.invoke(self.ctx.bot.get_command('vote'))
+            embed = (
+                disnake.Embed(
+                    title='Whoops! This feature is locked.',
+                    description=f'By voting for me on Top.gg, you\'ll unlock features like looping and all other locked commands for 12 hours.',
+                    color=accent_color['error']
+                ).set_footer(
+                    text='It\'s free, it only takes a minute to do and it also supports my creator a lot!',
+                    icon_url=interaction.author.avatar
+                )
+            )
+            await interaction.send(embed=embed, view=VoteCommandView())
+
+    @disnake.ui.button(label='Skip', style=disnake.ButtonStyle.gray)
+    async def skip(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        if self.ctx.voice_state.loop:
+            self.ctx.voice_state.loop = False
+
+        voter = interaction.author
+
+        if voter == self.ctx.voice_state.current.requester:
+            self.ctx.voice_state.skip()
+            await interaction.send('Song skipped.')
+
+        elif voter.id not in self.ctx.voice_state.skip_votes:
+            self.ctx.voice_state.skip_votes.add(voter.id)
+            total_votes = len(self.ctx.voice_state.skip_votes)
+
+            if total_votes >= 3:
+                self.ctx.voice_state.skip()
+                await interaction.send('Song skipped through voting.')
+            else:
+                await interaction.send('Skip vote added, currently at **{}/3** votes.'.format(total_votes))
+
+        else:
+            await interaction.send('You have already voted to skip this song.')
+        
 
 class PlayCommandView(disnake.ui.View):
     def __init__(self, url: str, timeout: float=30):
@@ -2029,7 +2065,7 @@ class Song:
                 url=self.source.thumbnail
             )
         )
-        view = NowCommandView(ctx=ctx, url=self.source.url, views=self.source.views, likes=self.source.likes)
+        view = NowCommandView(ctx=ctx, url=self.source.url)
         return embed, view
 
 
@@ -2162,7 +2198,7 @@ class Music(commands.Cog):
 
     @commands.command(
         name='join', 
-        help='Joins a specific voice channel.', 
+        help='Joins the voice channel that you\'re in.', 
         invoke_without_subcommand=True
     )
     @commands.guild_only()
@@ -2178,7 +2214,7 @@ class Music(commands.Cog):
 
     @commands.command(
         name='summon', 
-        help='Summons Veron1CA to a particular voice channel.'
+        help='Summons me to a particular voice channel.'
     )
     @commands.guild_only()
     async def _summon(self, ctx: commands.Context, *, channel: disnake.VoiceChannel=None):
@@ -2239,7 +2275,7 @@ class Music(commands.Cog):
         else:
             embed = (
                 disnake.Embed(
-                    title='Whoops! This command is locked.',
+                    title='Whoops! This feature is locked.',
                     description=f'By voting for me on Top.gg, you\'ll unlock `{ctx.command}` and all other locked commands for 12 hours.',
                     color=accent_color['error']
                 ).set_footer(
@@ -2251,7 +2287,7 @@ class Music(commands.Cog):
 
     @commands.command(
         name='now', 
-        help='Displays the currently playing song.'
+        help='Displays an interactive control embed for the current song.'
     )
     @commands.guild_only()
     async def _now(self, ctx: commands.Context):
@@ -2315,37 +2351,6 @@ class Music(commands.Cog):
             await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
-        name='skip', 
-        help='Vote to skip a song. The requester can automatically skip.'
-    )
-    @commands.guild_only()
-    async def _skip(self, ctx: commands.Context):
-        if not ctx.voice_state.is_playing:
-            return await ctx.reply('Not playing any music right now, so no skipping for you.')
-
-        if ctx.voice_state.loop:
-            return await ctx.reply(f'Unable to skip as looping is enabled. Try using `{prefix}loop` to turn it off.')
-
-        voter = ctx.author
-
-        if voter == ctx.voice_state.current.requester:
-            await ctx.message.add_reaction(reaction_emoji)
-            ctx.voice_state.skip()
-
-        elif voter.id not in ctx.voice_state.skip_votes:
-            ctx.voice_state.skip_votes.add(voter.id)
-            total_votes = len(ctx.voice_state.skip_votes)
-
-            if total_votes >= 3:
-                await ctx.message.add_reaction(reaction_emoji)
-                ctx.voice_state.skip()
-            else:
-                await ctx.reply('Skip vote added, currently at **{}/3** votes.'.format(total_votes))
-
-        else:
-            await ctx.reply('You have already voted to skip this song.')
-
-    @commands.command(
         name='queue', 
         help='Shows the player\'s queue.'
     )
@@ -2374,44 +2379,6 @@ class Music(commands.Cog):
 
         ctx.voice_state.songs.remove(index - 1)
         await ctx.message.add_reaction(reaction_emoji)
-
-    @commands.command(
-        name='loop', 
-        help='Enables no-timeout looping for music playback.'
-    )
-    @commands.guild_only()
-    async def _loop(self, ctx: commands.Context):
-        vote = await check_if_voted(ctx.author.id)
-
-        if (vote is None) or (vote is True):
-            if not ctx.voice_state.is_playing:
-                return await ctx.reply('There\'s nothing being played at the moment.')
-
-            ctx.voice_state.loop = not ctx.voice_state.loop
-            embed = (
-                disnake.Embed(
-                    title='Looping right now!' if ctx.voice_state.loop else 'Looping stopped.',
-                    color=accent_color['primary']
-                ).set_footer(
-                    text=generate_random_footer(),
-                    icon_url=ctx.author.avatar
-                )
-            )
-
-            await ctx.reply(embed=embed)
-        
-        else:
-            embed = (
-                disnake.Embed(
-                    title='Whoops! This command is locked.',
-                    description=f'By voting for me on Top.gg, you\'ll unlock `{ctx.command}` and all other locked commands for 12 hours.',
-                    color=accent_color['error']
-                ).set_footer(
-                    text='It\'s free, it only takes a minute to do and it also supports my creator a lot!',
-                    icon_url=ctx.author.avatar
-                )
-            )
-            await ctx.reply(embed=embed, view=VoteCommandView())
 
     @commands.command(
         name='play', 
@@ -2482,7 +2449,6 @@ class Music(commands.Cog):
                     )
                 )
                 await sent_embed.edit(embed=embed)
-
 
             elif "https://open.spotify.com/album/" in search or "spotify:album:" in search:
                 ids = Spotify.get_album(search)
