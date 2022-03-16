@@ -1964,6 +1964,10 @@ class NowCommandView(disnake.ui.View):
 
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
+    async def on_timeout(self):
+        for children in self.children:
+            children.disabled = True
+
     @disnake.ui.button(label='Loop', style=disnake.ButtonStyle.green)
     async def loop(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         vote = await check_if_voted(self.ctx.author.id)
@@ -2029,6 +2033,10 @@ class QueueView(disnake.ui.View):
     def __init__(self, ctx: commands.Context, timeout: float=30):
         super().__init__(timeout=timeout)
         self.ctx = ctx
+
+    async def on_timeout(self):
+        for children in self.children:
+            children.disabled = True
 
     @disnake.ui.button(label='Clear Queue', style=disnake.ButtonStyle.danger)
     async def clear(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
