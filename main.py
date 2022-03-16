@@ -1958,15 +1958,14 @@ def get_queue_embed(ctx: commands.Context, page: int=1):
 
 # Views (static / dynamic, for music commands).
 class NowCommandView(disnake.ui.View):
-    def __init__(self, ctx: commands.Context, url: str, timeout: float=40):
+    def __init__(self, ctx: commands.Context, url: str, timeout: float=30):
         super().__init__(timeout=timeout)
         self.ctx = ctx
 
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
     async def on_timeout(self):
-        for children in self.children:
-            children.disabled = True
+        pass
 
     @disnake.ui.button(label='Loop', style=disnake.ButtonStyle.green)
     async def loop(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
@@ -2035,8 +2034,7 @@ class QueueView(disnake.ui.View):
         self.ctx = ctx
 
     async def on_timeout(self):
-        for children in self.children:
-            children.disabled = True
+        pass
 
     @disnake.ui.button(label='Clear Queue', style=disnake.ButtonStyle.danger)
     async def clear(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
