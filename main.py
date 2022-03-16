@@ -290,15 +290,27 @@ class HelpCommandDropdown(disnake.ui.Select):
 # Views (static).
 class VoteCommandView(disnake.ui.View):
     def __init__(self):
+        super().__init__(timeout=timeout)
+
         self.add_item(disnake.ui.Button(label='Vote Now', url='https://top.gg/bot/867998923250352189/vote'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
 
 class HelpCommandView(disnake.ui.View):
-    def __init__(self):
+    message: disnake.Message
+
+    def __init__(self, timeout: float=40):
+        super().__init__(timeout=timeout)
+
         self.add_item(HelpCommandDropdown())
         self.add_item(disnake.ui.Button(label='Invite Me', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1506458988023&scope=bot%20applications.commands'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
-        self.add_item(disnake.ui.Button(label='Support Server', url='https://discord.gg/6GNgcu7hjn'))  
+        self.add_item(disnake.ui.Button(label='Support Server', url='https://discord.gg/6GNgcu7hjn'))
+        
+    async def on_timeout(self):
+        for children in self.children:
+            children.disabled = True
+
+        await self.message.edit(view=self)
 
 
 # Custom help command.
@@ -328,7 +340,8 @@ class HelpCommand(commands.HelpCommand):
             inline=False
         )
 
-        await ctx.reply(embed=embed, view=HelpCommandView())
+        view = HelpCommandView()
+        view.message = await ctx.reply(embed=embed, view=view)
 
     async def send_command_help(self, command: commands.Command):
         ctx = self.context
