@@ -289,16 +289,12 @@ class HelpCommandDropdown(disnake.ui.Select):
 
 # Views (static).
 class VoteCommandView(disnake.ui.View):
-    def __init__(self, timeout: float=10):
-        super().__init__(timeout=timeout)
-
+    def __init__(self):
         self.add_item(disnake.ui.Button(label='Vote Now', url='https://top.gg/bot/867998923250352189/vote'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
 
 class HelpCommandView(disnake.ui.View):
-    def __init__(self, timeout: float=40):
-        super().__init__(timeout=timeout)
-
+    def __init__(self):
         self.add_item(HelpCommandDropdown())
         self.add_item(disnake.ui.Button(label='Invite Me', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1506458988023&scope=bot%20applications.commands'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
