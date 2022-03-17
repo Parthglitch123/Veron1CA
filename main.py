@@ -38,7 +38,7 @@ import functools
 import itertools
 import traceback
 from threading import Thread
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Tuple
 
 # Import third-party libraries.
 import qrcode
@@ -1893,7 +1893,7 @@ class YTDLSource(disnake.PCMVolumeTransformer):
         return cls(ctx, disnake.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
 
     @staticmethod
-    def parse_duration(duration: int):
+    def parse_duration(duration: int) -> str:
         minutes, seconds = divmod(duration, 60)
         hours, minutes = divmod(minutes, 60)
         days, hours = divmod(hours, 24)
@@ -1939,7 +1939,7 @@ class Spotify:
         return sp.album(id)
 
     @classmethod
-    def get_track_features(self, id: Any):
+    def get_track_features(self, id: Any) -> str:
         meta = sp.track(id)
         album = meta['album']['name']
         artist = meta['album']['artists'][0]['name']
@@ -1947,7 +1947,7 @@ class Spotify:
 
 
 # Functions / coroutines (for using within music commands and classes only).
-def get_queue_embed(ctx: commands.Context, page: int=1):
+def get_queue_embed(ctx: commands.Context, page: int=1) -> disnake.Embed:
     items_per_page = 10
     pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
 
@@ -2043,7 +2043,7 @@ class Song:
         self.source = source
         self.requester = source.requester
 
-    def create_embed(self, ctx: commands.Context):
+    def create_embed(self, ctx: commands.Context) -> Tuple[disnake.Embed, disnake.ui.View]:
         duration = 'Live' if not self.source.duration else self.source.duration
 
         embed = (
@@ -2176,7 +2176,7 @@ class Music(commands.Cog):
         self.bot = bot
         self.voice_states = {}
 
-    def get_voice_state(self, ctx: commands.Context):
+    def get_voice_state(self, ctx: commands.Context) -> VoiceState:
         state = self.voice_states.get(ctx.guild.id)
         if not state or not state.exists:
             state = VoiceState(self.bot, ctx)
