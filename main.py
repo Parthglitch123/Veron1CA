@@ -470,10 +470,7 @@ bot = Bot()
 bot.topggpy = topgg.DBLClient(bot, tokens['topggpy'])
 
 async def check_if_voted(id: int) -> bool:
-    try:
-        return await bot.topggpy.get_user_vote(id)
-    except topgg.errors.Unauthorized:
-        return None
+    return True
 
 
 # Global exception handler cog.
@@ -1973,16 +1970,16 @@ class NowCommandView(disnake.ui.View):
 
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
-    async def on_timeout(self):
-        pass
-
-    @disnake.ui.button(label='Loop', style=disnake.ButtonStyle.green)
+    @disnake.ui.button(label='Enable Loop', style=disnake.ButtonStyle.green)
     async def loop(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         vote = await check_if_voted(self.ctx.author.id)
 
         if (vote is None) or (vote is True):
             self.ctx.voice_state.loop = not self.ctx.voice_state.loop
-            await interaction.send('Looping enabled!' if self.ctx.voice_state.loop else 'Looping disabled.')
+            button.label = 'Enable Loop' if not self.ctx.voice_state.loop else 'Disable Loop'
+            button.style = disnake.ButtonStyle.green if not self.ctx.voice_state.loop else disnake.ButtonStyle.red
+            await interaction.response.edit_message(view=self)
+            
         else:
             embed = (
                 disnake.Embed(
