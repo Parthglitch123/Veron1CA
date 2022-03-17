@@ -537,7 +537,7 @@ class ExceptionHandler(commands.Cog):
             pass
 
         elif isinstance(error, disnake.errors.Forbidden):
-            await ctx.reply(embed=generate_error_embed(title='The command couldn\'t be processed.', description='Either I\'m missing the required permissions or I just need to be at a higher position in the role hierarchy.', footer_avatar=ctx.author.avatar))
+            await ctx.reply(embed=generate_error_embed(title='Forbidden!', description='Either I\'m missing the required permissions or I just need to be at a higher position in the role hierarchy.', footer_avatar=ctx.author.avatar))
 
         else:
             embed = (
