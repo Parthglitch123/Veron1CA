@@ -1970,7 +1970,7 @@ class NowCommandView(disnake.ui.View):
 
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
-    @disnake.ui.button(label='Enable Loop', style=disnake.ButtonStyle.green)
+    @disnake.ui.button(label='Toggle Loop', style=disnake.ButtonStyle.gray)
     async def loop(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         vote = await check_if_voted(self.ctx.author.id)
 
