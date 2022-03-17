@@ -196,7 +196,11 @@ async def wait_for_message(member: disnake.Member, check_if_member: bool) -> dis
 
 async def check_if_frozen(message: disnake.Message) -> bool:
     for frozen_guild in frozen_guilds:
-        if frozen_guild[1] == message.guild.id and frozen_guild[2] == message.channel.id and frozen_guild[0] != message.author.id:
+        if (
+            frozen_guild[1] == message.guild.id 
+            and frozen_guild[2] == message.channel.id 
+            and frozen_guild[0] != message.author.id
+        ):
             await message.delete()
             return True
 
@@ -401,7 +405,7 @@ class Bot(commands.AutoShardedBot):
         print(f'{self.user} | Connected to Discord\n')
 
     async def on_ready(self):
-        print(f'I\'ve been deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
+        print(f'Deployed in {len(self.guilds)} server(s) with {self.shard_count} shard(s) active.')
 
     @tasks.loop(seconds=200)
     async def task_update_presence(self):
@@ -1844,7 +1848,7 @@ class YTDLSource(disnake.PCMVolumeTransformer):
         self.stream_url = data.get('url')
 
     def __str__(self):
-        return "**{0.title}** by **{0.uploader}**".format(self)
+        return "**{0.title}** by **[{0.uploader}]({0.uploader_url})**".format(self)
 
     @classmethod
     async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop):
@@ -1996,41 +2000,6 @@ class NowCommandView(disnake.ui.View):
             )
             await interaction.send(embed=embed, view=VoteCommandView())
 
-    @disnake.ui.button(label='Skip', style=disnake.ButtonStyle.gray)
-    async def skip(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        if self.ctx.voice_state.loop:
-            self.ctx.voice_state.loop = False
-
-        voter = interaction.author
-
-        if voter == self.ctx.voice_state.current.requester:
-            self.ctx.voice_state.skip()
-            await interaction.response.edit_message(
-                content='Song skipped.',
-                embed=None,
-                view=None
-            )
-            await interaction.response.delete(delay=5)
-
-        elif voter.id not in self.ctx.voice_state.skip_votes:
-            self.ctx.voice_state.skip_votes.add(voter.id)
-            total_votes = len(self.ctx.voice_state.skip_votes)
-
-            if total_votes >= 3:
-                self.ctx.voice_state.skip()
-                await interaction.response.edit_message(
-                    content='Song skipped through voting.',
-                    embed=None,
-                    view=None
-                )
-                await interaction.response.delete(delay=5)
-            else:
-                await interaction.send(f'Skip vote added, currently at **{total_votes}/3** votes.')
-
-        else:
-            await interaction.send('You have already voted to skip this song.')
-        
-
 class PlayCommandView(disnake.ui.View):
     def __init__(self, url: str, timeout: float=10):
         super().__init__(timeout=timeout)
@@ -2058,10 +2027,12 @@ class QueueView(disnake.ui.View):
     @disnake.ui.button(label='Shuffle', style=disnake.ButtonStyle.gray)
     async def shuffle(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         self.ctx.voice_state.songs.shuffle()
+        button.label = 'Shuffled'
+        button.disabled = True
+
         await interaction.response.edit_message(
-            content='Queue shuffled!',
             embed=get_queue_embed(self.ctx, page=1),
-            view=None
+            view=self
         )
 
 
@@ -2373,6 +2344,38 @@ class Music(commands.Cog):
 
             ctx.voice_state.voice.stop()
             await ctx.message.add_reaction(reaction_emoji)
+
+    @commands.command(
+        name='skip', 
+        help='Vote to skip a song. The requester can automatically skip.'
+    )
+    @commands.guild_only()
+    async def _skip(self, ctx: commands.Context):
+        if not ctx.voice_state.is_playing:
+            return await ctx.reply('Not playing anything right now.')
+
+        if ctx.voice_state.loop:
+            ctx.voice_state.loop = not ctx.voice_state.loop
+
+        voter = ctx.author
+
+        if voter == ctx.voice_state.current.requester:
+            await ctx.message.add_reaction(reaction_emoji)
+            ctx.voice_state.skip()
+
+        elif voter.id not in ctx.voice_state.skip_votes:
+            ctx.voice_state.skip_votes.add(voter.id)
+            total_votes = len(ctx.voice_state.skip_votes)
+
+            if total_votes >= 3:
+                await ctx.message.add_reaction(reaction_emoji)
+                ctx.voice_state.skip()
+            else:
+                await ctx.reply('Skip vote added, currently at **{}/3** votes.'.format(total_votes))
+
+        else:
+            await ctx.reply('You have already voted to skip this song.')
+
 
     @commands.command(
         name='queue', 
