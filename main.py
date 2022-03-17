@@ -2006,7 +2006,7 @@ class PlayCommandView(disnake.ui.View):
     
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
-class QueueView(disnake.ui.View):
+class QueueCommandView(disnake.ui.View):
     def __init__(self, ctx: commands.Context, timeout: float=30):
         super().__init__(timeout=timeout)
         self.ctx = ctx
@@ -2387,7 +2387,7 @@ class Music(commands.Cog):
             return await ctx.reply('The queue is empty.')
 
         embed = get_queue_embed(ctx, page=page)
-        await ctx.reply(embed=embed, view=QueueView(ctx))
+        await ctx.reply(embed=embed, view=QueueCommandView(ctx))
 
     @commands.command(
         name='rmqueue',
