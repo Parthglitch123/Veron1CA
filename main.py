@@ -471,7 +471,7 @@ bot.topggpy = topgg.DBLClient(bot, tokens['topggpy'])
 
 async def check_if_voted(id: int) -> bool:
     try: 
-        return bot.topggpy.has_voted(id)
+        return bot.topggpy.get_user_vote(id)
     except topgg.errors.Unauthorized:
         return None
 
