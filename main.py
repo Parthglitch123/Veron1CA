@@ -2532,6 +2532,17 @@ class Developer(commands.Cog):
         self.bot = bot
 
     @commands.command(
+        name='fetchlogs',
+        help='Fetches the logs of the bot.'
+    )
+    @commands.check(is_developer)
+    async def fetchlogs(self, ctx: commands.Context):
+        await ctx.author.send(
+            content='Log file for session: `' + startup_data['str'] + '`', 
+            file=disnake.File('bot.log', spoiler=True)
+        )
+
+    @commands.command(
         name='close', 
         help='Closes the connection to Discord.'
     )
