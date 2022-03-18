@@ -1,6 +1,7 @@
 __pycache__
 venv
 guild-db.json
+bot.log
 .breakpoints
 .vscode
 .env

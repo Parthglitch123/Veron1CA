@@ -25,6 +25,7 @@ SOFTWARE.
 
 
 # Import built-in libraries.
+from fileinput import filename
 import os
 import sys
 import json
@@ -32,6 +33,7 @@ import math
 import time
 import uvloop
 import random
+import logging
 import asyncio
 import datetime
 import functools
@@ -101,6 +103,9 @@ startup_data = {
     'obj': time.time()
 }
 
+
+# Implementation of the logging module.
+logging.basicConfig(filename='bot.log', filemode='w', format='%(asctime)s | %(levelname)s | %(message)s')
 
 # Implementation of the profanity filter.
 profanity.load_censor_words_from_file('filtered.txt')
@@ -205,7 +210,11 @@ async def check_if_frozen(message: disnake.Message) -> bool:
             return True
 
 async def check_if_swore(message: disnake.Message) -> bool:
-    guild = get_guild_dict(message.guild.id)
+    try:
+        guild = get_guild_dict(message.guild.id)
+    except AttributeError:
+        return 
+
     if (
         not message.author.bot
         and message.channel != disnake.DMChannel
@@ -432,8 +441,7 @@ class Bot(commands.AutoShardedBot):
                         'id': message.guild.id, 
                         'prefix': None, 
                         'filter_profanity': False,
-                        'greet_message': None,
-                        'default_commands_channel': None
+                        'greet_message': None
                     }
                 )
         except AttributeError:
@@ -444,14 +452,7 @@ class Bot(commands.AutoShardedBot):
             and not await check_if_frozen(message)
             and not await check_if_jailed(message)
         ):
-            guild = get_guild_dict(message.guild.id)
-
-            if (
-                guild['default_commands_channel']
-                and message.channel.id == guild['default_commands_channel']
-                or not guild['default_commands_channel']
-            ):
-                await self.process_commands(message)
+            await self.process_commands(message)
 
     async def on_message_delete(self, message: disnake.Message):
         global snipeables
@@ -496,6 +497,7 @@ class ExceptionHandler(commands.Cog):
 
         ignored = (commands.CommandNotFound, )
         error = getattr(error, 'original', error)
+        logging.error(f'{ctx.command} raised an error: {error}')
 
         if isinstance(error, ignored):
             return
@@ -1730,39 +1732,6 @@ class Tweaks(commands.Cog):
         else:
             db.update({'greet_message': None}, Guild.id == ctx.guild.id)
             await ctx.reply('Greetings have been disabled.')
-
-    @commands.command(
-        name='setdefaultch',
-        help='Sets a specific channel as the default for executing commands.'
-    )
-    @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
-    async def bindch(self, ctx: commands.Context, *, channel: disnake.TextChannel | None):
-        if channel:
-            embed = (
-                disnake.Embed(
-                    title=f'#{channel.name} has been binded!',
-                    description='Now you won\'t be able to execute commands outside this channel. To unbind, just type this command again without any arguments.',
-                    color=accent_color['primary']
-                ).set_footer(
-                    text=generate_random_footer(),
-                    icon_url=ctx.author.avatar
-                )
-            )
-
-            db.update({'default_commands_channel': channel.id}, Guild.id == ctx.guild.id)
-            await ctx.reply(embed=embed)
-        
-        else:
-            guild = get_guild_dict(ctx.guild.id)
-            
-            if not guild['default_commands_channel']:
-                await ctx.reply('No channel is binded with me in this server.')
-
-            else:
-                channel = self.bot.get_channel(guild['default_commands_channel'])
-                db.update({'default_commands_channel': None}, Guild.id == ctx.guild.id)
-                await ctx.reply(f'Unbinded **#{channel.name}** successfully!')
 
     @commands.command(
         name='toggleprofanityfilter',
