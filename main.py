@@ -2216,10 +2216,9 @@ class Music(commands.Cog):
         destination = channel or ctx.author.voice.channel
         
         if ctx.voice_state.voice:
-            await ctx.voice_state.voice.move_to(destination)
+            return await ctx.voice_state.voice.move_to(destination)
 
         ctx.voice_state.voice = await destination.connect()
-        await ctx.message.add_reaction(reaction_emoji)
 
     @commands.command(
         name='leave', 
