@@ -25,7 +25,6 @@ SOFTWARE.
 
 
 # Import built-in libraries.
-from fileinput import filename
 import os
 import sys
 import json
