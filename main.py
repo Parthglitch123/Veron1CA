@@ -170,7 +170,7 @@ def generate_random_footer() -> str:
     ]
     return random.choice(footers_list)
 
-def generate_qr_code(id: int, text_to_embed: str):
+def generate_qr_code(id: int, text_to_embed: str) -> Tuple[str, disnake.File]:
     img = qrcode.make(text_to_embed)
 
     file_name = f'{id}.png'
