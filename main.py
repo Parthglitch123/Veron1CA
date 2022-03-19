@@ -799,7 +799,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def userinfo(self, ctx: commands.Context, user: disnake.Member | None):
+    async def userinfo(self, ctx: commands.Context, *, user: disnake.Member | None):
         if not user:
             user = ctx.author
 
@@ -1008,7 +1008,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def roleinfo(self, ctx: commands.Context, role: disnake.Role):
+    async def roleinfo(self, ctx: commands.Context, *, role: disnake.Role):
         embed = (
             disnake.Embed(
                 title=f'Role Information: {role}', color=accent_color['primary']
