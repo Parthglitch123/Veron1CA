@@ -1975,16 +1975,14 @@ class NowCommandView(disnake.ui.View):
             await interaction.send(embed=embed, view=VoteCommandView())
 
 class PlayCommandView(disnake.ui.View):
-    def __init__(self, url: str):
+    def __init__(self, url: str, timeout: float=10):
+        super().__init__(timeout=timeout)
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
 class QueueCommandView(disnake.ui.View):
     def __init__(self, ctx: commands.Context, timeout: float=50):
         super().__init__(timeout=timeout)
         self.ctx = ctx
-
-    async def on_timeout(self):
-        pass
 
     @disnake.ui.button(label='Clear Queue', style=disnake.ButtonStyle.danger)
     async def clear(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
