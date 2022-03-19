@@ -1370,6 +1370,18 @@ class GeneralMod(commands.Cog):
         await ctx.message.delete()
 
     @commands.command(
+        name='softban',
+        help='Temporarily bans members to delete their messages.'
+    )
+    @commands.guild_only()
+    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    async def softban(self, ctx: commands.Context, member: disnake.User, *, reason: str='No reason provided.'):
+        await ctx.guild.ban(member, delete_message_days=7, reason=reason)
+        await ctx.guild.unban(member)
+        await ctx.send(f'**{member.name}** has been softbanned! Reason: {reason}')
+        await ctx.message.delete()
+
+    @commands.command(
         name='bans', 
         help='Shows a list of banned users in the server.'
     )
