@@ -1610,7 +1610,7 @@ class Customization(commands.Cog):
     @commands.has_role(lock_roles['admin'])
     async def assignrole(self, ctx: commands.Context, role: disnake.Role, member: disnake.Member):
         await member.add_roles(role)
-        await ctx.reply(f'Role {role.mention} has been given to {member.mention}, peace! :partying_face:')
+        await ctx.reply(f'Role {role.name} has been assigned to {member}.')
 
     @commands.command(
         name='nick',
@@ -1929,9 +1929,9 @@ def get_queue_embed(ctx: commands.Context, page: int=1) -> disnake.Embed:
 
     embed = (
         disnake.Embed(
-            description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue)
+            description=f'**{len(ctx.voice_state.songs)} tracks:**\n\n{queue}'
         ).set_footer(
-            text='Viewing page {}/{}'.format(page, pages)
+            text=f'Viewing page {page}/{pages}'
         )
     )
     return embed
