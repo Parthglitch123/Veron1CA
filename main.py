@@ -97,7 +97,7 @@ lock_roles: Dict[str, str] = {
 
 
 # Store startup data.
-startup_data = {
+startup_data: Dict[str, float] = {
     'str': str(datetime.datetime.now().strftime(datetime_format_str)),
     'obj': time.time()
 }
