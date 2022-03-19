@@ -490,7 +490,7 @@ class ExceptionHandler(commands.Cog):
         if cog and cog._get_overridden_method(cog.cog_command_error) is not None:
             return
 
-        ignored = (commands.CommandNotFound, )
+        ignored = commands.CommandNotFound
         error = getattr(error, 'original', error)
         logging.error(f'{ctx.command} raised an error: {error}')
 
