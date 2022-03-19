@@ -276,7 +276,7 @@ class HelpCommandDropdown(disnake.ui.Select):
             options=options
         )
 
-    async def callback(self, inter: disnake.MessageInteraction):
+    async def callback(self, interaction: disnake.MessageInteraction):
         cog = bot.get_cog(self.values[0])
         commands_str = ''
 
@@ -292,11 +292,11 @@ class HelpCommandDropdown(disnake.ui.Select):
                 name='Usable commands:',
                 value=commands_str
             ).set_footer(
-                text=f'Cog help requested by {inter.author.name}',
-                icon_url=inter.author.avatar
+                text=f'Cog help requested by {interaction.author.name}',
+                icon_url=interaction.author.avatar
             )
         )
-        await inter.response.edit_message(embed=embed)
+        await interaction.response.edit_message(embed=embed)
 
 
 # Views (static).
@@ -314,7 +314,7 @@ class HelpCommandView(disnake.ui.View):
         super().__init__(timeout=timeout)
 
         self.add_item(HelpCommandDropdown())
-        self.add_item(disnake.ui.Button(label='Invite Me', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1506458988023&scope=bot%20applications.commands'))
+        self.add_item(disnake.ui.Button(label='Add Me!', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1506458988023&scope=bot%20applications.commands'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
         self.add_item(disnake.ui.Button(label='Support Server', url='https://discord.gg/6GNgcu7hjn'))
         
@@ -379,14 +379,10 @@ class HelpCommand(commands.HelpCommand):
             inline=False
         )
 
-        if not command.aliases:
-            aliases = "No aliases are available."
-        else:
-            aliases = ', '.join(command.aliases)
-
+        slash_command = bot.get_slash_command(command.name)
         embed.add_field(
-            name='Aliases', 
-            value=aliases, 
+            name='Slash Equivalent', 
+            value=f'`{slash_command.name}`' if slash_command else 'None',
             inline=False
         )
         await ctx.reply(embed=embed)
@@ -556,9 +552,9 @@ class ExceptionHandler(commands.Cog):
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     @commands.Cog.listener()
-    async def on_slash_command_error(self, inter: disnake.ApplicationCommandInteraction, error):
+    async def on_slash_command_error(self, interaction: disnake.ApplicationCommandInteraction, error):
         if isinstance(error, commands.NoPrivateMessage):
-            await inter.response.send_message(embed=generate_error_embed(title='This command can\'t be used in DMs.', description=f'The command `{inter.data.name}` has been configured to only be executed in servers, not DM channels.', footer_avatar=inter.author.avatar), ephemeral=True)
+            await interaction.response.send_message(embed=generate_error_embed(title='This command can\'t be used in DMs.', description=f'The command `{interaction.data.name}` has been configured to only be executed in servers, not DM channels.', footer_avatar=interaction.author.avatar), ephemeral=True)
 
 
 # Chill commands.
@@ -596,9 +592,9 @@ class Chill(commands.Cog):
         ]
     )
     @commands.guild_only()
-    async def _avatar(self, inter: disnake.ApplicationCommandInteraction, member: disnake.Member | None):
+    async def _avatar(self, interaction: disnake.ApplicationCommandInteraction, member: disnake.Member | None):
         if not member:
-            member = inter.author
+            member = interaction.author
 
         embed = (
             disnake.Embed(
@@ -608,10 +604,10 @@ class Chill(commands.Cog):
                 url=member.avatar
             ).set_footer(
                 text=generate_random_footer(),
-                icon_url=inter.author.avatar
+                icon_url=interaction.author.avatar
             )
         )
-        await inter.send(embed=embed)
+        await interaction.send(embed=embed)
 
     @commands.command(
         name='ping', 
@@ -659,11 +655,11 @@ class Chill(commands.Cog):
         description='Shows my current response time.'
     )
     @commands.guild_only()
-    async def _ping(self, inter: disnake.ApplicationCommandInteraction):
+    async def _ping(self, interaction: disnake.ApplicationCommandInteraction):
         system_latency = round(self.bot.latency * 1000)
 
         start_time = time.time()
-        await inter.send('Testing overall speed...')
+        await interaction.send('Testing overall speed...')
         end_time = time.time()
 
         api_latency = round((end_time - start_time) * 1000)
@@ -690,10 +686,10 @@ class Chill(commands.Cog):
                 inline=False
             ).set_footer(
                 text=generate_random_footer(),
-                icon_url=inter.author.avatar
+                icon_url=interaction.author.avatar
             )
         )
-        await inter.edit_original_message(content=None, embed=embed)
+        await interaction.edit_original_message(content=None, embed=embed)
 
     @commands.command(
         name='vote', 
@@ -724,8 +720,8 @@ class Chill(commands.Cog):
         description='Vote for me on Top.gg!'
     )
     @commands.guild_only()
-    async def _vote(self, inter: disnake.ApplicationCommandInteraction):
-        vote = await check_if_voted(inter.author.id)
+    async def _vote(self, interaction: disnake.ApplicationCommandInteraction):
+        vote = await check_if_voted(interaction.author.id)
         
         if vote is False:
             embed = (
@@ -735,13 +731,13 @@ class Chill(commands.Cog):
                     color=accent_color['primary']
                 ).set_footer(
                     text=generate_random_footer(),
-                    icon_url=inter.author.avatar
+                    icon_url=interaction.author.avatar
                 )
             )
-            await inter.send(embed=embed, view=VoteCommandView())
+            await interaction.send(embed=embed, view=VoteCommandView())
             
         elif vote is True:
-            await inter.send('You have already voted for me today, yay!', ephemeral=True)
+            await interaction.send('You have already voted for me today, yay!', ephemeral=True)
 
 # Casual commands.
 class Inspection(commands.Cog):
@@ -779,19 +775,19 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def _senddm(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, *, message: str):
-        if not user == inter.author:
+    async def _senddm(self, interaction: disnake.ApplicationCommandInteraction, user: disnake.User, *, message: str):
+        if not user == interaction.author:
             embed = (
                 disnake.Embed(
-                    title=f'{inter.author.display_name} > {message}',
+                    title=f'{interaction.author.display_name} > {message}',
                     color=accent_color['primary']
                 )
             )
             await user.send(embed=embed)
-            await inter.send(f'Your message has been sent!', ephemeral=True)
+            await interaction.send(f'Your message has been sent!', ephemeral=True)
 
         else:
-            await inter.send('You can\'t message yourself!', ephemeral=True)
+            await interaction.send('You can\'t message yourself!', ephemeral=True)
 
     @commands.command(
         name='userinfo', 
@@ -861,9 +857,9 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def _userinfo(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member | None):
+    async def _userinfo(self, interaction: disnake.ApplicationCommandInteraction, user: disnake.Member | None):
         if not user:
-            user = inter.author
+            user = interaction.author
 
         qr_file_name, qr_file = generate_qr_code(id=user.id, text_to_embed=f'https://discordapp.com/users/{user.id}/')
 
@@ -901,15 +897,15 @@ class Inspection(commands.Cog):
         try:
             embed.set_footer(
                 text=user.activities[0],
-                icon_url=inter.author.avatar
+                icon_url=interaction.author.avatar
             )
         except:
             embed.set_footer(
                 text=generate_random_footer(),
-                icon_url=inter.author.avatar
+                icon_url=interaction.author.avatar
             )
 
-        await inter.send(file=qr_file, embed=embed)
+        await interaction.send(file=qr_file, embed=embed)
         
         if os.path.exists(qr_file_name):
             os.remove(qr_file_name)
@@ -964,43 +960,43 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def _guildinfo(self, inter: disnake.ApplicationCommandInteraction):
-        guild = get_guild_dict(inter.guild.id)
+    async def _guildinfo(self, interaction: disnake.ApplicationCommandInteraction):
+        guild = get_guild_dict(interaction.guild.id)
         embed = (
             disnake.Embed(
                 color=accent_color['primary']
             )
         ).add_field(
             name='Birth',
-            value=inter.guild.created_at.strftime("%b %d, %Y")
+            value=interaction.guild.created_at.strftime("%b %d, %Y")
         ).add_field(
             name='Owner',
-            value=inter.guild.owner.mention
+            value=interaction.guild.owner.mention
         ).add_field(
             name='Region', 
-            value=inter.guild.region
+            value=interaction.guild.region
         ).add_field(
             name='Members', 
-            value=inter.guild.member_count
+            value=interaction.guild.member_count
         ).add_field(
             name='Roles', 
-            value=len(inter.guild.roles)
+            value=len(interaction.guild.roles)
         ).add_field(
             name='Channels', 
-            value=len(inter.guild.channels)
+            value=len(interaction.guild.channels)
         ).add_field(
             name='Prefix',
             value=prefix if not guild['prefix'] else guild['prefix']
         ).add_field(
             name='Identifier', 
-            value=inter.guild.id,
+            value=interaction.guild.id,
         ).set_thumbnail(
-            url=inter.guild.icon
+            url=interaction.guild.icon
         ).set_footer(
             text=generate_random_footer(),
-            icon_url=inter.author.avatar
+            icon_url=interaction.author.avatar
         )
-        await inter.send(embed=embed)
+        await interaction.send(embed=embed)
 
     @commands.command(
         name='roleinfo', 
@@ -1046,7 +1042,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def _roleinfo(self, inter: disnake.ApplicationCommandInteraction, role: disnake.Role):
+    async def _roleinfo(self, interaction: disnake.ApplicationCommandInteraction, role: disnake.Role):
         embed = (
             disnake.Embed(
                 title=f'Role Information: {role}', color=accent_color['primary']
@@ -1070,10 +1066,10 @@ class Inspection(commands.Cog):
                 value=f'`{role.id}`'
             ).set_footer(
                 text=generate_random_footer(), 
-                icon_url=inter.author.avatar
+                icon_url=interaction.author.avatar
             )
         )
-        await inter.send(embed=embed)
+        await interaction.send(embed=embed)
 
     @commands.command(
         name='audit', 
@@ -1113,28 +1109,28 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
-    async def _audit(self, inter: disnake.ApplicationCommandInteraction, limit: int=5):
+    async def _audit(self, interaction: disnake.ApplicationCommandInteraction, limit: int=5):
         if int(limit) > 70:
-            await inter.send('Log limit has to be within 1 and 70.')
+            await interaction.send('Log limit has to be within 1 and 70.')
 
         else:
             embed = (
                 disnake.Embed(
                     title='Audit Log', 
-                    description=f'Showing the latest {limit} entries that were made in the audit log of {inter.guild.name}.', 
+                    description=f'Showing the latest {limit} entries that were made in the audit log of {interaction.guild.name}.', 
                     color=accent_color['primary']
                 ).set_footer(
                     text=generate_random_footer(), 
-                    icon_url=inter.author.avatar
+                    icon_url=interaction.author.avatar
                 )
             )
-            async for audit_entry in inter.guild.audit_logs(limit=limit):
+            async for audit_entry in interaction.guild.audit_logs(limit=limit):
                 embed.add_field(
                     name=f'- {audit_entry.action}', 
                     value=f'User: {audit_entry.user} | Target: {audit_entry.target}', 
                     inline=False
                 )
-            await inter.send(embed=embed)
+            await interaction.send(embed=embed)
 
 
 # General moderation commands.
@@ -2388,7 +2384,7 @@ class Music(commands.Cog):
 
     @commands.command(
         name='play', 
-        help='Plays music for you.'
+        help='Enqueues music for playing.'
     )
     @commands.guild_only()
     async def _play(self, ctx: commands.Context, *, search: str | None):
