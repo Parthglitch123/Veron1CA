@@ -152,11 +152,11 @@ def get_guild_dict(id: int) -> dict:
 
 def generate_random_footer() -> str:
     footers_list = [
-        'Hey there pal :D',
         'Hey! Want some pants?',
         'When pigs fly.',
         'When you\'re not looking...',
         'Cheesecakes!',
+        'Muffinhead!',
         'Hey! This looks sketchy, not gonna lie.',
         'Have a good day... or good night, whatever.',
         'This has to be the matrix!',
@@ -164,7 +164,6 @@ def generate_random_footer() -> str:
         'Back to the future!',
         'We need a hashmap.',
         'I\'m not a robot.',
-        'I\'m not a fan of you.',
         'Steven, use failure!',
         'Json, Jason, Jason, Jayson!'
     ]
