@@ -87,7 +87,7 @@ datetime_format_str = "%d/%m/%Y | %H:%M:%S"
 reaction_emoji = '☑️'
 
 accent_color: Dict[str, int] = {
-    'primary': 0, 
+    'primary': 3158326, 
     'error': 14573921
 }
 lock_roles: Dict[str, str] = {
