@@ -1,7 +1,7 @@
 <div align="center">
 
 # Veron1CA
-An open source Discord moderation bot with all-in-one server moderation and beat handling capabilities.
+An open source Discord bot built with unified experience for commands in mind.
 
 ![GitHub](https://img.shields.io/github/license/hitblast/Veron1CA?color=blue)
 ![GitHub Repo Stars](https://img.shields.io/github/stars/hitblast/Veron1CA?color=blue)
@@ -13,16 +13,19 @@ An open source Discord moderation bot with all-in-one server moderation and beat
 </div>
 <br><br>
 
-## Features
-Veron1CA is designed to be the collab of a Discord moderation bot and a chill music bot. It mainly focuses on next level server moderation, which can make customizing and controlling Discord servers a breeze! Here are a few things that come with it under the hood:
+## Introduction
+Veron1CA is a Discord bot that is designed to be the combo of a moderation and a music bot and, at the same time, aims to deliver one of the most unified feels in case of command usage out there. Here are a few things that come out of the box:
 
 - Almost every necessary moderation command with some alien ones as well.
 - Continuously updating codebase with regular maintenance.
-- Built with modern, organized Python syntax.
+- Built with modern, asynchronous Python syntax.
+
+Now, there isn't much spoiler about the initial features  about the bot here because it'll be better if you wanna learn and use it on your own.
+
 <br><br>
 
 ## Wiki
-It's normal for you to not know anything from usage to self-hosting of this project, and that's why a [dedicated Wiki page](https://github.com/hitblast/Veron1CA/wiki) of this repository exists.
+It's normal for you to not know anything from usage to self-hosting of this project, and that's why a [dedicated Wiki page](https://github.com/hitblast/Veron1CA/wiki) of this repository exists. Feel free to go through it as needed.
 <br><br>
 
 ## Contribution

@@ -313,7 +313,6 @@ class HelpCommandView(disnake.ui.View):
         super().__init__(timeout=timeout)
 
         self.add_item(HelpCommandDropdown())
-        self.add_item(disnake.ui.Button(label='Add Me!', url='https://discord.com/api/oauth2/authorize?client_id=867998923250352189&permissions=1506458988023&scope=bot%20applications.commands'))
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
         self.add_item(disnake.ui.Button(label='Support Server', url='https://discord.gg/6GNgcu7hjn'))
         
@@ -336,17 +335,17 @@ class HelpCommand(commands.HelpCommand):
 
         embed = (
             disnake.Embed(
-                title=f'It\'s {bot.user.name} onboard!', 
+                title=f'The name\'s {bot.user.name}!', 
                 color=accent_color['primary']
             ).set_footer(
                 text=f'Help requested by {ctx.author.name}',
                 icon_url=ctx.author.avatar
             )
         ).add_field(
-            name='Some quick, basic stuff...',
-            value='I\'m an open source Discord music & moderation bot, and I can help you make customizing and modding your server easy as a feather! From blowing up scammers to freezing the entire crowded chat, there\'s a ton of stuff that I can do.'
+            name='Intro',
+            value='I\'m an open source, unified Discord bot, and I can help you make customizing and modding your server a breeze! From blowing up scammers to freezing the entire crowded chat, there\'s a ton of stuff that I can do. To add me in servers, press on my avatar and click on **"Add To Server"**.'
         ).add_field(
-            name='How to access me?',
+            name='Initialization',
             value=f'My command prefix is set to `{ctx.prefix}` and you can select the category from the dropdown below to get a list of usable commands, or even type `{ctx.prefix}help <command>` to get information on a particular command.', 
             inline=False
         )
