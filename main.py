@@ -251,19 +251,19 @@ class HelpCommandDropdown(disnake.ui.Select):
                 label="Chill", description="Casual commands for everyone."
             ),
             disnake.SelectOption(
-                label="Inspection", description="Commands to spectate stuff."
+                label="Inspection", description="Spectate stuff with these ones."
             ),
             disnake.SelectOption(
-                label="GeneralMod", description="Commands to use in moderation."
+                label="GeneralMod", description="To be used in moderation."
             ),
             disnake.SelectOption(
                 label="VoiceMod", description="Moderation, but for voice."
             ),
             disnake.SelectOption(
-                label="Customization", description="Commands to customize your server."
+                label="Customization", description="Pretty self-explanatory, helps you customize the server."
             ),
             disnake.SelectOption(
-                label="Tweaks", description="Tweak your experience with this category of commands."
+                label="Tweaks", description="View or change my settings."
             ),
             disnake.SelectOption(
                 label="Music", description="The vibe is real!"
@@ -285,11 +285,8 @@ class HelpCommandDropdown(disnake.ui.Select):
         embed = (
             disnake.Embed(
                 title=f'{cog.qualified_name} Commands',
-                description=f'Below is an entire list of commands originating from the {cog.qualified_name} category. Type the `help` command followed by your command (choose from below) to learn more about it.',
+                description=f'Type the `help` command followed by your command (choose from below) to learn more about it. \n\n {commands_str} \n\n',
                 color=accent_color['primary']
-            ).add_field(
-                name='Usable commands:',
-                value=commands_str
             ).set_footer(
                 text=f'Cog help requested by {interaction.author.name}',
                 icon_url=interaction.author.avatar
@@ -1832,8 +1829,7 @@ class YTDLSource(disnake.PCMVolumeTransformer):
         data = await loop.run_in_executor(None, partial)
 
         if data is None:
-            raise YTDLError(
-                'Couldn\'t find anything that matches **{}**'.format(search))
+            raise YTDLError(f'Couldn\'t find anything that matches **{search}**')
 
         if 'entries' not in data:
             process_info = data
@@ -1845,14 +1841,14 @@ class YTDLSource(disnake.PCMVolumeTransformer):
                     break
 
             if process_info is None:
-                raise YTDLError('Couldn\'t find anything that matches **{}**'.format(search))
+                raise YTDLError(f'Couldn\'t find anything that matches **{search}**')
 
         webpage_url = process_info['webpage_url']
         partial = functools.partial(cls.ytdl.extract_info, webpage_url, download=False)
         processed_info = await loop.run_in_executor(None, partial)
 
         if processed_info is None:
-            raise YTDLError('Couldn\'t fetch **{}**'.format(webpage_url))
+            raise YTDLError(f'Couldn\'t fetch **{webpage_url}**')
 
         if 'entries' not in processed_info:
             info = processed_info
@@ -1862,7 +1858,7 @@ class YTDLSource(disnake.PCMVolumeTransformer):
                 try:
                     info = processed_info['entries'].pop(0)
                 except IndexError:
-                    raise YTDLError('Couldn\'t retrieve any matches for **{}**'.format(webpage_url))
+                    raise YTDLError(f'Couldn\'t retrieve any matches for **{webpage_url}**')
 
         return cls(ctx, disnake.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
 
