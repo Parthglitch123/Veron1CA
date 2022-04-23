@@ -287,9 +287,6 @@ class HelpCommandDropdown(disnake.ui.Select):
                 title=f'{cog.qualified_name} Commands',
                 description=f'Type the `help` command followed by your command (choose from below) to learn more about it. \n\n {commands_str} \n\n',
                 color=ACCENT_COLOR['PRIMARY']
-            ).set_footer(
-                text=f'Cog help requested by {interaction.author.name}',
-                icon_url=interaction.author.avatar
             )
         )
         await interaction.response.edit_message(embed=embed)
@@ -313,7 +310,7 @@ class HelpCommandView(disnake.ui.View):
         self.add_item(disnake.ui.Button(label='Website', url='https://hitblast.github.io/Veron1CA'))
         self.add_item(disnake.ui.Button(label='Support Server', url='https://discord.gg/6GNgcu7hjn'))
         
-    async def on_timeout(self):
+    async def on_timeout(self) -> None:
         for children in self.children:
             children.disabled = True
 
@@ -1916,29 +1913,6 @@ class Spotify:
         return f"{artist} - {album}"
 
 
-# Functions / coroutines (for using within music commands and classes only).
-def get_queue_embed(ctx: commands.Context, page: int=1) -> disnake.Embed:
-    items_per_page = 10
-    pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
-
-    start = (page - 1) * items_per_page
-    end = start + items_per_page
-
-    queue = ''.join(
-        '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(i + 1, song)
-        for i, song in enumerate(ctx.voice_state.songs[start:end], start=start)
-    )
-
-    embed = (
-        disnake.Embed(
-            description=f'**{len(ctx.voice_state.songs)} tracks:**\n\n{queue}'
-        ).set_footer(
-            text=f'Viewing page {page}/{pages}'
-        )
-    )
-    return embed
-
-
 # Views (static / dynamic, for music commands).
 class NowCommandView(disnake.ui.View):
     message: disnake.Message
@@ -2000,12 +1974,17 @@ class QueueCommandView(disnake.ui.View):
     @disnake.ui.button(label='Clear Queue', style=disnake.ButtonStyle.danger)
     async def clear(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         self.ctx.voice_state.songs.clear()
+
+        button.label = 'Cleared'
+        button.style = disnake.ButtonStyle.gray
+
+        for children in self.children:
+            children.disabled = True
+
         await interaction.response.edit_message(
-            content='Queue cleared.',
-            embed=None,
-            view=None
+            embed=self.ctx.voice_state.songs.get_queue_embed(self.ctx, page=1),
+            view=self
         )
-        await interaction.response.delete(delay=5)
 
     @disnake.ui.button(label='Shuffle', style=disnake.ButtonStyle.gray)
     async def shuffle(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
@@ -2014,7 +1993,7 @@ class QueueCommandView(disnake.ui.View):
         button.disabled = True
 
         await interaction.response.edit_message(
-            embed=get_queue_embed(self.ctx, page=1),
+            embed=self.ctx.voice_state.songs.get_queue_embed(self.ctx, page=1),
             view=self
         )
 
@@ -2074,6 +2053,27 @@ class SongQueue(asyncio.Queue):
 
     def remove(self, index: int):
         del self._queue[index]
+
+    def get_queue_embed(self, ctx: commands.Context, page: int=1) -> disnake.Embed:
+        items_per_page = 10
+        pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
+
+        start = (page - 1) * items_per_page
+        end = start + items_per_page
+
+        queue_str = ''.join(
+            '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(i + 1, song)
+            for i, song in enumerate(ctx.voice_state.songs[start:end], start=start)
+        )
+
+        embed = (
+            disnake.Embed(
+                description=f'**{len(ctx.voice_state.songs)} tracks:**\n\n{queue_str}'
+            ).set_footer(
+                text=f'Viewing page {page}/{pages}'
+            )
+        )
+        return embed
 
 
 class VoiceState:
@@ -2375,8 +2375,9 @@ class Music(commands.Cog):
         if len(ctx.voice_state.songs) == 0:
             return await ctx.reply('The queue is empty.')
 
-        embed = get_queue_embed(ctx, page=page)
-        await ctx.reply(embed=embed, view=QueueCommandView(ctx))
+        embed = ctx.voice_state.songs.get_queue_embed(ctx, page=page)
+        view = QueueCommandView(ctx)
+        view.message = await ctx.reply(embed=embed, view=view)
 
     @commands.command(
         name='rmqueue',
