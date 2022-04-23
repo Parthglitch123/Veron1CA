@@ -86,20 +86,20 @@ except UndefinedValueError:
 DATETIME_FORMAT_STR = "%d/%m/%Y | %H:%M:%S"
 REACTION_EMOJI = '☑️'
 
-accent_color: Dict[str, int] = {
-    'primary': 3158326, 
-    'error': 14573921
+ACCENT_COLOR: Dict[str, int] = {
+    'PRIMARY': 3158326, 
+    'ERROR': 14573921
 }
-lock_roles: Dict[str, str] = {
-    'moderator': 'BotMod', 
-    'admin': 'BotAdmin'
+LOCK_ROLES: Dict[str, str] = {
+    'MODERATOR': 'BotMod', 
+    'ADMIN': 'BotAdmin'
 }
 
 
 # Store startup data.
 startup_data: Dict[str, float] = {
     'str': str(datetime.datetime.now().strftime(DATETIME_FORMAT_STR)),
-    'obj': time.time()
+    'float': time.time()
 }
 
 
@@ -183,7 +183,7 @@ def generate_error_embed(title: str, description: str, footer_avatar) -> disnake
         disnake.Embed(
             title=f'Whoops! {title}',
             description=description,
-            color=accent_color['error']
+            color=ACCENT_COLOR['ERROR']
         ).set_footer(
             text=generate_random_footer(),
             icon_url=footer_avatar
@@ -286,7 +286,7 @@ class HelpCommandDropdown(disnake.ui.Select):
             disnake.Embed(
                 title=f'{cog.qualified_name} Commands',
                 description=f'Type the `help` command followed by your command (choose from below) to learn more about it. \n\n {commands_str} \n\n',
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_footer(
                 text=f'Cog help requested by {interaction.author.name}',
                 icon_url=interaction.author.avatar
@@ -333,7 +333,7 @@ class HelpCommand(commands.HelpCommand):
         embed = (
             disnake.Embed(
                 title=f'The name\'s {bot.user.name}!', 
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_footer(
                 text=f'Help requested by {ctx.author.name}',
                 icon_url=ctx.author.avatar
@@ -359,7 +359,7 @@ class HelpCommand(commands.HelpCommand):
         embed = (
             disnake.Embed(
                 title=f'{command.cog_name} -> {command.name}', 
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_footer(
                 text=f'Command help requested by {ctx.author.name}',
                 icon_url=ctx.author.avatar
@@ -569,7 +569,7 @@ class Chill(commands.Cog):
         embed = (
             disnake.Embed(
                 title='Here\'s what I found!', 
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_image(
                 url=member.avatar
             ).set_footer(
@@ -594,7 +594,7 @@ class Chill(commands.Cog):
         embed = (
             disnake.Embed(
                 title='Here\'s what I found!', 
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_image(
                 url=member.avatar
             ).set_footer(
@@ -618,11 +618,11 @@ class Chill(commands.Cog):
 
         api_latency = round((end_time - start_time) * 1000)
         uptime = str(datetime.timedelta(seconds=int(
-            round(time.time() - startup_data['obj']))))
+            round(time.time() - startup_data['float']))))
 
         embed = (
             disnake.Embed(
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).add_field(
                 name='System Latency', 
                 value=f'{system_latency}ms [{self.bot.shard_count} shard(s)]', 
@@ -659,11 +659,11 @@ class Chill(commands.Cog):
 
         api_latency = round((end_time - start_time) * 1000)
         uptime = str(datetime.timedelta(seconds=int(
-            round(time.time() - startup_data['obj']))))
+            round(time.time() - startup_data['float']))))
 
         embed = (
             disnake.Embed(
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).add_field(
                 name='System Latency', 
                 value=f'{system_latency}ms [{self.bot.shard_count} shard(s)]', 
@@ -699,7 +699,7 @@ class Chill(commands.Cog):
                 disnake.Embed(
                     title=':military_medal: Voting Section', 
                     description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourages him to launch more updates.',
-                    color=accent_color['primary']
+                    color=ACCENT_COLOR['PRIMARY']
                 ).set_footer(
                     text=generate_random_footer(),
                     icon_url=ctx.author.avatar
@@ -723,7 +723,7 @@ class Chill(commands.Cog):
                 disnake.Embed(
                     title=':military_medal: Voting Section', 
                     description='Hey! Looks like you haven\'t voted for me today. If you\'re free, then be sure to check the links below to vote for me on Top.gg! It really helps my creator to get energetic and encourages him to launch more updates.',
-                    color=accent_color['primary']
+                    color=ACCENT_COLOR['PRIMARY']
                 ).set_footer(
                     text=generate_random_footer(),
                     icon_url=interaction.author.avatar
@@ -744,13 +744,13 @@ class Inspection(commands.Cog):
         help='Helps to send DMs to specific users.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def senddm(self, ctx: commands.Context, user: disnake.User, *, message: str):
         if not user == ctx.author:
             embed = (
                 disnake.Embed(
                     title=f'{ctx.author.display_name} > {message}',
-                    color=accent_color['primary']
+                    color=ACCENT_COLOR['PRIMARY']
                 )
             )
             await user.send(embed=embed)
@@ -769,13 +769,13 @@ class Inspection(commands.Cog):
         ]
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def _senddm(self, interaction: disnake.ApplicationCommandInteraction, user: disnake.User, *, message: str):
         if not user == interaction.author:
             embed = (
                 disnake.Embed(
                     title=f'{interaction.author.display_name} > {message}',
-                    color=accent_color['primary']
+                    color=ACCENT_COLOR['PRIMARY']
                 )
             )
             await user.send(embed=embed)
@@ -789,7 +789,7 @@ class Inspection(commands.Cog):
         help='Shows all important information on a user.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def userinfo(self, ctx: commands.Context, *, user: disnake.Member | None):
         if not user:
             user = ctx.author
@@ -799,7 +799,7 @@ class Inspection(commands.Cog):
         embed = (
             disnake.Embed(
                 title=f'{user}',
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             )
         ).add_field(
             name='Status', 
@@ -851,7 +851,7 @@ class Inspection(commands.Cog):
         ]
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def _userinfo(self, interaction: disnake.ApplicationCommandInteraction, user: disnake.Member | None):
         if not user:
             user = interaction.author
@@ -861,7 +861,7 @@ class Inspection(commands.Cog):
         embed = (
             disnake.Embed(
                 title=f'{user}',
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             )
         ).add_field(
             name='Status', 
@@ -910,12 +910,12 @@ class Inspection(commands.Cog):
         help='Shows all important information on the current guild / server.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def guildinfo(self, ctx: commands.Context):
         guild = get_guild_dict(ctx.guild.id)
         embed = (
             disnake.Embed(
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             )
         ).add_field(
             name='Birth',
@@ -954,12 +954,12 @@ class Inspection(commands.Cog):
         description='Shows all important information on the current guild / server.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def _guildinfo(self, interaction: disnake.ApplicationCommandInteraction):
         guild = get_guild_dict(interaction.guild.id)
         embed = (
             disnake.Embed(
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             )
         ).add_field(
             name='Birth',
@@ -998,11 +998,11 @@ class Inspection(commands.Cog):
         help='Shows all important information related to a specific role.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def roleinfo(self, ctx: commands.Context, *, role: disnake.Role):
         embed = (
             disnake.Embed(
-                title=f'Role Information: {role}', color=accent_color['primary']
+                title=f'Role Information: {role}', color=ACCENT_COLOR['PRIMARY']
             ).add_field(
                 name='Birth', 
                 value=role.created_at.strftime("%b %d, %Y")
@@ -1036,11 +1036,11 @@ class Inspection(commands.Cog):
         ]
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def _roleinfo(self, interaction: disnake.ApplicationCommandInteraction, role: disnake.Role):
         embed = (
             disnake.Embed(
-                title=f'Role Information: {role}', color=accent_color['primary']
+                title=f'Role Information: {role}', color=ACCENT_COLOR['PRIMARY']
             ).add_field(
                 name='Birth', 
                 value=role.created_at.strftime("%b %d, %Y")
@@ -1071,7 +1071,7 @@ class Inspection(commands.Cog):
         help='Views the latest entries of the audit log in detail (limited to 100 entries).'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def audit(self, ctx: commands.Context, limit: int=5):
         if int(limit) > 70:
             await ctx.reply('Log limit has to be within 1 and 70.')
@@ -1081,7 +1081,7 @@ class Inspection(commands.Cog):
                 disnake.Embed(
                     title='Audit Log', 
                     description=f'Showing the latest {limit} entries that were made in the audit log of {ctx.guild.name}.', 
-                    color=accent_color['primary']
+                    color=ACCENT_COLOR['PRIMARY']
                 ).set_footer(
                     text=generate_random_footer(), 
                     icon_url=ctx.author.avatar
@@ -1103,7 +1103,7 @@ class Inspection(commands.Cog):
         ]
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def _audit(self, interaction: disnake.ApplicationCommandInteraction, limit: int=5):
         if int(limit) > 70:
             await interaction.send('Log limit has to be within 1 and 70.')
@@ -1113,7 +1113,7 @@ class Inspection(commands.Cog):
                 disnake.Embed(
                     title='Audit Log', 
                     description=f'Showing the latest {limit} entries that were made in the audit log of {interaction.guild.name}.', 
-                    color=accent_color['primary']
+                    color=ACCENT_COLOR['PRIMARY']
                 ).set_footer(
                     text=generate_random_footer(), 
                     icon_url=interaction.author.avatar
@@ -1138,7 +1138,7 @@ class GeneralMod(commands.Cog):
         help='Clears messages within the given index.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def purge(self, ctx: commands.Context, amount: int=1):
         if amount > 200:
             await ctx.reply('Purges are limited to 200 messages per use!')
@@ -1151,7 +1151,7 @@ class GeneralMod(commands.Cog):
         help='Purges a message by its identifier.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def purgeone(self, ctx: commands.Context, message_id: int):
         message = await ctx.channel.fetch_message(message_id)
         print(message)
@@ -1163,7 +1163,7 @@ class GeneralMod(commands.Cog):
         help='Clears messages that are sent by a specific user within the given index.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def ripplepurge(self, ctx: commands.Context, member: disnake.Member, amount: int=2):
         if amount > 100:
             await ctx.reply('Ripple purges are limited to 100 messages per use!')
@@ -1180,7 +1180,7 @@ class GeneralMod(commands.Cog):
         help='Enables a web trap to capture six messages sent by a specific user.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def msgweb(self, ctx: commands.Context, member: disnake.Member):
         await ctx.message.delete()
 
@@ -1197,7 +1197,7 @@ class GeneralMod(commands.Cog):
             disnake.Embed(
                 title='Web Trap Retracted',
                 description=f'All captured messages from {member} are listed below.',
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_footer(
                 text=generate_random_footer(),
                 icon_url=ctx.author.avatar
@@ -1218,7 +1218,7 @@ class GeneralMod(commands.Cog):
         help='Snipes a recent message from the channel.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def snipemsg(self, ctx: commands.Context):
         if snipeables:
             for snipeable in snipeables:
@@ -1235,7 +1235,7 @@ class GeneralMod(commands.Cog):
         help='Temporarily prevents a member from chatting in server.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def jail(self, ctx: commands.Context, member: disnake.Member, *, reason: str='None.'):
         do_jail = False
 
@@ -1265,14 +1265,14 @@ class GeneralMod(commands.Cog):
         help='Views jailed members.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def jailed(self, ctx: commands.Context):
         jail_has_member = False
 
         embed = (
             disnake.Embed(
                 title='Now viewing the prison!', 
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_footer(
                 icon_url=ctx.author.avatar, 
                 text=generate_random_footer()
@@ -1299,7 +1299,7 @@ class GeneralMod(commands.Cog):
         help='Removes a member from jail.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def unjail(self, ctx: commands.Context, member: disnake.Member):
         for jail_member in jail_members:
             if jail_member[1] == ctx.guild.id and jail_member[0] == member.id:
@@ -1315,7 +1315,7 @@ class GeneralMod(commands.Cog):
         help='Blocks a user from chatting in a specific channel.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def block(self, ctx: commands.Context, member: disnake.Member, *, reason: str='No reason provided.'):
         if member == self.bot.user:
             await ctx.reply('Why are you even trying to block me?')
@@ -1333,7 +1333,7 @@ class GeneralMod(commands.Cog):
         help='Unblocks a user.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def unblock(self, ctx: commands.Context, member: disnake.Member):
         await ctx.channel.set_permissions(member, overwrite=None)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1343,7 +1343,7 @@ class GeneralMod(commands.Cog):
         help='Kicks a member from server.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def kick(self, ctx: commands.Context, member: disnake.User, *, reason: str='No reason provided.'):
         await ctx.guild.kick(member, reason=reason)
         await ctx.send(f'**{member.name}** has been kicked! Reason: {reason}')
@@ -1354,7 +1354,7 @@ class GeneralMod(commands.Cog):
         help='Bans a member from server.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def ban(self, ctx: commands.Context, member: disnake.User, *, reason: str='No reason provided.'):
         await ctx.guild.ban(member, reason=reason)
         await ctx.send(f'**{member.name}** has been banned! Reason: {reason}')
@@ -1365,7 +1365,7 @@ class GeneralMod(commands.Cog):
         help='Temporarily bans members to delete their messages.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def softban(self, ctx: commands.Context, member: disnake.User, *, reason: str='No reason provided.'):
         await ctx.guild.ban(member, delete_message_days=7, reason=reason)
         await ctx.guild.unban(member)
@@ -1377,13 +1377,13 @@ class GeneralMod(commands.Cog):
         help='Shows a list of banned users in the server.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def bans(self, ctx: commands.Context):
         bans = await ctx.guild.bans()
         embed = (
             disnake.Embed(
                 title='Now viewing banned members!', 
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_footer(
                 icon_url=ctx.author.avatar, 
                 text=generate_random_footer()
@@ -1406,7 +1406,7 @@ class GeneralMod(commands.Cog):
         help='Unbans a member in server.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def unban(self, ctx: commands.Context, member: disnake.User):
         await ctx.guild.unban(member)
         await ctx.reply(f'Member **{member.name}** has been unbanned!')
@@ -1416,7 +1416,7 @@ class GeneralMod(commands.Cog):
         help='Timeouts a member.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def deafen(self, ctx: commands.Context, member: disnake.Member, duration: int=30, *, reason: str='No reason provided.'):
         await member.timeout(duration=duration, reason=reason)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1426,7 +1426,7 @@ class GeneralMod(commands.Cog):
         help='Calms down chat.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def freeze(self, ctx: commands.Context):
         frozen_guilds.append([ctx.author.id, ctx.guild.id, ctx.message.channel.id])
         await ctx.send(f'**Chat was frozen by {ctx.author.mention}!**')
@@ -1437,7 +1437,7 @@ class GeneralMod(commands.Cog):
         help='Removes frozen state from chat.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def thaw(self, ctx: commands.Context):
         for frozen_guild in frozen_guilds:
             if frozen_guild[1] == ctx.guild.id:
@@ -1455,7 +1455,7 @@ class VoiceMod(commands.Cog):
         help='Moves a member from-to specific a voice channel.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def move(self, ctx: commands.Context, member: disnake.Member, *, channel: disnake.VoiceChannel | disnake.StageChannel):
         await member.move_to(channel)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1465,7 +1465,7 @@ class VoiceMod(commands.Cog):
         help='Server-mutes a member.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def mute(self, ctx: commands.Context, member: disnake.Member):
         await member.edit(mute=True)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1475,7 +1475,7 @@ class VoiceMod(commands.Cog):
         help='Server-deafens a member.'
     )    
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def deafen(self, ctx: commands.Context, member: disnake.Member):
         await member.edit(deafen=True)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1485,7 +1485,7 @@ class VoiceMod(commands.Cog):
         help='Stops any unning stage instance in a given stage channel.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def stopstage(self, ctx: commands.Context, *, channel: disnake.StageChannel):
         try:
             instance = await channel.fetch_instance()
@@ -1506,7 +1506,7 @@ class Customization(commands.Cog):
         help='Creates an invite code or link.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def makeinv(self, ctx: commands.Context, max_age: int=60, max_uses: int=1, *, reason: str='No reason provided.'):
         if not reason:
             reason = f'Inviter: {ctx.author.name}'
@@ -1518,7 +1518,7 @@ class Customization(commands.Cog):
         embed = (
             disnake.Embed(
                 title=f'An invite to #{invite.channel} was created!',
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).add_field(
                 name='Link', 
                 value=invite
@@ -1547,13 +1547,13 @@ class Customization(commands.Cog):
         help='Shows all active server invite codes.'
     )
     @commands.guild_only()
-    @commands.has_any_role(lock_roles['moderator'], lock_roles['admin'])
+    @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
     async def invites(self, ctx: commands.Context):
         invites = await ctx.guild.invites()
         embed = (
             disnake.Embed(
                 title='Now viewing invite codes!', 
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_footer(
                 icon_url=ctx.author.avatar, 
                 text=generate_random_footer()
@@ -1577,7 +1577,7 @@ class Customization(commands.Cog):
         help='Removes a previously generated invite code or link.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def removeinv(self, ctx: commands.Context, id: str):
         invites = await ctx.guild.invites()
         for invite in invites:
@@ -1590,7 +1590,7 @@ class Customization(commands.Cog):
         help='Creates a role.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def makerole(self, ctx: commands.Context, *, name: str):
         await ctx.guild.create_role(name=name)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1600,7 +1600,7 @@ class Customization(commands.Cog):
         help='Removes an existing role.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def removerole(self, ctx: commands.Context, *, role: disnake.Role):
         await role.delete()
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1610,7 +1610,7 @@ class Customization(commands.Cog):
         help='Assigns an existing role to a server member.', pass_context=True
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def assignrole(self, ctx: commands.Context, role: disnake.Role, member: disnake.Member):
         await member.add_roles(role)
         await ctx.reply(f'Role {role.name} has been assigned to {member}.')
@@ -1620,7 +1620,7 @@ class Customization(commands.Cog):
         help='Changes the nickname of a member.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def nick(self, ctx: commands.Context, member: disnake.Member, *, new_nick: str):
         await member.edit(nick=new_nick)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1630,7 +1630,7 @@ class Customization(commands.Cog):
         help='Creates a text channel.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def mktextch(self, ctx: commands.Context, *, name: str):
         await ctx.guild.create_text_channel(name)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1640,7 +1640,7 @@ class Customization(commands.Cog):
         help='Creates a voice channel.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def mkvoicech(self, ctx: commands.Context, *, name: str):
         await ctx.guild.create_voice_channel(name)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1650,7 +1650,7 @@ class Customization(commands.Cog):
         help='Clones a given channel.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def clonech(self, ctx: commands.Context, *, channel: disnake.TextChannel | disnake.VoiceChannel | disnake.StageChannel):
         await channel.clone()
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1660,7 +1660,7 @@ class Customization(commands.Cog):
         help='Removes an existing server channel.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def removech(self, ctx: commands.Context, *, channel: disnake.TextChannel | disnake.VoiceChannel | disnake.StageChannel):
         await channel.delete()
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1670,7 +1670,7 @@ class Customization(commands.Cog):
         help='Creates a new thread in the current channel.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def mkthread(self, ctx: commands.Context, *, name: str):
         message = await ctx.send(f'Created thread **{name}**.')
         await ctx.channel.create_thread(name=name, message=message)
@@ -1680,7 +1680,7 @@ class Customization(commands.Cog):
         help='Removes an existing thread in the current channel.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def rmthread(self, ctx: commands.Context, *, thread: disnake.Thread):
         await thread.delete()
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1690,7 +1690,7 @@ class Customization(commands.Cog):
         help='Creates a category channel.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def mkcategory(self, ctx: commands.Context, *, name: str):
         await ctx.guild.create_category(name)
         await ctx.message.add_reaction(REACTION_EMOJI)
@@ -1706,7 +1706,7 @@ class Tweaks(commands.Cog):
         help='Shows / changes the server\'s default command prefix.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def prefix(self, ctx: commands.Context, prefix: str | None):
         db.update({'prefix': prefix}, Guild.id == ctx.guild.id)
         await ctx.reply(f'Changed server prefix to `{prefix}`!')
@@ -1716,14 +1716,14 @@ class Tweaks(commands.Cog):
         help='Toggles the greeting message which is sent to an incoming Discord user upon joining the server.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def greetings(self, ctx: commands.Context, *, greet_message: str | None):
         if greet_message:
             embed = (
                 disnake.Embed(
                     title='Greetings enabled!',
                     description=f'`{greet_message}` will be sent to anyone who joins this server from now on. You can disable it by using this command without any arguments.',
-                    color=accent_color['primary']
+                    color=ACCENT_COLOR['PRIMARY']
                 ).set_footer(
                     text=generate_random_footer(),
                     icon_url=ctx.author.avatar
@@ -1740,7 +1740,7 @@ class Tweaks(commands.Cog):
         help='Toggles the profanity filter.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def profanityfilter(self, ctx: commands.Context):
         guild = get_guild_dict(ctx.guild.id)
         previous_value = guild['filter_profanity']
@@ -1752,12 +1752,12 @@ class Tweaks(commands.Cog):
         help='Shows the server\'s configuration data in a JSON file format.'
     )
     @commands.guild_only()
-    @commands.has_role(lock_roles['admin'])
+    @commands.has_role(LOCK_ROLES['ADMIN'])
     async def viewconfig(self, ctx: commands.Context):
         guild = get_guild_dict(ctx.guild.id)
         embed = (
             disnake.Embed(
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).add_field(
                 name='Current Configuration',
                 value=f'```json\n{json.dumps(guild, indent=4)}\n```'
@@ -1970,7 +1970,7 @@ class NowCommandView(disnake.ui.View):
                 disnake.Embed(
                     title='Whoops! This feature is locked.',
                     description=f'By voting for me on Top.gg, you\'ll unlock features like looping and all other locked commands for 12 hours.',
-                    color=accent_color['error']
+                    color=ACCENT_COLOR['ERROR']
                 ).set_footer(
                     text='It\'s free, it only takes a minute to do and it also supports my creator a lot!',
                     icon_url=interaction.author.avatar
@@ -2038,7 +2038,7 @@ class Song:
         embed = (
             disnake.Embed(
                 title=f'{self.source.title}',
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).add_field(
                 name='Duration', 
                 value=duration
@@ -2241,7 +2241,7 @@ class Music(commands.Cog):
                 embed = (
                     disnake.Embed(
                         title=f'Current Volume: {ctx.voice_state.current.source.volume * 100}%',
-                        color=accent_color['primary']
+                        color=ACCENT_COLOR['PRIMARY']
                     ).set_footer(
                         text=generate_random_footer(),
                         icon_url=ctx.author.avatar
@@ -2260,7 +2260,7 @@ class Music(commands.Cog):
                 disnake.Embed(
                     title='Whoops! This feature is locked.',
                     description=f'By voting for me on Top.gg, you\'ll unlock `{ctx.command}` and all other locked commands for 12 hours.',
-                    color=accent_color['error']
+                    color=ACCENT_COLOR['ERROR']
                 ).set_footer(
                     text='It\'s free, it only takes a minute to do and it also supports my creator a lot!',
                     icon_url=ctx.author.avatar
@@ -2405,7 +2405,7 @@ class Music(commands.Cog):
         enqueueing_embed = (
             disnake.Embed(
                 title='Enqueueing...',
-                color=accent_color['primary']
+                color=ACCENT_COLOR['PRIMARY']
             ).set_footer(
                 text=generate_random_footer(),
                 icon_url=ctx.author.avatar
@@ -2429,7 +2429,7 @@ class Music(commands.Cog):
                 embed = (
                     disnake.Embed(
                         title=f'Enqueued {song.source.title} from YouTube.',
-                        color=accent_color['primary']
+                        color=ACCENT_COLOR['PRIMARY']
                     ).set_footer(
                         text=generate_random_footer(),
                         icon_url=ctx.author.avatar
@@ -2458,7 +2458,7 @@ class Music(commands.Cog):
                     disnake.Embed(
                         title=f'{len(tracks)} tracks have been queued!',
                         description=f'You can view the queue of songs imported from the playlist by using the `{PREFIX}queue` command.',
-                        color=accent_color['primary']
+                        color=ACCENT_COLOR['PRIMARY']
                     ).set_footer(
                         text=generate_random_footer(),
                         icon_url=ctx.author.avatar
@@ -2483,7 +2483,7 @@ class Music(commands.Cog):
                     disnake.Embed(
                         title=f'{len(tracks)} tracks have been queued!',
                         description=f'You can view the queue of song imported from the album by using the `{PREFIX}queue` command.',
-                        color=accent_color['primary']
+                        color=ACCENT_COLOR['PRIMARY']
                     ).set_footer(
                         text=generate_random_footer(),
                         icon_url=ctx.author.avatar
@@ -2631,7 +2631,7 @@ def home():
 def ping():
     ping_dict = {
         'latency': round(bot.latency * 1000),
-        'uptime': int(round(time.time() - startup_data['obj'])),
+        'uptime': int(round(time.time() - startup_data['float'])),
         'last_restart': startup_data['str']
     }
     return jsonify(ping_dict)
