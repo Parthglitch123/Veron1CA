@@ -275,7 +275,7 @@ class HelpCommandDropdown(disnake.ui.Select):
             options=options
         )
 
-    async def callback(self, interaction: disnake.MessageInteraction):
+    async def callback(self, interaction: disnake.CommandInteraction):
         cog = bot.get_cog(self.values[0])
         commands_str = ''
 
@@ -544,7 +544,7 @@ class ExceptionHandler(commands.Cog):
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     @commands.Cog.listener()
-    async def on_slash_command_error(self, interaction: disnake.ApplicationCommandInteraction, error):
+    async def on_slash_command_error(self, interaction: disnake.CommandInteraction, error):
         if isinstance(error, commands.NoPrivateMessage):
             await interaction.response.send_message(embed=generate_error_embed(title='This command can\'t be used in DMs.', description=f'The command `{interaction.data.name}` has been configured to only be executed in servers, not DM channels.', footer_avatar=interaction.author.avatar), ephemeral=True)
 
@@ -584,7 +584,7 @@ class Chill(commands.Cog):
         ]
     )
     @commands.guild_only()
-    async def _avatar(self, interaction: disnake.ApplicationCommandInteraction, member: disnake.Member | None):
+    async def _avatar(self, interaction: disnake.CommandInteraction, member: disnake.Member | None):
         if not member:
             member = interaction.author
 
@@ -647,7 +647,7 @@ class Chill(commands.Cog):
         description='Shows my current response time.'
     )
     @commands.guild_only()
-    async def _ping(self, interaction: disnake.ApplicationCommandInteraction):
+    async def _ping(self, interaction: disnake.CommandInteraction):
         system_latency = round(self.bot.latency * 1000)
 
         start_time = time.time()
@@ -712,7 +712,7 @@ class Chill(commands.Cog):
         description='Vote for me on Top.gg!'
     )
     @commands.guild_only()
-    async def _vote(self, interaction: disnake.ApplicationCommandInteraction):
+    async def _vote(self, interaction: disnake.CommandInteraction):
         vote = await check_if_voted(interaction.author.id)
         
         if vote is False:
@@ -767,7 +767,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
-    async def _senddm(self, interaction: disnake.ApplicationCommandInteraction, user: disnake.User, *, message: str):
+    async def _senddm(self, interaction: disnake.CommandInteraction, user: disnake.User, *, message: str):
         if not user == interaction.author:
             embed = (
                 disnake.Embed(
@@ -849,7 +849,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
-    async def _userinfo(self, interaction: disnake.ApplicationCommandInteraction, user: disnake.Member | None):
+    async def _userinfo(self, interaction: disnake.CommandInteraction, user: disnake.Member | None):
         if not user:
             user = interaction.author
 
@@ -952,7 +952,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
-    async def _guildinfo(self, interaction: disnake.ApplicationCommandInteraction):
+    async def _guildinfo(self, interaction: disnake.CommandInteraction):
         guild = get_guild_dict(interaction.guild.id)
         embed = (
             disnake.Embed(
@@ -1034,7 +1034,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
-    async def _roleinfo(self, interaction: disnake.ApplicationCommandInteraction, role: disnake.Role):
+    async def _roleinfo(self, interaction: disnake.CommandInteraction, role: disnake.Role):
         embed = (
             disnake.Embed(
                 title=f'Role Information: {role}', color=ACCENT_COLOR['PRIMARY']
@@ -1101,7 +1101,7 @@ class Inspection(commands.Cog):
     )
     @commands.guild_only()
     @commands.has_any_role(LOCK_ROLES['MODERATOR'], LOCK_ROLES['ADMIN'])
-    async def _audit(self, interaction: disnake.ApplicationCommandInteraction, limit: int=5):
+    async def _audit(self, interaction: disnake.CommandInteraction, limit: int=5):
         if int(limit) > 70:
             await interaction.send('Log limit has to be within 1 and 70.')
 
@@ -1924,7 +1924,7 @@ class NowCommandView(disnake.ui.View):
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
     @disnake.ui.button(label='Toggle Loop', style=disnake.ButtonStyle.gray)
-    async def loop(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+    async def loop(self, button: disnake.ui.Button, interaction: disnake.CommandInteraction):
         vote = await check_if_voted(self.ctx.author.id)
 
         if (vote is None) or (vote is True):
@@ -1972,7 +1972,7 @@ class QueueCommandView(disnake.ui.View):
         self.ctx = ctx
 
     @disnake.ui.button(label='Clear Queue', style=disnake.ButtonStyle.danger)
-    async def clear(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+    async def clear(self, button: disnake.ui.Button, interaction: disnake.CommandInteraction):
         self.ctx.voice_state.songs.clear()
 
         button.label = 'Cleared'
@@ -1987,7 +1987,7 @@ class QueueCommandView(disnake.ui.View):
         )
 
     @disnake.ui.button(label='Shuffle', style=disnake.ButtonStyle.gray)
-    async def shuffle(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+    async def shuffle(self, button: disnake.ui.Button, interaction: disnake.CommandInteraction):
         self.ctx.voice_state.songs.shuffle()
         button.label = 'Shuffled'
         button.disabled = True
@@ -2360,7 +2360,7 @@ class Music(commands.Cog):
                 await ctx.message.add_reaction(REACTION_EMOJI)
                 ctx.voice_state.skip()
             else:
-                await ctx.reply('Skip vote added, currently at **{}/3** votes.'.format(total_votes))
+                await ctx.reply(f'Skip vote added, currently at **{total_votes}/3** votes.')
 
         else:
             await ctx.reply('You have already voted to skip this song.')
