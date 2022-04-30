@@ -275,7 +275,7 @@ class HelpCommandDropdown(disnake.ui.Select):
             options=options
         )
 
-    async def callback(self, interaction: disnake.CommandInteraction):
+    async def callback(self, interaction: disnake.MessageInteraction):
         cog = bot.get_cog(self.values[0])
         commands_str = ''
 
@@ -1924,7 +1924,7 @@ class NowCommandView(disnake.ui.View):
         self.add_item(disnake.ui.Button(label='Redirect', url=url))
 
     @disnake.ui.button(label='Toggle Loop', style=disnake.ButtonStyle.gray)
-    async def loop(self, button: disnake.ui.Button, interaction: disnake.CommandInteraction):
+    async def loop(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         vote = await check_if_voted(self.ctx.author.id)
 
         if (vote is None) or (vote is True):
@@ -1972,7 +1972,7 @@ class QueueCommandView(disnake.ui.View):
         self.ctx = ctx
 
     @disnake.ui.button(label='Clear Queue', style=disnake.ButtonStyle.danger)
-    async def clear(self, button: disnake.ui.Button, interaction: disnake.CommandInteraction):
+    async def clear(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         self.ctx.voice_state.songs.clear()
 
         button.label = 'Cleared'
@@ -1987,7 +1987,7 @@ class QueueCommandView(disnake.ui.View):
         )
 
     @disnake.ui.button(label='Shuffle', style=disnake.ButtonStyle.gray)
-    async def shuffle(self, button: disnake.ui.Button, interaction: disnake.CommandInteraction):
+    async def shuffle(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         self.ctx.voice_state.songs.shuffle()
         button.label = 'Shuffled'
         button.disabled = True
@@ -2360,7 +2360,7 @@ class Music(commands.Cog):
                 await ctx.message.add_reaction(REACTION_EMOJI)
                 ctx.voice_state.skip()
             else:
-                await ctx.reply(f'Skip vote added, currently at **{total_votes}/3** votes.')
+                await ctx.reply('Skip vote added, currently at **{}/3** votes.'.format(total_votes))
 
         else:
             await ctx.reply('You have already voted to skip this song.')
