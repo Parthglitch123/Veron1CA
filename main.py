@@ -65,14 +65,14 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 # Environment variables.
 try:
-    tokens: Dict[str, str] = {
-        'discord': config('DISCORD_TOKEN', cast=str),
-        'spotify': config('SPOTIFY_CLIENT_SECRET', cast=str),
-        'topggpy': config('DBL_TOKEN', default=None, cast=str)
+    TOKEN: Dict[str, str] = {
+        'DISCORD': config('DISCORD_TOKEN', cast=str),
+        'SPOTIFY': config('SPOTIFY_CLIENT_SECRET', cast=str),
+        'TOPGGPY': config('DBL_TOKEN', default=None, cast=str)
     }
-    owner_ids: Dict[str, int | str] = {
-        'discord': config('DISCORD_OWNER_ID', cast=int),
-        'spotify': config('SPOTIFY_CLIENT_ID', cast=str)
+    OWNER_ID: Dict[str, int | str] = {
+        'DISCORD': config('DISCORD_OWNER_ID', cast=int),
+        'SPOTIFY': config('SPOTIFY_CLIENT_ID', cast=str)
     }
     PREFIX = config('COMMAND_PREFIX', default='vrn.', cast=str)
 
@@ -116,8 +116,8 @@ Guild = Query()
 # Implementation of Spotipy.
 sp = spotipy.Spotify(
     auth_manager=SpotifyClientCredentials(
-        client_id=owner_ids['spotify'], 
-        client_secret=tokens['spotify']
+        client_id=OWNER_ID['SPOTIFY'], 
+        client_secret=TOKEN['SPOTIFY']
     )
 )
 
@@ -232,7 +232,7 @@ async def check_if_jailed(message: disnake.Message) -> bool:
 
 # Command-specific checks.
 def is_developer(ctx: commands.Context) -> bool:
-    return ctx.author.id == owner_ids['discord']
+    return ctx.author.id == OWNER_ID['DISCORD']
 
 
 # Custom exceptions.
@@ -459,7 +459,7 @@ bot = Bot()
 
 
 # Setting up the wrapper for Top.gg and the primary function for checking votes.
-bot.topggpy = topgg.DBLClient(bot, tokens['topggpy'])
+bot.topggpy = topgg.DBLClient(bot, TOKEN['TOPGGPY'])
 
 async def check_if_voted(id: int) -> bool:
     try: 
@@ -2660,4 +2660,4 @@ bot.add_cog(Developer(bot))
 
 
 # Run the bot.
-bot.run(tokens['discord'])
+bot.run(TOKEN['DISCORD'])
